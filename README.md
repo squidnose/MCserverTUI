@@ -3,11 +3,19 @@
 ## A TUI for Minecraft servers on linux. The default will be for debian but will have the option to easily modify for a different distro. 
 ### File-Structure:
 - ~/mcservers/<server_name> = MC server locations
+  - <server_name>
+    - run.sh = Run command with the Ram ammout with the nogui option
 - ~/MCserverTUI/ = Location of the script and its files
   - MCserverTUI.sh
-  - Modrinth-autodownloader.py
-  - Autostart-files
-    - <servername>_autostart.sh
+  - Modrinth-autodownloader.py https://github.com/aayushdutt/modrinth-collection-downloader
+  - Autostart-fileshttps://github.com/aayushdutt/modrinth-collection-downloader
+    - server_name_autostart.sh contents
+ ```
+#!/bin/bash
+tmux new-session -d -s <server_name>
+tmux send-keys -t <server_name> "cd ~/mcservers/<server_name>" C-m
+tmux send-keys -t <server_name> "./run.sh" C-m
+``` 
 ### Apart of setup.sh
 –	Install required: Tmux, Whiptale, openJDK8, openJDK17, openJDK21. (Seperate)
 –	Install the TUI into ~/MCserverTUI
