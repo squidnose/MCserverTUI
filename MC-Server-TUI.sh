@@ -7,6 +7,7 @@ MENU_WIDTH=70
 MENU_ITEM_HEIGHT=6
 
 manage_existing_servers() {
+    echo "Here is a list of existing MC servers"
     ls ~/mcservers
     # TODO: Add menu to select and attach to tmux server console
 }
