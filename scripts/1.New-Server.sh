@@ -37,7 +37,7 @@ MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to install
     3>&1 1>&2 2>&3)
 case $MC_MENU_LOADER in
     1)
-    JAR_NAME="$SERVER_NAME-$MC_LOADER.jar"
+    JAR_NAME="$SERVER_NAME.jar"
     SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" 10 60 3>&1 1>&2 2>&3)
     curl -sLo "$JAR_NAME" "$SERVER_URL"
     ;;
@@ -45,7 +45,7 @@ case $MC_MENU_LOADER in
 
     INSTALLER_VERSOIN=$(whiptail --title "$TITLE" --inputbox "Enter INSTALLER version(1.1.0)" 10 60 3>&1 1>&2 2>&3)
     LOADER_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter LOADER version(0.18.1)" 10 60 3>&1 1>&2 2>&3)
-    JAR_NAME="$SERVER_NAME-fabric-$LOADER_VERSION-MC-$MC_VERSION.jar"
+    JAR_NAME="$SERVER_NAME.jar"
     curl -sLo "$JAR_NAME" https://meta.fabricmc.net/v2/versions/loader/$MC_VERSION/$LOADER_VERSION/$INSTALLER_VERSOIN/server/jar
 
     ;;
