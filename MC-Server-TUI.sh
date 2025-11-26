@@ -24,7 +24,7 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
 
 ## Colors
 ## Uses NEWT colors file to run with diferent colors
-#export NEWT_COLORS_FILE="$SCRIPT_DIR/0.Tools/5.Config-Files/colors.conf"
+export NEWT_COLORS_FILE="$SCRIPT_DIR/colors/colors.conf"
 
 ## Title
 TITLE="MC-SERVER-TUI" # This will be the main title
