@@ -7,7 +7,7 @@ mkdir -p "$MC_ROOT"
 
 #==================================== 1. Get Info ====================================
 SERVER_NAME=$(whiptail --title "$TITLE" --inputbox "Enter a name for your server:" 10 60 3>&1 1>&2 2>&3)
-[ -z "$SERVER_NAME" ] && exit 1
+[ -z "$SERVER_NAME" ] && exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
 MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.10):" 10 60 3>&1 1>&2 2>&3)
