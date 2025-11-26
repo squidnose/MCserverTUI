@@ -1,20 +1,13 @@
-# WORK IN PROGRESS!!!!!!!!!!!!!!!!!!!!!!
+# WORK IN PROGRESS!
+# DO NOT USE IN PRODUCTION!!
+# DEVELOPMENT USE ONLY!!!
 # MC Server TUI:
-## A TUI for Minecraft servers on linux. The default will be for debian but will have the option to easily modify for a different distro. 
+## A simple TUI for Minecraft servers on linux.
 ### File-Structure:
 - ~/mcservers/<server_name> = MC server locations
-  - <server_name>
-    - run.sh = Run command with the Ram ammout with the nogui option
-  - MCserverTUI.sh
-  - Modrinth-autodownloader.py https://github.com/aayushdutt/modrinth-collection-downloader
-  - Autostart-files
-    - server_name_autostart.sh contents:
- ```
-#!/bin/bash
-tmux new-session -d -s <server_name>
-tmux send-keys -t <server_name> "cd ~/mcservers/<server_name>" C-m
-tmux send-keys -t <server_name> "./run.sh" C-m
-``` 
+  - run.sh | Run shortcut with the Ram ammout with the nogui option
+  - autostart.sh | 
+  - server-version.conf | MC version, Loader and Modrith colectoin ID
 ### Scripts and their functions
 #### MCserverTUI.sh
 - uses My [[Linux-Script-Manager]](https://codeberg.org/squidnose-code/Linux-Script-Runner)
@@ -38,11 +31,12 @@ tmux send-keys -t <server_name> "./run.sh" C-m
 - Choose max and min memory for server
   - you need to use either 1G or 1024M format (Example for 1 GB)
 - Ask if you Agree with the eula
-- Automatic start on Reboot(Not done yet)
+- Automatic start on Reboot
+  - Puts autostart file into the MC servers direcotry 
 - Run Server in Tmux window
 
 
-#### 2.Manage-Servers
+#### 2.Manage-Servers.sh
 Whiptale menu:
 - Existing servers(List in ~/mcserver/)
   - When selected server:
@@ -50,11 +44,19 @@ Whiptale menu:
   - Update server and its mods
   
 #### Todo
-- Add a cronjob to:
-    - Autostart Server konsole and put the tmux command into ~/MCserverTUI/Autostart-files/<servername>_autostart.sh
+- manage MC server
+- config mcserver
+  - Port
+  - gamemode
+  - online mode
+  - motd
+  - max players
+  - dificulty
+  - view distance
+  - 
 - Manage Backups for all servvers located in ~/mcservers
   - One time manula backup
   - Setup Auto backup with crontab 
 - Manage Reverse proxys (Localtonet, Playig.gg, ngrok)
   - Make crontabs for them with Tmux 
-- Update-Systems
+- Auto Update-System
