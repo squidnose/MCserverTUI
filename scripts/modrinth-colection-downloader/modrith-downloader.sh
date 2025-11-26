@@ -14,7 +14,7 @@ done
 
 SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" 20 60 10 \
     "${MENU_ITEMS[@]}" \
-    3>&1 1>&2 2>&3) || exit 1
+    3>&1 1>&2 2>&3) || exit 0
 
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 CONF_FILE="$SERVER_DIR/server-version.conf"
@@ -32,15 +32,15 @@ fi
 #========================= 3. Ask for updated values (pre-filled) ==============================
 MC_VERSION=$(whiptail --title "Minecraft Version" --inputbox \
     "Enter version:" 10 60 "$version" \
-    3>&1 1>&2 2>&3) || exit 1
+    3>&1 1>&2 2>&3) || exit 0
 
 MC_LOADER=$(whiptail --title "Loader" --inputbox \
     "Enter loader (fabric/vanilla/etc):" 10 60 "$loader" \
-    3>&1 1>&2 2>&3) || exit 1
+    3>&1 1>&2 2>&3) || exit 0
 
 MC_COLLECTION=$(whiptail --title "Collection" --inputbox \
     "Modrinth collection ID (optional):" 10 60 "$collection" \
-    3>&1 1>&2 2>&3) || exit 1
+    3>&1 1>&2 2>&3) || exit 0
 
 #============================ 4. Save updated config ====================================
 
