@@ -71,22 +71,38 @@ else
 fi
 
 #==================================== 8. Cron Autostart ====================================
-if whiptail --title "Enable automatic startup?" --yesno "Adds cronjob for autostart." 10 60; then
-    AUTOSTART="$HOME/MCserverTUI/Autostart-files/${SERVER_NAME}_autostart.sh"
-    mkdir -p "$HOME/MCserverTUI/Autostart-files"
+if whiptail --title "Enable automatic startup?" --yesno "Add cronjob for autostart?" 10 60; then
+
+    AUTOSTART="$SERVER_DIR/autostart.sh"
+
+    # Create autostart script in the server folder
     cat > "$AUTOSTART" <<EOF
 #!/bin/bash
-tmux new-session -d -s "$SERVER_NAME"
-tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
-tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
+# Autostart script for server: $SERVER_NAME
+
+SESSION="$SERVER_NAME"
+
+# Start tmux only if not already running
+if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "\$SESSION"
+    tmux send-keys -t "\$SESSION" "cd '$SERVER_DIR'" C-m
+    tmux send-keys -t "\$SESSION" "./run.sh" C-m
+fi
 EOF
 
     chmod +x "$AUTOSTART"
 
-    (crontab -l 2>/dev/null; echo "@reboot $AUTOSTART") | crontab -
+    # Add cron entry only if not already present
+    CRONLINE="@reboot $AUTOSTART"
 
-    echo "Autostart enabled."
+    if (crontab -l 2>/dev/null | grep -F "$CRONLINE" >/dev/null); then
+        echo "Cron entry already exists. Skipping."
+    else
+        (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
+        echo "Autostart enabled and cronjob added."
+    fi
 fi
+
 
 #==================================== 9. Start Server ====================================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" 10 60; then
