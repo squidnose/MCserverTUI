@@ -1,123 +1,133 @@
 #!/bin/bash
-#  Minecraft Server Setup Wizard
+#
+# MC Server Setup Wizard
+#
 
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+MC_ROOT="$HOME/mcservers"
 
-#==================================== Functions ====================================
-#  Modrinth Collection Downloader Wrapper
-modrinth_collection_downloader() {
+mkdir -p "$MC_ROOT"
 
-    MODRINTH_MENU_CHOICE=$(whiptail --title "Modrinth Downloader" --menu "Choose Mod Collection" 15 60 4 \
-        "1" "Install a custom Modrinth collection" \
-        "2" "Install my default collection" \
-        "3" "Install Geyser/Floodgate pack" \
-        "4" "Cancel" \
-        3>&1 1>&2 2>&3)
-
-    case $MODRINTH_MENU_CHOICE in
-        1)
-            COLLECTION=$(whiptail --inputbox "Enter Modrinth Collection ID:" 10 60 3>&1 1>&2 2>&3)
-            python3 modrinth-autodownloader.py -v "$MC_VERSION" -l fabric -c "$COLLECTION"
-            ;;
-        2)
-            python3 modrinth-autodownloader.py -v "$MC_VERSION" -l fabric -c ziTsdV9j
-            ;;
-        3)
-            python3 modrinth-autodownloader.py -v "$MC_VERSION" -l paper -c geyser
-            ;;
-        *)
-            ;;
-    esac
+# ---------------------------------------
+# Whiptail Slider Function
+# ---------------------------------------
+slider() {
+    local prompt="$1"
+    local default="$2"
+    whiptail --title "$prompt" --gauge "Use arrow keys then ENTER" 10 60 0 < <(
+        for i in $(seq 0 5 100); do
+            echo $i
+            sleep 0.01
+        done
+    ) >/dev/null 2>&1
+    whiptail --title "$prompt" --inputbox "$prompt" 10 60 "$default" 3>&1 1>&2 2>&3
 }
 
-#  Crontab Setup
-crontab_setup() {
-    TYPE="$1"
-    SERVER_NAME="$2"
+# ---------------------------------------
+# 1. Get Basic Info
+# ---------------------------------------
+SERVER_NAME=$(whiptail --title "Server Name" --inputbox "Enter a name for your server:" 10 60 3>&1 1>&2 2>&3)
+[ -z "$SERVER_NAME" ] && exit 1
 
-    AUTOSTART_FILE=~/MCserverTUI/Autostart-files/${SERVER_NAME}_autostart.sh
-    mkdir -p ~/MCserverTUI/Autostart-files
+SERVER_DIR="$MC_ROOT/$SERVER_NAME"
+mkdir -p "$SERVER_DIR"
 
-    if [ "$TYPE" = "mcserver" ]; then
+MC_VERSION=$(whiptail --title "Version" --inputbox "Enter Minecraft version (e.g., 1.21.10):" 10 60 3>&1 1>&2 2>&3)
+MC_LOADER=$(whiptail --title "Loader" --inputbox "Enter loader (vanilla/fabric):" 10 60 3>&1 1>&2 2>&3)
 
-        cat <<EOF > "$AUTOSTART_FILE"
-#!/bin/bash
-tmux new-session -d -s $SERVER_NAME
-tmux send-keys -t $SERVER_NAME "cd ~/mcservers/$SERVER_NAME" C-m
-tmux send-keys -t $SERVER_NAME "./run.sh" C-m
+MOD_COLLECTION=$(whiptail --title "Modrinth Collection" --inputbox "Enter Modrinth collection ID (or leave blank):" 10 60 3>&1 1>&2 2>&3)
+
+# ---------------------------------------
+# Save Config
+# ---------------------------------------
+CONF_FILE="$SERVER_DIR/server-version.conf"
+
+cat > "$CONF_FILE" <<EOF
+version=$MC_VERSION
+loader=$MC_LOADER
+collection=$MOD_COLLECTION
 EOF
 
-        chmod +x "$AUTOSTART_FILE"
+echo "Saved config to $CONF_FILE"
 
-        # add cron entry
-        (crontab -l 2>/dev/null; echo "@reboot $AUTOSTART_FILE") | crontab -
+# ---------------------------------------
+# 2. Offer Modrinth Downloader
+# ---------------------------------------
+if whiptail --title "Modrinth Downloader" --yesno "Install Modrinth Collection Downloader?" 10 60; then
+    cp "$SCRIPT_DIR/modrinth-autodownloader.py" "$SERVER_DIR/modrinth-autodownloader.py"
+    echo "Downloaded Modrinth tool."
+fi
 
-        echo "Autostart configured for $SERVER_NAME."
-    fi
-}
+# ---------------------------------------
+# 3. Install Loader (Fabric or Vanilla)
+# ---------------------------------------
+cd "$SERVER_DIR"
 
+if [ "$MC_LOADER" = "fabric" ]; then
+    JAR_NAME="fabric-$MC_VERSION.jar"
+    echo "Installing Fabric loader…"
 
-#==================================== main Script ====================================
-    # ───── Basic Info ─────
-    read -p "Server Name: " SERVER_NAME
-    read -p "Minecraft Version (enter manually, e.g. 1.21.4): " MC_VERSION
-    read -p "Minecraft Loader (vanilla/forge/paper): " MC_LOADER
-    read -p "Min RAM (Xms, e.g. 2G): " MC_XMS
-    read -p "Max RAM (Xmx, e.g. 4G): " MC_XMX
-    read -p "Agree to EULA? (yes/no): " EULA
+    curl -sLo fabric-installer.jar https://meta.fabricmc.net/v2/versions/installer/0.11.2/installer.jar
 
-    SERVER_DIR=~/mcservers/$SERVER_NAME
-    mkdir -p "$SERVER_DIR"
-    cd "$SERVER_DIR" || exit
+    java -jar fabric-installer.jar server -mc-version "$MC_VERSION" -downloadMinecraft
+    mv fabric-server-launch.jar "$JAR_NAME"
 
-    # ───── Download Server ─────
-    echo "Downloading server ($MC_LOADER $MC_VERSION)..."
+elif [ "$MC_LOADER" = "vanilla" ]; then
+    JAR_NAME="vanilla-$MC_VERSION.jar"
+    echo "Downloading Vanilla server jar…"
 
-    case "$MC_LOADER" in
-        vanilla)
-            wget -O server.jar "https://piston-meta.mojang.com/v1/packages/$(curl -s https://piston-meta.mojang.com/mc/game/version_manifest_v2.json | \
-                jq -r --arg v "$MC_VERSION" '.versions[] | select(.id==$v) | .url' | \
-                xargs curl -s | jq -r '.downloads.server.url')"
-            ;;
-        paper)
-            wget -O server.jar "https://api.papermc.io/v2/projects/paper/versions/$MC_VERSION/builds/$(curl -s https://api.papermc.io/v2/projects/paper/versions/$MC_VERSION | jq '.builds[-1]')/downloads/paper-$MC_VERSION-$(curl -s https://api.papermc.io/v2/projects/paper/versions/$MC_VERSION | jq '.builds[-1]').jar"
-            ;;
-        forge)
-            echo "Downloading Forge installer..."
-            wget -O forge-installer.jar "https://maven.minecraftforge.net/net/minecraftforge/forge/${MC_VERSION}/forge-${MC_VERSION}-installer.jar"
-            java -jar forge-installer.jar --installServer
-            rm forge-installer.jar
-            ;;
-        *)
-            echo "Invalid loader selected!"
-            return
-            ;;
-    esac
+    curl -sLo "$JAR_NAME" "https://piston-meta.mojang.com/v1/packages/$(curl -s https://piston-meta.mojang.com/mc/game/version_manifest.json | jq -r ".versions[] | select(.id==\"$MC_VERSION\") | .url" | xargs curl -s | jq -r '.downloads.server.jar.url')"
 
-    # ───── Write eula.txt ─────
-    if [ "$EULA" = "yes" ]; then
-        echo "eula=true" > eula.txt
-    else
-        echo "You must accept eula.txt manually before first run."
-        echo "eula=false" > eula.txt
-    fi
+else
+    echo "Unknown loader: $MC_LOADER"
+    exit 1
+fi
 
-    # ───── Create run.sh ─────
-    cat <<EOF > run.sh
+# ---------------------------------------
+# 4. Memory Settings
+# ---------------------------------------
+MC_XMS=$(slider "Minimum RAM (Xms)" "1G")
+MC_XMX=$(slider "Maximum RAM (Xmx)" "4G")
+
+# ---------------------------------------
+# 5. Create run.sh
+# ---------------------------------------
+cat > "$SERVER_DIR/run.sh" <<EOF
 #!/bin/bash
-java -Xms${MC_XMS} -Xmx${MC_XMX} -jar server.jar nogui
+java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
 EOF
-    chmod +x run.sh
 
-    echo "Server files created in $SERVER_DIR"
+chmod +x "$SERVER_DIR/run.sh"
 
-    # ───── Modrinth Downloader ─────
-    if whiptail --title "Modrinth Downloader" --yesno "Do you want to run the Modrinth collection downloader?" 10 60; then
-        modrinth_collection_downloader
-    fi
+# ---------------------------------------
+# 6. EULA
+# ---------------------------------------
+if whiptail --title "EULA" --yesno "Do you agree to the Minecraft EULA?" 10 60; then
+    echo "eula=true" > "$SERVER_DIR/eula.txt"
+else
+    echo "eula=false" > "$SERVER_DIR/eula.txt"
+fi
 
-    # ───── Autostart Cronjob ─────
-    if whiptail --title "Autostart" --yesno "Setup server autostart with cron?" 10 60; then
-        crontab_setup "mcserver" "$SERVER_NAME"
-    fi
+# ---------------------------------------
+# 7. Cron Autostart
+# ---------------------------------------
+if whiptail --title "Autostart" --yesno "Add cron autostart?" 10 60; then
+    AUTOSTART="$HOME/MCserverTUI/Autostart-files/${SERVER_NAME}_autostart.sh"
+    mkdir -p "$HOME/MCserverTUI/Autostart-files"
 
-    echo "Setup finished!"
+    cat > "$AUTOSTART" <<EOF
+#!/bin/bash
+tmux new-session -d -s "$SERVER_NAME"
+tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
+tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
+EOF
+
+    chmod +x "$AUTOSTART"
+
+    (crontab -l 2>/dev/null; echo "@reboot $AUTOSTART") | crontab -
+
+    echo "Autostart enabled."
+fi
+
+whiptail --title "Done!" --msgbox "Server setup complete! Folder: $SERVER_DIR" 10 60
+exit 0
