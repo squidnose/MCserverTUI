@@ -14,7 +14,7 @@ done
 
 SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" 20 60 10 \
     "${MENU_ITEMS[@]}" \
-    3>&1 1>&2 2>&3) || exit 1
+    3>&1 1>&2 2>&3) || return 0
 
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 CONF_FILE="$SERVER_DIR/server-version.conf"
@@ -58,21 +58,21 @@ check_base_dir_permissions() {
     if [ ! -d "$SCRIPT_DIR" ]; then
         echo "Error: The directory '$SCRIPT_DIR' does not exist." >&2
         echo "It should contain your script files." >&2
-        exit 1
+        return 0
     fi
 
     # Check read permission
     if [ ! -r "$SCRIPT_DIR" ]; then
         echo "Error: You do not have READ permission for '$SCRIPT_DIR'." >&2
         echo "Use: chmod u+r \"$SCRIPT_DIR\"" >&2
-        exit 1
+        return 0
     fi
 
     # Check execute permission
     if [ ! -x "$SCRIPT_DIR" ]; then
         echo "Error: You do not have EXECUTE permission for '$SCRIPT_DIR'." >&2
         echo "Use: chmod u+x \"$SCRIPT_DIR\"" >&2
-        exit 1
+        return 0
     fi
 }
 #Display menu logic
