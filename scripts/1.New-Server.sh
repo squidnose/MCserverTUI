@@ -113,4 +113,4 @@ tmux attach -t "$SERVER_NAME"
 fi
 
 
-return 0
+exit 0
