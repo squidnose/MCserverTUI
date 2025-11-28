@@ -200,7 +200,8 @@ while true; do
     case $MENU_CHOICES in
     1) tmux attach -t "$SERVER_NAME" ;;
     2) lsr ;;
-    3) crontab -e ;;
+    3) #Ask what editor to use
+    crontab -e ;;
     4) exit 0 ;;
     *) echo "Invalid option selected." ;;
     esac
