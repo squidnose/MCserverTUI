@@ -190,7 +190,8 @@ while true; do
     MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" 15 60 5 \
         "1" "Open Console (tmux attach)" \
         "2" "Edit Files (lsr)" \
-        "3" "Open Crontab (System wide)" \
+        "3" "Add autostart(Crontab)" \
+        "5" "Manage Backup Options" \
         "4" "Exit" \
         3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
@@ -200,8 +201,8 @@ while true; do
     case $MENU_CHOICES in
     1) tmux attach -t "$SERVER_NAME" ;;
     2) lsr ;;
-    3) #Ask what editor to use
-    crontab -e ;;
+    3) crontab -e ;;
+    5) crontab -e ;;
     4) exit 0 ;;
     *) echo "Invalid option selected." ;;
     esac
