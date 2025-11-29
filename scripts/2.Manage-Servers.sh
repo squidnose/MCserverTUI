@@ -184,67 +184,15 @@ display_dynamic_menu "Edit Files for $SERVER_NAME" "$SCRIPT_DIR"
 return 0
 }
 manage_autostart() {
-#this function will check for the existance of run.sh and autostart.sh
+#this function will regenerate autostart.sh
 #it will also check if there is a corntab entry
-#In both cases it will offer a reconfiguratoin
+#================ 1. parameters =========================
     local SERVER_NAME="$1"
     local SERVER_DIR="$2"
     local AUTOSTART="$SERVER_DIR/autostart.sh"
-    local RUNSCRIPT="$SERVER_DIR/run.sh"
-#==================================== 1. Check for run.sh and autostart.sh if they dont exist ====================================
-## Check if run.sh exists, if not create it
-if [ ! -f "$RUNSCRIPT" ]; then
-    if whiptail --title "Missing Files!" --yesno "run.sh is missing.\nDo you wish to create it?" 10 60 ; then
-    ### Ask for new memory amount
-    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" 10 60 3>&1 1>&2 2>&3)
-    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" 10 60 3>&1 1>&2 2>&3)
-    JAR_NAME="$SERVER_NAME.jar"
-    ### Create run.sh
-cat > "$RUNSCRIPT" <<EOF
-#!/bin/bash
-java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
-EOF
-chmod +x "$RUNSCRIPT"
-echo "created run.sh for $SERVER_NAME"
-    fi
-fi
-
-## Check if autostart.sh exists, if not create it
-if [ ! -f "$AUTOSTART" ]; then
-    if whiptail --title "Missing Files!" --yesno "autostart.sh is missing.\nCreate It?" 10 60 ; then
-    ### Create autostart.sh
-cat > "$AUTOSTART" <<EOF
-#!/bin/bash
-SESSION="$SERVER_NAME"
-
-if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "\$SESSION"
-    tmux send-keys -t "\$SESSION" "cd '$SERVER_DIR'" C-m
-    tmux send-keys -t "\$SESSION" "./run.sh" C-m
-fi
-EOF
-chmod +x "$AUTOSTART"
-echo "created autostart.sh for $SERVER_NAME"
-    fi
-fi
-#========================== 2. Ask to regenerate run.sh or autostart.sh even if it exists =============================
-## Ask to regenerate run.sh
-if whiptail --title "Regenerate File?" --yesno "run.sh already exists.\nReplace it with a fresh one?" 10 60 --defaultno; then
-    ### Ask for new memory amount
-    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" 10 60 3>&1 1>&2 2>&3)
-    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" 10 60 3>&1 1>&2 2>&3)
-    JAR_NAME="$SERVER_NAME.jar"
-    ### Create run.sh
-cat > "$RUNSCRIPT" <<EOF
-#!/bin/bash
-java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
-EOF
-chmod +x "$RUNSCRIPT"
-echo "created run.sh for $SERVER_NAME"
-fi
-
+#====================== 2. Regenerate autostart.sh ====================================
 ## Ask to regenerate autostart.sh
-if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" 10 60 --defaultno; then
+if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" 10 60 ; then
 cat > "$AUTOSTART" <<EOF
 #!/bin/bash
 SESSION="$SERVER_NAME"
@@ -263,9 +211,11 @@ fi
 ## Check if this exact path already exists
 local CRONLINE="@reboot $AUTOSTART"
     if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
-        whiptail --title "Cron Entry Exists" --msgbox "A cron @reboot entry already exists for this server." 10 60
+        if whiptail --title "Cron Entry Exists!" --yesno "Do you wish to remove it?" --defaultno 10 60; then
+        crontab -l 2>/dev/null | grep -v "$CRONLINE" | crontab -
+        return 0
+        fi
     else
-    # Ask to add cronjob
     if whiptail --title "Add Cron Autostart?" --yesno "Add @reboot entry to start this server on boot?" 10 60; then
         (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
             echo "Cron entry added."
@@ -275,6 +225,30 @@ local CRONLINE="@reboot $AUTOSTART"
     fi
     echo "Autostart management complete."
     return 0
+}
+manage_run_sh() {
+#This function will reconfigure run.sh
+#================ 1. parameters =========================
+    local SERVER_NAME="$1"
+    local SERVER_DIR="$2"
+    local RUNSCRIPT="$SERVER_DIR/run.sh"
+
+#======================= 2. Ask to regenerate run.sh or autostart.sh even if it exists =========================
+## Ask to regenerate run.sh
+if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh one?" 10 60 ; then
+    ### Ask for new memory amount
+    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" 10 60 3>&1 1>&2 2>&3)
+    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" 10 60 3>&1 1>&2 2>&3)
+    JAR_NAME="$SERVER_NAME.jar"
+    ### Create run.sh
+cat > "$RUNSCRIPT" <<EOF
+#!/bin/bash
+java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
+EOF
+chmod +x "$RUNSCRIPT"
+echo "created run.sh for $SERVER_NAME"
+fi
+
 }
 startserver_tmux() {
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" 10 60; then
@@ -287,7 +261,7 @@ fi
 modrinth_autodownloader() {
 #============================ 1. offer Modrinth Atodownloader ====================================
 if whiptail --title "Update Server" --yesno "Would you also like to run Modrinth Collection Downloader?" 10 60; then
-    bash "$SCRIPT_OG_DIR/modrinth-colection-downloader/modrith-downloader.sh" --name $SERVER_NAME
+    bash "$SCRIPT_OG_DIR/more-scripts/modrith-downloader.sh" --name $SERVER_NAME
     echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
 fi
 }
@@ -354,6 +328,7 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
     SERVER_DIR="$HOME/mcservers/$SERVER_NAME"
 #===================== 6. Regenerate autostart ==============================
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"
+    manage_run_sh "$SERVER_NAME" "$SERVER_DIR"
 } fi
 }
 
@@ -366,8 +341,8 @@ while true; do
         "3" "Stop Server" \
         "4" "Update Server (Modrinth Mods and $SERVER_NAME.jar file)" \
         "5" "Edit Files (LSR)" \
-        "6" "Configure or add Autostart Fetures and memory config" \
-        "7" "Manage/reconfigure Backup Options(TBD)" \
+        "6" "Add or Reconfigure Autostart Fetures" \
+        "7" "Add or Reconfigure Memory ammout" \
         "8" "Change server Name" \
         "9" "Exit" \
         3>&1 1>&2 2>&3)
@@ -385,7 +360,7 @@ while true; do
     ;;
     5) lsr ;;
     6) manage_autostart "$SERVER_NAME" "$SERVER_DIR" ;;
-    7) crontab -e ;;
+    7) manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;;
     8) change_server_name ;;
     9) exit 0 ;;
     *) echo "Invalid option selected. \nHow did you get here???" ;;
