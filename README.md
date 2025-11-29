@@ -11,6 +11,7 @@
 - Crontab support, Tested with cronie - For automation and server startup
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
+- curl - to download minecraft server jar files 
 - opejnjdk8, 17 and 21 - for Minecraft (My script doesnt use it)
 ## Scripts and their functions
 ### setup.sh
@@ -68,7 +69,7 @@ Whiptale menu:
   - sets a color theme from presets
   - Uses newt colors as standard for whiptale
   - saves choice in colors.conf
-  
+
 
 ## Todo
 - Manage Backups for all servvers located in ~/mcservers
