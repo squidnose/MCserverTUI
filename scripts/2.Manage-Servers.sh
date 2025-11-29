@@ -325,32 +325,36 @@ case $MC_MENU_LOADER in
 esac
 }
 change_server_name() {
-
+if whiptail --title "Change Name of $SERVER_NAME?" --yesno "Do you want to change the name of your Server?\n This will also force stop your server!\nSTOP YOU SERVER BEFORE CHANGEING THE NAME!!!" 10 60; then
+{
+#===================== 1. Force Stop the old server=====================
+tmux kill-session -t "$SERVER_NAME"
+#===================== 2.Ask for the new name =====================
 SERVER_NAME_NEW=$(whiptail --title "$TITLE" --inputbox \
     "Enter a NEW name for your server:" 10 60 \
     3>&1 1>&2 2>&3) || return 0
 OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
-#===================== 1. Remove cron entry for old name =====================
+#===================== 3. Remove cron entry for old name =====================
     if crontab -l >/dev/null 2>&1; then
         crontab -l | grep -v "@reboot $OLD_AUTOSTART" | crontab -
     fi
-#===================== 2. Remove run.sh and autostart.sh ============================
+#===================== 4. Remove run.sh and autostart.sh ============================
     cd $SERVER_DIR
     rm run.sh
     rm autostart.sh
-#===================== 3. Rename server jar ============================
+#===================== 5. Rename server jar ============================
     JAR_NAME_OLD="$SERVER_NAME.jar"
     JAR_NAME_NEW="$SERVER_NAME_NEW.jar"
     mv $JAR_NAME_OLD $JAR_NAME_NEW
-#===================== 4. Rename server directory ============================
+#===================== 6. Rename server directory ============================
     cd "$HOME/mcservers" || return 0
     mv "$SERVER_NAME" "$SERVER_NAME_NEW"
     # Update internal variable
     SERVER_NAME="$SERVER_NAME_NEW"
     SERVER_DIR="$HOME/mcservers/$SERVER_NAME"
-#===================== 5. Regenerate autostart ==============================
+#===================== 6. Regenerate autostart ==============================
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"
-
+} fi
 }
 
 
