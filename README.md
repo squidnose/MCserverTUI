@@ -1,19 +1,17 @@
 # WORK IN PROGRESS!
-# DO NOT USE IN PRODUCTION!!
-# DEVELOPMENT USE ONLY!!!
 # MC Server TUI:
 ## A simple TUI for Minecraft servers on linux.
-### File-Structure:
+## File-Structure:
 - ~/mcservers/<server_name> = MC server locations
   - run.sh | Run shortcut with the Ram ammout with the nogui option
   - autostart.sh | 
   - server-version.conf | MC version, Loader and Modrith colectoin ID
-### Scripts and their functions
-#### MCserverTUI.sh
+## Scripts and their functions
+### MCserverTUI.sh
 - uses My [[Linux-Script-Manager]](https://codeberg.org/squidnose-code/Linux-Script-Runner)
 - runs all script located in the scripts dirctory
 
-#### 1.New-Server.sh
+### 1.New-Server.sh
 - Asks for: 
   - Server name
   - Choose MC version number
@@ -22,7 +20,6 @@
 - saves info into config file located in the servers directory
 - Asks if you want to download mods from modrinth via colection ID
   - runs modrith-downloader.sh
-  - modrith-downloader.sh is a TUI front end for https://github.com/aayushdutt/modrinth-collection-downloader
 - Asks how to install a server jar
   - manually via URL
   - fabric, asks for:
@@ -36,16 +33,36 @@
 - Run Server in Tmux window
 
 
-#### 2.Manage-Servers.sh
+### 2.Manage-Servers.sh
 Whiptale menu:
 - Existing servers(List in ~/mcserver/)
-  - When selected server:
+- When selected server:
   - Open server console
-  - Update server and its mods
+  - Start server 
+  - Stop server
+  - Update Server (Modrinth Mods and server jar file)
+  - Edit server files 
+  - Add or Configure Autostart Features 
+  - Add or Configure memory config
+  - Change server Name 
+### 3.Crontab-Management.sh
+- asks for you to select a text editor
+- opens user crontab using crontab -e
+### More scripts
+- modrinth-autodownloader.py 
+  - Modrinth colectoin downloader in python. 
+  - This is not my code, i used: https://github.com/aayushdutt/modrinth-collection-downloader
+- modrith-downloader.sh
+  - modrith-downloader.sh is a TUI front end for https://github.com/aayushdutt/modrinth-collection-downloader
+### Colors
+- set-colors.sh
+  - sets a color theme from presets
+  - Uses newt colors as standard for whiptale
+  - saves choice in colors.conf
   
-#### Todo
-- manage MC server
-- config mcserver
+
+### Todo
+- config mcserver (Should I????)
   - Port
   - gamemode
   - online mode
@@ -53,7 +70,6 @@ Whiptale menu:
   - max players
   - dificulty
   - view distance
-  - 
 - Manage Backups for all servvers located in ~/mcservers
   - One time manula backup
   - Setup Auto backup with crontab 
