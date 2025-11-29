@@ -5,7 +5,7 @@
 - ~/mcservers/<server_name> = MC server locations
   - run.sh | Run shortcut with the Ram ammout with the nogui option
   - autostart.sh | Autostart script with tmux commands
-  - server-version.conf | MC version, Loader and Modrith colectoin ID
+  - server-version.conf | MC version, Loader and Modrith colection ID
 ## Dependecnies
 - [whiptale (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
 - Crontab support, Tested with cronie - For automation and server startup
@@ -54,7 +54,10 @@ Whiptale menu:
   - Edit server files using a modified LSR 
     - Opens Folders
     - Edits files
-    - Todo: Replace .jar file from URL
+    - Modify .jar files:
+      - replace .jar file from URL
+      - rename .jar files
+      - remove .jar files
   - Add or Configure Autostart Features 
   - Add or Configure memory config
   - Change server Name 
@@ -62,12 +65,12 @@ Whiptale menu:
 - asks for you to select a text editor
 - opens user crontab using crontab -e
 ### 4.Tunneling-Services
-- LocalToNet - Fast but paid 
-- playit.gg - Free but slow, offers premium options
-- telebit.io - Free, decetly fast but only Java servers
+- LocalToNet - Fast but paid (Supports x64, ARM and ARM64 all in Either Glibc or Musl)
+- playit.gg - Free but slow, offers premium options (Supports x64, i686, ARMv7 and ARM64 Glibc only, avalible as MC plugin)
+- telebit.io - Free, decetly fast but only Java servers (Likely Glibc only?)
 ### More scripts
 - modrinth-autodownloader.py 
-  - Modrinth colectoin downloader in python. 
+  - Modrinth colection downloader in python. 
   - This is not my code, i used: https://github.com/aayushdutt/modrinth-collection-downloader
 - modrith-downloader.sh
   - modrith-downloader.sh is a TUI front for modrinth-autodownloader.py 
@@ -76,7 +79,6 @@ Whiptale menu:
   - sets a color theme from presets
   - Uses newt colors as standard for whiptale
   - saves choice in colors.conf
-
 ## Todo
 - Manage Backups for all servvers located in ~/mcservers
   - One time manula backup
