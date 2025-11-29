@@ -58,7 +58,11 @@ Whiptale menu:
 ### 3.Crontab-Management.sh
 - asks for you to select a text editor
 - opens user crontab using crontab -e
-## More scripts
+### 4.Tunneling-Services
+- LocalToNet - Fast but paid 
+- playit.gg - Free but slow, offers premium options
+- telebit.io - Free, decetly fast but only Java servers
+### More scripts
 - modrinth-autodownloader.py 
   - Modrinth colectoin downloader in python. 
   - This is not my code, i used: https://github.com/aayushdutt/modrinth-collection-downloader
@@ -69,7 +73,6 @@ Whiptale menu:
   - sets a color theme from presets
   - Uses newt colors as standard for whiptale
   - saves choice in colors.conf
-
 
 ## Todo
 - Manage Backups for all servvers located in ~/mcservers
