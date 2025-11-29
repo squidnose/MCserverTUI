@@ -74,6 +74,60 @@ check_base_dir_permissions() {
         return 0
     fi
 }
+modify_jar() {
+    ### The full path to the jar file to change (passed as argument $1).
+    local script_path="$1"
+    ### Extract the script's file name from the full path.
+    local script_name="$(basename "$script_path")"
+    ### Check if the jar file actually exists
+    if [ ! -f "$script_path" ]; then
+        whiptail --msgbox "Error: jar file '$script_name' not found at '$script_path'. How did you do that... LOL" "$HEIGHT" "$WIDTH"
+        return 1
+    fi
+
+### Jarfile Modification
+    echo "=========================================="
+JARFILE_CHOICE=$(whiptail --title "$script_name" --menu "What do you want to do:" "$HEIGHT" "$WIDTH" 5 \
+"1" "Replace from URL" \
+"2" "Rename the .jar file" \
+"3" "Remove the .jar file!" \
+3>&1 1>&2 2>&3)
+case $JARFILE_CHOICE in
+1)
+    local URL
+    URL=$(whiptail --title "Replace the .jar file" --inputbox "Enter the direct download URL for the new .jar file:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    if [[ -z "$URL" ]]; then
+        whiptail --msgbox "No URL provided. Aborted." "$HEIGHT" "$WIDTH"
+        return 0
+    fi
+    if curl -fLo "$script_path" "$URL"; then whiptail --msgbox "JAR successfully replaced!" "$HEIGHT" "$WIDTH"
+        else whiptail --msgbox "Download failed! Old file NOT removed." "$HEIGHT" "$WIDTH"
+    fi
+;;
+2)
+    local NEW_NAME
+    NEW_NAME=$(whiptail --title "Rename the .jar file" --inputbox "Enter a new name for the .jar file:\n dont forget to add .jar file name!!!" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    if [[ -z "$NEW_NAME" ]]; then
+        whiptail --msgbox "No name provided. Aborted." "$HEIGHT" "$WIDTH"
+        return 0
+    fi
+    #I should probably add a waring about not adding the .jar suffix...
+    local EXTRACTED_LOCATOIN="$(dirname "$script_path")"
+    local NEW_NAME_SPACE="$EXTRACTED_LOCATOIN/$NEW_NAME"
+    echo $NEW_NAME_SPACE
+    echo $script_path
+    mv $script_path $NEW_NAME_SPACE
+;;
+3)
+if whiptail --title "REMOVE $script_name?" --yesno "Would you like to remove $script_name?" 10 60; then
+rm $script_path
+fi
+;;
+*) return 0 ;;
+esac
+    echo "=========================================="
+    return 0
+}
 #Display menu logic
 #What does it do:
     #scan directories
@@ -106,7 +160,7 @@ display_dynamic_menu() {
         ### Finds all files that are either .sh or not .sh.
         ### This output is then sorted into .sh and non .sh files/folders.
         local items
-        items=$(find "$current_path" -maxdepth 1 -mindepth 1 \( -type d -o -type f -name "*.sh" -o -type f ! -name "*.sh" \) | sort)
+        items=$(find "$current_path" -maxdepth 1 -mindepth 1 \( -type d -o -type f -name "*.jar" -o -type f ! -name "*.jar" \) | sort)
 
     ### 5. Process each item found and add it to our menu options array.
         while read -r item; do # Reads one line at a time from the input
@@ -117,15 +171,18 @@ display_dynamic_menu() {
             if [ -d "$item" ]; then
                 menu_options+=("$item_name" "(Folder) Enter this folder")
 
-        ### If the item is a file edit with nano
+        ### If the item is a script with a '.sh' extension, add it to the menu with a script label.
+            elif [ -f "$item" ] && [[ "$item_name" == *.jar ]]; then
+                menu_options+=("$item_name" "(Script) Run this script")
+
+        ### If the item is a file but not a '.jar' script, we'll assume it's a text file to be read.
            elif [ -f "$item" ]; then
-                menu_options+=("$item_name" "(File) Edit this file")
+                menu_options+=("$item_name" "(File) Read this file")
             fi
         done <<< "$items" # The loop runs once for each path found by find.
 
         # Add an "Exit" option to the menu. This option is be available at all levels.
         menu_options+=("Exit" "Exit the script")
-
 
     ### 6. Display the Menu
         # Use whiptail to display the menu to the user.
@@ -160,10 +217,12 @@ display_dynamic_menu() {
             if [ -d "$chosen_path" ]; then
                 current_path="$chosen_path"
                 title="Inside: $choice" # Update the title to reflect the new location.
-            ### For Files to read using less
+            ### For .jar files, the modify_jar funciton is called with the path parsed
+            elif [ -f "$chosen_path" ] && [[ "$chosen_path" == *.jar ]]; then
+                modify_jar "$chosen_path"
+            ### For non .jar Files, edit with nano
             elif [ -f "$chosen_path" ]; then
                 nano "$chosen_path"
-                # The script will continue after 'less' is closed by the user (by pressing 'q').
             ### Fallback for when a selected file or folder is no longer available.
             else
                 whiptail --msgbox "Error: '$choice' could not be found or is not a valid script." "$HEIGHT" "$WIDTH"
