@@ -24,8 +24,8 @@ echo "Saved config to $CONF_FILE"
 
 #==================================== 3.Offer Modrinth Downloader ====================================
 if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" 10 60; then
-    "$SCRIPT_DIR/modrinth-colection-downloader/modrith-downloader.sh"
-    echo "Ran Modrinth Collection Downloader."
+    "$SCRIPT_DIR/modrinth-colection-downloader/modrith-downloader.sh --name $SERVER_NAME"
+    echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
 fi
 
 #==================================== 4.Install a loader ====================================
