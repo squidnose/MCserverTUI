@@ -357,7 +357,6 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
 } fi
 }
 
-
 #==================================== 5. Main Menu ====================================
 while true; do
     # 1. Read the user's choice into the variable MENU_CHOICES
