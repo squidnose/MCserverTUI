@@ -207,7 +207,6 @@ echo "autostart.sh regenerated for $SERVER_NAME"
 fi
 
 #==================================== 3. Check on crontab  ====================================
-## Check if this exact path already exists
 local CRONLINE="@reboot $AUTOSTART"
     if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
         if whiptail --title "Cron Entry Exists!" --yesno "Do you wish to remove it?" --defaultno 10 60; then
