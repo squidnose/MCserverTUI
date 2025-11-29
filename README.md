@@ -51,7 +51,10 @@ Whiptale menu:
   - Start server 
   - Stop server
   - Update Server (Modrinth Mods and server jar file)
-  - Edit server files 
+  - Edit server files using a modified LSR 
+    - Opens Folders
+    - Edits files
+    - Todo: Replace .jar file from URL
   - Add or Configure Autostart Features 
   - Add or Configure memory config
   - Change server Name 
