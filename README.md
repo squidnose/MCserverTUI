@@ -4,13 +4,22 @@
 ## File-Structure:
 - ~/mcservers/<server_name> = MC server locations
   - run.sh | Run shortcut with the Ram ammout with the nogui option
-  - autostart.sh | 
+  - autostart.sh | Autostart script with tmux commands
   - server-version.conf | MC version, Loader and Modrith colectoin ID
+## Dependecnies
+- [whiptale (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
+- Crontab support, Tested with cronie - For automation and server startup
+- tmux - for MC server console
+- python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
+- opejnjdk8, 17 and 21 - for Minecraft (My script doesnt use it)
 ## Scripts and their functions
+### setup.sh
+- Will setup Dependecnies and services for some linux distros.
+- Not all are supported
 ### MCserverTUI.sh
 - uses My [[Linux-Script-Manager]](https://codeberg.org/squidnose-code/Linux-Script-Runner)
 - runs all script located in the scripts dirctory
-
+## scripts
 ### 1.New-Server.sh
 - Asks for: 
   - Server name
@@ -48,12 +57,12 @@ Whiptale menu:
 ### 3.Crontab-Management.sh
 - asks for you to select a text editor
 - opens user crontab using crontab -e
-### More scripts
+## More scripts
 - modrinth-autodownloader.py 
   - Modrinth colectoin downloader in python. 
   - This is not my code, i used: https://github.com/aayushdutt/modrinth-collection-downloader
 - modrith-downloader.sh
-  - modrith-downloader.sh is a TUI front end for https://github.com/aayushdutt/modrinth-collection-downloader
+  - modrith-downloader.sh is a TUI front for modrinth-autodownloader.py 
 ### Colors
 - set-colors.sh
   - sets a color theme from presets
@@ -61,7 +70,13 @@ Whiptale menu:
   - saves choice in colors.conf
   
 
-### Todo
+## Todo
+- Manage Backups for all servvers located in ~/mcservers
+  - One time manula backup
+  - Setup Auto backup with crontab 
+- Manage Reverse proxys (Localtonet, Playig.gg, ngrok)
+  - Make crontabs for them with Tmux 
+- Auto Update-System
 - config mcserver (Should I????)
   - Port
   - gamemode
@@ -70,9 +85,3 @@ Whiptale menu:
   - max players
   - dificulty
   - view distance
-- Manage Backups for all servvers located in ~/mcservers
-  - One time manula backup
-  - Setup Auto backup with crontab 
-- Manage Reverse proxys (Localtonet, Playig.gg, ngrok)
-  - Make crontabs for them with Tmux 
-- Auto Update-System
