@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-#Linux Script Runner Terminal User Interface
+#Linux Script Runner Terminal User Interface with removed confimation logic
 #==================================== Dependecies ====================================
 #Add for you distro, im using voidlinux
 
@@ -79,12 +79,6 @@ run_script() {
             whiptail --msgbox "Error: Failed to make '$script_name' executable. Cannot run. Check your permissions." "$HEIGHT" "$WIDTH"
             return 1
         fi
-    fi
-
-### Confirmation Logic
-    if ! (whiptail --title "Confirm Run" --yesno "Are you sure you want to run '$script_name'?" 10 60); then
-        echo "User cancelled running '$script_name'." >&2
-        return 0 # User chose not to run, return to menu
     fi
 
 ### Script Execution
