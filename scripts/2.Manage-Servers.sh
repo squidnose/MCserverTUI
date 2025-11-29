@@ -23,8 +23,7 @@ done
 
 SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "${MENU_ITEMS[@]}" \
-    3>&1 1>&2 2>&3) || return 0
-
+    3>&1 1>&2 2>&3) || exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 CONF_FILE="$SERVER_DIR/server-version.conf"
 #==================================== 3. Load  server config file ====================================
