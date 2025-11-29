@@ -1,9 +1,18 @@
 #!/bin/bash
 #This script uses a modified version of my LSR
 #==================================== MC Server Managment ====================================
+#==================================== 1. Parameters ====================================
 TITLE="MC server Managment"
 MC_ROOT="$HOME/mcservers"
-#==================================== 1. Select a server ====================================
+SCRIPT_OG_DIR="$(dirname "$(realpath "$0")")"
+## Detect terminal size
+TERM_HEIGHT=$(tput lines)
+TERM_WIDTH=$(tput cols)
+## Set TUI size based on terminal size
+HEIGHT=$(( TERM_HEIGHT * 3 / 4 ))
+WIDTH=$(( TERM_WIDTH * 4 / 5 ))
+MENU_HEIGHT=$(( HEIGHT - 10 ))
+#==================================== 2. Select a server ====================================
 # Build menu items from directories
 MENU_ITEMS=()
 for d in "$MC_ROOT"/*; do
@@ -12,13 +21,13 @@ for d in "$MC_ROOT"/*; do
     MENU_ITEMS+=("$NAME" "Minecraft server")
 done
 
-SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" 20 60 10 \
+SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "${MENU_ITEMS[@]}" \
     3>&1 1>&2 2>&3) || return 0
 
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 CONF_FILE="$SERVER_DIR/server-version.conf"
-#==================================== 2. Load config file ====================================
+#==================================== 3. Load  server config file ====================================
 
 if [ -f "$CONF_FILE" ]; then
     source "$CONF_FILE"
@@ -28,18 +37,9 @@ else
     collection=""
 fi
 
-#==================================== 3. Menu - Modified LSR ====================================
-#Linux Script Runner Terminal User Interface - Modified
-#==================================== Parameters ====================================
+#==================================== 4. Functions ====================================
 lsr() {
-## Detect terminal size
-TERM_HEIGHT=$(tput lines)
-TERM_WIDTH=$(tput cols)
-## Set TUI size based on terminal size
-HEIGHT=$(( TERM_HEIGHT * 3 / 4 ))
-WIDTH=$(( TERM_WIDTH * 4 / 5 ))
-MENU_HEIGHT=$(( HEIGHT - 10 ))
-
+#Linux Script Runner Terminal User Interface - Modified
 ## SCRIPT_DIR should point to the base directory containing your numbered script folders.
 SCRIPT_DIR="$SERVER_DIR"
 
@@ -180,19 +180,193 @@ display_dynamic_menu() {
 check_base_dir_permissions
 
 # 2. Start the dynamic menu navigation from the root 'scripts' directory
-display_dynamic_menu "Main Menu" "$SCRIPT_DIR"
+display_dynamic_menu "Edit Files for $SERVER_NAME" "$SCRIPT_DIR"
 return 0
 }
+manage_autostart() {
+#this function will check for the existance of run.sh and autostart.sh
+#it will also check if there is a corntab entry
+#In both cases it will offer a reconfiguratoin
+    local SERVER_NAME="$1"
+    local SERVER_DIR="$2"
+    local AUTOSTART="$SERVER_DIR/autostart.sh"
+    local RUNSCRIPT="$SERVER_DIR/run.sh"
+#==================================== 1. Check for run.sh and autostart.sh if they dont exist ====================================
+## Check if run.sh exists, if not create it
+if [ ! -f "$RUNSCRIPT" ]; then
+    if whiptail --title "Missing Files!" --yesno "run.sh is missing.\nDo you wish to create it?" 10 60 ; then
+    ### Ask for new memory amount
+    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" 10 60 3>&1 1>&2 2>&3)
+    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" 10 60 3>&1 1>&2 2>&3)
+    JAR_NAME="$SERVER_NAME.jar"
+    ### Create run.sh
+cat > "$RUNSCRIPT" <<EOF
+#!/bin/bash
+java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
+EOF
+chmod +x "$RUNSCRIPT"
+echo "created run.sh for $SERVER_NAME"
+    fi
+fi
 
-#==================================== 4. Main Menu ====================================
+## Check if autostart.sh exists, if not create it
+if [ ! -f "$AUTOSTART" ]; then
+    if whiptail --title "Missing Files!" --yesno "autostart.sh is missing.\nCreate It?" 10 60 ; then
+    ### Create autostart.sh
+cat > "$AUTOSTART" <<EOF
+#!/bin/bash
+SESSION="$SERVER_NAME"
+
+if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "\$SESSION"
+    tmux send-keys -t "\$SESSION" "cd '$SERVER_DIR'" C-m
+    tmux send-keys -t "\$SESSION" "./run.sh" C-m
+fi
+EOF
+chmod +x "$AUTOSTART"
+echo "created autostart.sh for $SERVER_NAME"
+    fi
+fi
+#========================== 2. Ask to regenerate run.sh or autostart.sh even if it exists =============================
+## Ask to regenerate run.sh
+if whiptail --title "Regenerate File?" --yesno "run.sh already exists.\nReplace it with a fresh one?" 10 60 --defaultno; then
+    ### Ask for new memory amount
+    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" 10 60 3>&1 1>&2 2>&3)
+    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" 10 60 3>&1 1>&2 2>&3)
+    JAR_NAME="$SERVER_NAME.jar"
+    ### Create run.sh
+cat > "$RUNSCRIPT" <<EOF
+#!/bin/bash
+java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
+EOF
+chmod +x "$RUNSCRIPT"
+echo "created run.sh for $SERVER_NAME"
+fi
+
+## Ask to regenerate autostart.sh
+if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" 10 60 --defaultno; then
+cat > "$AUTOSTART" <<EOF
+#!/bin/bash
+SESSION="$SERVER_NAME"
+
+if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "\$SESSION"
+    tmux send-keys -t "\$SESSION" "cd '$SERVER_DIR'" C-m
+    tmux send-keys -t "\$SESSION" "./run.sh" C-m
+fi
+EOF
+chmod +x "$AUTOSTART"
+echo "autostart.sh regenerated for $SERVER_NAME"
+fi
+
+#==================================== 3. Check on crontab  ====================================
+## Check if this exact path already exists
+local CRONLINE="@reboot $AUTOSTART"
+    if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
+        whiptail --title "Cron Entry Exists" --msgbox "A cron @reboot entry already exists for this server." 10 60
+    else
+    # Ask to add cronjob
+    if whiptail --title "Add Cron Autostart?" --yesno "Add @reboot entry to start this server on boot?" 10 60; then
+        (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
+            echo "Cron entry added."
+        else
+            echo "Skipped adding cron entry."
+        fi
+    fi
+    echo "Autostart management complete."
+    return 0
+}
+startserver_tmux() {
+if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" 10 60; then
+tmux new-session -d -s "$SERVER_NAME"
+tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
+tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
+tmux attach -t "$SERVER_NAME"
+fi
+}
+modrinth_autodownloader() {
+#============================ 1. offer Modrinth Atodownloader ====================================
+if whiptail --title "Update Server" --yesno "Would you also like to run Modrinth Collection Downloader?" 10 60; then
+    bash "$SCRIPT_OG_DIR/modrinth-colection-downloader/modrith-downloader.sh" --name $SERVER_NAME
+    echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
+fi
+}
+update_server_jar() {
+#==================================== 1. Load config file ====================================
+if [ -f "$CONF_FILE" ]; then
+    source "$CONF_FILE"
+else
+    version=""
+    loader=""
+    collection=""
+fi
+#============================ 2. Update server.jar ====================================
+cd "$SERVER_DIR"
+MC_MENU_LOADER=$(whiptail --title "Update server" --menu "How would you like to update server jar file" 15 60 6 \
+    "1" "manual URL" \
+    "2" "Fabric (Manual)" \
+    "3" "Dont update " \
+    3>&1 1>&2 2>&3)
+case $MC_MENU_LOADER in
+    1)
+    JAR_NAME="$SERVER_NAME.jar"
+    rm $JAR_NAME ## remove existing jar file
+    SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" 10 60 3>&1 1>&2 2>&3)
+    curl -sLo "$JAR_NAME" "$SERVER_URL"
+    ;;
+    2)
+    INSTALLER_VERSOIN=$(whiptail --title "$TITLE" --inputbox "Enter INSTALLER version(1.1.0)" 10 60 3>&1 1>&2 2>&3)
+    LOADER_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter LOADER version(0.18.1)" 10 60 3>&1 1>&2 2>&3)
+    JAR_NAME="$SERVER_NAME.jar"
+    rm $JAR_NAME ## remove existing jar file
+    curl -sLo "$JAR_NAME" https://meta.fabricmc.net/v2/versions/loader/$MC_VERSION/$LOADER_VERSION/$INSTALLER_VERSOIN/server/jar
+
+    ;;
+esac
+}
+change_server_name() {
+
+SERVER_NAME_NEW=$(whiptail --title "$TITLE" --inputbox \
+    "Enter a NEW name for your server:" 10 60 \
+    3>&1 1>&2 2>&3) || return 0
+OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
+#===================== 1. Remove cron entry for old name =====================
+    if crontab -l >/dev/null 2>&1; then
+        crontab -l | grep -v "@reboot $OLD_AUTOSTART" | crontab -
+    fi
+#===================== 2. Remove run.sh and autostart.sh ============================
+    cd $SERVER_DIR
+    rm run.sh
+    rm autostart.sh
+#===================== 3. Rename server jar ============================
+    JAR_NAME_OLD="$SERVER_NAME.jar"
+    JAR_NAME_NEW="$SERVER_NAME_NEW.jar"
+    mv $JAR_NAME_OLD $JAR_NAME_NEW
+#===================== 4. Rename server directory ============================
+    cd "$HOME/mcservers" || return 0
+    mv "$SERVER_NAME" "$SERVER_NAME_NEW"
+    # Update internal variable
+    SERVER_NAME="$SERVER_NAME_NEW"
+    SERVER_DIR="$HOME/mcservers/$SERVER_NAME"
+#===================== 5. Regenerate autostart ==============================
+    manage_autostart "$SERVER_NAME" "$SERVER_DIR"
+
+}
+
+
+#==================================== 5. Main Menu ====================================
 while true; do
     # 1. Read the user's choice into the variable MENU_CHOICES
-    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" 15 60 5 \
+    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "1" "Open Console (tmux attach)" \
-        "2" "Edit Files (lsr)" \
-        "3" "Add autostart(Crontab)" \
-        "5" "Manage Backup Options" \
-        "4" "Exit" \
+        "2" "Start Server" \
+        "3" "Stop Server" \
+        "4" "Update Server (Modrinth Mods and $SERVER_NAME.jar file)" \
+        "5" "Edit Files (LSR)" \
+        "6" "Configure or add Autostart Fetures and memory config" \
+        "7" "Manage/reconfigure Backup Options(TBD)" \
+        "8" "Change server Name" \
+        "9" "Exit" \
         3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
         echo "Menu canceled. Exiting."
@@ -200,10 +374,18 @@ while true; do
     fi
     case $MENU_CHOICES in
     1) tmux attach -t "$SERVER_NAME" ;;
-    2) lsr ;;
-    3) crontab -e ;;
-    5) crontab -e ;;
-    4) exit 0 ;;
-    *) echo "Invalid option selected." ;;
+    2) startserver_tmux ;;
+    3) tmux send-keys -t "$SERVER_NAME" "stop" C-m ;;
+    4)
+    modrinth_autodownloader
+    update_server_jar
+    ;;
+    5) lsr ;;
+    6) manage_autostart "$SERVER_NAME" "$SERVER_DIR" ;;
+    7) crontab -e ;;
+    8) change_server_name ;;
+    9) exit 0 ;;
+    *) echo "Invalid option selected. \nHow did you get here???" ;;
     esac
 done
+exit 0

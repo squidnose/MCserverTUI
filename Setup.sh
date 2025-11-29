@@ -6,3 +6,5 @@ cd MCserverTUI
 ./!MC-Server-TUI.sh
 echo "if it didnt load, make sure you have theese dependecies: git and newt"
 
+#add a menu for multiple distros
+#add a optoin to show how to use tmux
