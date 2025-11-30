@@ -87,7 +87,7 @@ run_script() {
     "$script_path"
     echo "Ran $script_path"
     echo "=========================================="
-    read -p "Done, press enter to continue"
+    #read -p "Done, press enter to continue"
     return 0
 }
 
