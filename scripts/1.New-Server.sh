@@ -50,12 +50,24 @@ case $MC_MENU_LOADER in
 
     ;;
 esac
-
-#==================================== 5. Memory Config ====================================
+#==================================== 5 Initialize Server Jarfile ====================================
+#This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
+if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Reccomended!" 10 60; then
+    cd "$SERVER_DIR"
+    java -jar $JAR_NAME
+fi
+#==================================== 6. Server.properties editor====================================
+if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" 10 60; then
+    cd "$SCRIPT_DIR/more-scripts/"
+    bash server_properties_editor.sh --name $SERVER_NAME
+    echo "Ran server.properties editor with $SERVER_NAME flag."
+fi
+#==================================== 7. Memory Config ====================================
 MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" 10 60 3>&1 1>&2 2>&3)
 MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" 10 60 3>&1 1>&2 2>&3)
 
-#==================================== 6. Create run.sh ====================================
+
+#==================================== 8. Create run.sh ====================================
 cat > "$SERVER_DIR/run.sh" <<EOF
 #!/bin/bash
 java -Xms$MC_XMS -Xmx$MC_XMX -jar $JAR_NAME nogui
@@ -63,14 +75,14 @@ EOF
 
 chmod +x "$SERVER_DIR/run.sh"
 
-#==================================== 7. EULA ====================================
+#==================================== 9. EULA ====================================
 if whiptail --title "EULA" --yesno "Do you agree to the Minecraft EULA?" 10 60; then
     echo "eula=true" > "$SERVER_DIR/eula.txt"
 else
     echo "eula=false" > "$SERVER_DIR/eula.txt"
 fi
 
-#==================================== 8. Cron Autostart ====================================
+#==================================== 10. Cron Autostart ====================================
 if whiptail --title "Enable automatic startup?" --yesno "Add cronjob for autostart?" 10 60; then
 
     AUTOSTART="$SERVER_DIR/autostart.sh"
@@ -104,7 +116,7 @@ EOF
 fi
 
 
-#==================================== 9. Start Server ====================================
+#==================================== 11. Start Server ====================================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" 10 60; then
 tmux new-session -d -s "$SERVER_NAME"
 tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
