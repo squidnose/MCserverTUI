@@ -9,8 +9,8 @@ SCRIPT_OG_DIR="$(dirname "$(realpath "$0")")"
 TERM_HEIGHT=$(tput lines)
 TERM_WIDTH=$(tput cols)
 ## Set TUI size based on terminal size
-HEIGHT=$(( TERM_HEIGHT * 3 / 4 ))
-WIDTH=$(( TERM_WIDTH * 4 / 5 ))
+HEIGHT=$(( TERM_HEIGHT ))
+WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
 #==================================== 2. Select a server ====================================
 # Build menu items from directories
@@ -173,11 +173,11 @@ display_dynamic_menu() {
 
         ### If the item is a script with a '.sh' extension, add it to the menu with a script label.
             elif [ -f "$item" ] && [[ "$item_name" == *.jar ]]; then
-                menu_options+=("$item_name" "(Script) Run this script")
+                menu_options+=("$item_name" "(.jar file) Replace/Rename/Remove")
 
         ### If the item is a file but not a '.jar' script, we'll assume it's a text file to be read.
            elif [ -f "$item" ]; then
-                menu_options+=("$item_name" "(File) Read this file")
+                menu_options+=("$item_name" "(File) Edit this file")
             fi
         done <<< "$items" # The loop runs once for each path found by find.
 
