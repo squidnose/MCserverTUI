@@ -3,6 +3,13 @@
 #For server Chooser
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 MC_ROOT="$HOME/mcservers"
+## Detect terminal size
+TERM_HEIGHT=$(tput lines)
+TERM_WIDTH=$(tput cols)
+## Set TUI size based on terminal size
+HEIGHT=$(( TERM_HEIGHT ))
+WIDTH=$(( TERM_WIDTH ))
+MENU_HEIGHT=$(( HEIGHT - 10 ))
 #for funcions
 declare -a PARAM_KEYS
 declare -a PARAM_VALUES
@@ -28,7 +35,7 @@ if [ -n "$PASSED_NAME" ]; then
     SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 
     if [ ! -d "$SERVER_DIR" ]; then
-        whiptail --title "Error" --msgbox "Server '$SERVER_NAME' does not exist!" 10 60
+        whiptail --title "Error" --msgbox "Server '$SERVER_NAME' does not exist!" "$HEIGHT" "$WIDTH"
         exit 0
     fi
     CONF_FILE="$SERVER_DIR/server.properties"
@@ -41,9 +48,8 @@ else
         MENU_ITEMS+=("$NAME" "Minecraft server")
     done
 
-    SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to edit the server.properties file" 20 60 10 \
-        "${MENU_ITEMS[@]}" \
-        3>&1 1>&2 2>&3) || exit 0
+    SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to edit the server.properties file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3) || exit 0
 
     SERVER_DIR="$MC_ROOT/$SERVER_NAME"
     CONF_FILE="$SERVER_DIR/server.properties"
@@ -118,13 +124,8 @@ edit_parameter() {
     local index="$2"
     local old="${PARAM_VALUES[$index]}"
 
-    new_val=$(whiptail --inputbox \
-        "Edit value for:\n$key" \
-        12 60 "$old" \
-        3>&1 1>&2 2>&3)
-
+    new_val=$(whiptail --inputbox "Edit value for:\n$key" "$HEIGHT" "$WIDTH" "$old" 3>&1 1>&2 2>&3)
     [[ $? -ne 0 ]] && return 0  # Cancelled
-
     PARAM_VALUES[$index]="$new_val"
 }
 
@@ -138,11 +139,8 @@ edit_parameter() {
             MENU_ITEMS+=("${PARAM_KEYS[$i]}" "${PARAM_VALUES[$i]}")
         done
 
-        choice=$(whiptail --title "server.properties Editor" \
-            --menu "Select a parameter to edit:" 35 150 25 \
-            "${MENU_ITEMS[@]}" \
-            3>&1 1>&2 2>&3)
-
+        choice=$(whiptail --title "server.properties Editor" --menu "Select a parameter to edit:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+            "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
         # Exit on cancel
         [[ $? -ne 0 ]] && exit 0
 

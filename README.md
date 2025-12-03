@@ -50,6 +50,7 @@ Whiptale menu:
   - Open server console
   - Start server 
   - Stop server
+  - Edit server.properties file
   - Update Server (Modrinth Mods and server jar file)
   - Edit server files using a modified LSR 
     - Opens Folders
@@ -64,11 +65,14 @@ Whiptale menu:
 ### 3.Crontab-Management.sh
 - asks for you to select a text editor
 - opens user crontab using crontab -e
-### 4.Tunneling-Services
+### 4.Tunneling-Services.sh
 - LocalToNet - Fast but paid (Supports x64, ARM and ARM64 all in Either Glibc or Musl)
 - (Not done)playit.gg - Free but slow, offers premium options (Supports x64, i686, ARMv7 and ARM64 Glibc only, avalible as MC plugin)
 - (Not done)telebit.io - Free, decetly fast but only Java servers (Unknown Architectural limitations.)
-### More scripts
+### 5.SystemBackup-and-Update.sh
+- Todo
+- curently opens htop:)
+## More scripts
 - modrinth-autodownloader.py 
   - Modrinth colection downloader in python. 
   - This is not my code, i used: https://github.com/aayushdutt/modrinth-collection-downloader
