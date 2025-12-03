@@ -5,9 +5,10 @@ set -e
 #Add for you distro, im using voidlinux
 
 ## Ensure whiptail exists
-#if ! command -v whiptail >/dev/null 2>&1; then
+if ! command -v whiptail >/dev/null 2>&1; then
+    echo "Install the Newt Package!"
 #    sudo xbps-install -Syu newt
-#fi
+fi
 
 #==================================== Parameters ====================================
 
@@ -18,13 +19,14 @@ TERM_WIDTH=$(tput cols)
 HEIGHT=$(( TERM_HEIGHT  ))
 WIDTH=$(( TERM_WIDTH  ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
-
+## Select your reader/editor
+READER="less"
 ## SCRIPT_DIR should point to the base directory containing your numbered script folders.
 SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
 
 ## Colors
 ## Uses NEWT colors file to run with diferent colors
-export NEWT_COLORS_FILE="$SCRIPT_DIR/colors/colors.conf"
+export NEWT_COLORS_FILE="$SCRIPT_DIR/Colors/colors.conf"
 
 ## Title
 TITLE="MC-SERVER-TUI" # This will be the main title
@@ -86,7 +88,6 @@ run_script() {
     echo "Running $script_path"
     "$script_path"
     echo "Ran $script_path"
-    echo "=========================================="
     #read -p "Done, press enter to continue"
     return 0
 }
@@ -140,7 +141,7 @@ display_dynamic_menu() {
 
         ### If the item is a file but not a '.sh' script, we'll assume it's a text file to be read.
            elif [ -f "$item" ]; then
-                menu_options+=("$item_name" "(File) Read this file")
+                menu_options+=("$item_name" "(File) Read this file using $READER")
             fi
         done <<< "$items" # The loop runs once for each path found by find.
 
@@ -167,6 +168,7 @@ display_dynamic_menu() {
         if [[ "$choice" == "Exit" ]]; then
         ### The user explicitly chose to exit the script.
         echo "=========================================="
+        echo "=========================================="
         echo "  Thank you for using My Linux-Script-Runner TUI!   "
         echo "=========================================="
         read -p "Press Enter To continue"
@@ -189,7 +191,7 @@ display_dynamic_menu() {
                 run_script "$chosen_path"
             ### For Files to read using less
             elif [ -f "$chosen_path" ]; then
-                less "$chosen_path"
+                $READER "$chosen_path"
                 # The script will continue after 'less' is closed by the user (by pressing 'q').
             ### Fallback for when a selected file or folder is no longer available.
             else
