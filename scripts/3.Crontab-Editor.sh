@@ -1,9 +1,15 @@
 #!/bin/bash
 # Crontab Editor with Editor Selection
-
+## Detect terminal size
+TERM_HEIGHT=$(tput lines)
+TERM_WIDTH=$(tput cols)
+## Set TUI size based on terminal size
+HEIGHT=$(( TERM_HEIGHT ))
+WIDTH=$(( TERM_WIDTH ))
+MENU_HEIGHT=$(( HEIGHT - 10 ))
 raw_edit_crontab() {
 # 1. Capture the menu choice (the number 1, 2, 3, or 4)
-CHOICE=$(whiptail --title "Choose an Editor" --menu "Select your preferred editor for Crontab" 20 80 4 \
+CHOICE=$(whiptail --title "Choose an Editor" --menu "Select your preferred editor for Crontab" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
 "1" "nano (Beginner-friendly)" \
 "2" "vi/vim (Standard terminal editor)" \
 "3" "kate (Graphical text editor)" \
