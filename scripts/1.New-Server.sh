@@ -39,7 +39,8 @@ cd "$SERVER_DIR"
 
 MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to install server jar file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "manual URL" \
-    "2" "Fabric (Manual)" \
+    "2" "Oficial Mojang API (Vanila)" \
+    "3" "MCjarfiles API (Modded)" \
     3>&1 1>&2 2>&3)
 case $MC_MENU_LOADER in
     1)
@@ -48,12 +49,11 @@ case $MC_MENU_LOADER in
     curl -sLo "$JAR_NAME" "$SERVER_URL"
     ;;
     2)
-
-    INSTALLER_VERSOIN=$(whiptail --title "$TITLE" --inputbox "Enter INSTALLER version(1.1.0)" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    LOADER_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter LOADER version(0.18.1)" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    echo "tbd lol"
+    ;;
+    2)
     JAR_NAME="$SERVER_NAME.jar"
-    curl -sLo "$JAR_NAME" https://meta.fabricmc.net/v2/versions/loader/$MC_VERSION/$LOADER_VERSION/$INSTALLER_VERSOIN/server/jar
-
+    curl -sLo "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
     ;;
 esac
 #==================================== 5 Initialize Server Jarfile ====================================
