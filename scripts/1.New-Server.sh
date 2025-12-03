@@ -17,8 +17,26 @@ SERVER_NAME=$(whiptail --title "$TITLE" --inputbox "Enter a name for your server
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
 MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.10):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader (vanilla/fabric):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+MC_LOADER_CHOICE=$(whiptail --title "$TITLE" --menu "Choose a Loader/Server SW:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    "1" "vanila" \
+    "2" "fabric" \
+    "3" "forge" \
+    "4" "neoforge" \
+    "5" "paper" \
+    "6" "purpur" \
+    "7" "Enter a loader name manually" \
+    3>&1 1>&2 2>&3)
+case $MC_LOADER_CHOICE in
+    1) MC_LOADER="vanila" ;;
+    2) MC_LOADER="fabric" ;;
+    3) MC_LOADER="forge" ;;
+    4) MC_LOADER="neoforge" ;;
+    5) MC_LOADER="paper" ;;
+    6) MC_LOADER="purpur" ;;
+    7) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) ;;
+    *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2)
+esac
+MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth Mods collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 #==================================== 2. Save Info ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 cat > "$CONF_FILE" <<EOF
@@ -29,9 +47,12 @@ EOF
 echo "Saved config to $CONF_FILE"
 
 #==================================== 3.Offer Modrinth Downloader ====================================
+if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" || "$MC_LOADER" == "liteloader" || "$MC_LOADER" == "quilt" || "$MC_LOADER" == "rift" ]]; then
 if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
-    "$SCRIPT_DIR/more-scripts/modrith-downloader.sh --name $SERVER_NAME"
+    cd "$SCRIPT_DIR/more-scripts/"
+    bash modrith-downloader.sh --name $SERVER_NAME
     echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
+fi
 fi
 
 #==================================== 4.Install a loader ====================================
@@ -39,22 +60,29 @@ cd "$SERVER_DIR"
 
 MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to install server jar file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "manual URL" \
-    "2" "Oficial Mojang API (Vanila)" \
-    "3" "MCjarfiles API (Modded)" \
+    "2" "MCjarfiles API(Modded and Vanila)" \
     3>&1 1>&2 2>&3)
 case $MC_MENU_LOADER in
     1)
     JAR_NAME="$SERVER_NAME.jar"
     SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    curl -sLo "$JAR_NAME" "$SERVER_URL"
-    ;;
-    2)
-    echo "tbd lol"
+    wget -O "$JAR_NAME" "$SERVER_URL"
+    echo "manual server jar url"
     ;;
     2)
     JAR_NAME="$SERVER_NAME.jar"
-    curl -sLo "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+    if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+    fi
+    if [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+    fi
+    if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+    fi
+    echo "MCjarfiles API called"
     ;;
+
 esac
 #==================================== 5 Initialize Server Jarfile ====================================
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
