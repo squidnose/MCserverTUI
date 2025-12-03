@@ -61,7 +61,7 @@ MC_VERSION=$(whiptail --title "Minecraft Version" --inputbox \
     3>&1 1>&2 2>&3) || exit 0
 
 MC_LOADER=$(whiptail --title "Loader" --inputbox \
-    "Enter loader (fabric/vanilla/etc):" 10 60 "$loader" \
+    "Enter loader, supported:\nforge, fabric, quilt, neoforge, liteloader" 10 60 "$loader" \
     3>&1 1>&2 2>&3) || exit 0
 
 MC_COLLECTION=$(whiptail --title "Collection" --inputbox \
