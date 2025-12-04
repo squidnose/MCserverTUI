@@ -16,13 +16,13 @@ case $CHOICE in
 echo "Installing MCserverTUI dependecies"
 sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
-sudo apt install openjdk-8-jre-headless openjdk-17-jre-headless openjdk-21-jre-headless
+sudo apt install openjdk-8-jdk-headless openjdk-17-jdk-headless openjdk-21-jdk-headless
 ;;
 2)
 echo "Installing MCserverTUI dependecies"
 sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
-sudo apt install openjdk-17-jre-headless
+sudo apt install openjdk-17-jdk-headless
 echo "DEBIAN 12 DOESNT SUPPORT JAVA 21 FOR MC 1.20.5 AND NEWER"
 echo "DEBIAN 12 DOESNT SUPPORT JAVA 8 FOR MC 1.16.5 AND OLDER"
 echo "Either manually install Java 21 and 8 or use a diferent distro..."
@@ -31,7 +31,7 @@ echo "Either manually install Java 21 and 8 or use a diferent distro..."
 echo "Installing MCserverTUI dependecies"
 sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
-sudo apt install openjdk-21-jre-headless
+sudo apt install openjdk-21-jdk-headless
 echo "DEBIAN 13 DOESNT SUPPORT JAVA 17 or 8 FOR MC 1.20.4 AND OLDER"
 echo "Either manually install Java 17 and 8 or use a diferent distro..."
 ;;

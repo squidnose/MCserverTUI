@@ -5,7 +5,7 @@
 - The Goal of this TUI is Simplicity and robustness. It works on any linux distro if the depencencies are met. 
 - You dont need MCserverTUI to run your MC server. 
   - MCserverTUI is only needed for Setting up and manageing your MC server.
-## Dependencies
+### Dependencies
 - [whiptail (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
 - Crontab support, Tested with cronie and crond - For automation and server startup
 - tmux - for MC server console
@@ -14,12 +14,35 @@
 - opejnjdk8, 17 and 21 - for Minecraft (My script doesnt use it)
 
 - Does not require SystemD, Glibc or any specific CPU architecture
-## File-Structure:
+
+### File-Structure:
 - ~/mcservers/<server_name> = MC server locations
   - run.sh | Run shortcut with the Ram ammout with the nogui option
   - autostart.sh | Autostart script with tmux commands
   - server-version.conf | MC version, Loader and Modrith colection ID
-  
+
+## How to use:
+### Setup Dependencies:
+- Either install all the depencencies or run setup.sh
+```
+./setup.sh
+```
+### Download and run the Git version:
+```
+git clone https://github.com/squidnose/MCserverTUI.git
+cd MCserverTUI
+./MCserverTUI.sh
+```
+- MCserverTUI doest require a specific directory, but do not place it in ~/mcservers!
+### Run on SSH login
+- You can add MCserverTUI in your .bashrc.
+- This makes it esier to acces, at the cost of safety. 
+- DO THIS AT YOUR OWN RISK!
+```
+cd MCserverTUI
+./MC-Server-TUI.sh
+```
+(If you have placed MCserverTUI in ~ )
 # Scripts and their functions
 ### setup.sh
 - Will setup Dependecnies and services for some linux distros.
