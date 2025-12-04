@@ -18,7 +18,7 @@ SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
 MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.10):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_LOADER_CHOICE=$(whiptail --title "$TITLE" --menu "Choose a Loader/Server SW:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    "1" "vanila" \
+    "1" "vanilla" \
     "2" "fabric" \
     "3" "forge" \
     "4" "neoforge" \
@@ -27,7 +27,7 @@ MC_LOADER_CHOICE=$(whiptail --title "$TITLE" --menu "Choose a Loader/Server SW:"
     "7" "Enter a loader name manually" \
     3>&1 1>&2 2>&3)
 case $MC_LOADER_CHOICE in
-    1) MC_LOADER="vanila" ;;
+    1) MC_LOADER="vanilla" ;;
     2) MC_LOADER="fabric" ;;
     3) MC_LOADER="forge" ;;
     4) MC_LOADER="neoforge" ;;
@@ -60,7 +60,7 @@ cd "$SERVER_DIR"
 
 MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to install server jar file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "manual URL" \
-    "2" "MCjarfiles API(Modded and Vanila)" \
+    "2" "MCjarfiles API(Modded and Vanilla)" \
     3>&1 1>&2 2>&3)
 case $MC_MENU_LOADER in
     1)
@@ -71,7 +71,7 @@ case $MC_MENU_LOADER in
     ;;
     2)
     JAR_NAME="$SERVER_NAME.jar"
-    if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+    if [[ "$MC_LOADER" == "vanilla" ]]; then
     wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
     fi
     if [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
