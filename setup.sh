@@ -14,13 +14,13 @@ read -r -p "Enter your choice (1-6):" CHOICE
 case $CHOICE in
 1)
 echo "Installing MCserverTUI dependecies"
-sudo apt install newt python3 tmux curl
+sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
 sudo apt install openjdk-8-jre-headless openjdk-17-jre-headless openjdk-21-jre-headless
 ;;
 2)
 echo "Installing MCserverTUI dependecies"
-sudo apt install newt python3 tmux curl
+sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
 sudo apt install openjdk-17-jre-headless
 echo "DEBIAN 12 DOESNT SUPPORT JAVA 21 FOR MC 1.20.5 AND NEWER"
@@ -29,7 +29,7 @@ echo "Either manually install Java 21 and 8 or use a diferent distro..."
 ;;
 3)
 echo "Installing MCserverTUI dependecies"
-sudo apt install newt python3 tmux curl
+sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
 sudo apt install openjdk-21-jre-headless
 echo "DEBIAN 13 DOESNT SUPPORT JAVA 17 or 8 FOR MC 1.20.4 AND OLDER"
@@ -37,7 +37,7 @@ echo "Either manually install Java 17 and 8 or use a diferent distro..."
 ;;
 4)
 echo "Installing MCserverTUI dependecies"
-sudo xbps-install -Syu newt cronie python3 tmux curl
+sudo xbps-install -Syu newt cronie python3 tmux curl wget
 echo "Enabling Crontab service"
 sudo ln -s /etc/sv/cronie/ /var/service/
 echo "Installing Minecraft Java dependecies"
@@ -45,7 +45,7 @@ sudo xbps-install -Syu openjdk8 openjdk17 openjdk21
 ;;
 5)
 echo "Installing MCserverTUI dependecies"
-sudo pacman -S newt cronie python tmux curl
+sudo pacman -S newt cronie python tmux curl wget
 echo "Enabling Crontab service"
 sudo systemctl enable cronie.service
 echo "Installing Minecraft Java dependecies"
@@ -53,7 +53,7 @@ sudo pacman -S  jdk8-openjdk jdk17-openjdk jdk21-openjdk
 ;;
 6)
 echo "Installing MCserverTUI dependecies"
-sudo dnf install newt cronie python3 tmux curl
+sudo dnf install newt cronie python3 tmux curl wget
 echo "Enabling Crontab service"
 sudo systemctl enable cronie.service
 echo "Installing Minecraft Java dependecies"

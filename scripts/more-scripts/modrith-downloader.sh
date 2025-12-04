@@ -2,7 +2,13 @@
 #==================================== location ====================================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 MC_ROOT="$HOME/mcservers"
-
+## Detect terminal size
+TERM_HEIGHT=$(tput lines)
+TERM_WIDTH=$(tput cols)
+## Set TUI size based on terminal size
+HEIGHT=$(( TERM_HEIGHT ))
+WIDTH=$(( TERM_WIDTH ))
+MENU_HEIGHT=$(( HEIGHT - 10 ))
 #==================================== 0. Parse CLI flags ====================================
 PASSED_NAME=""
 while [[ "$#" -gt 0 ]]; do
@@ -24,7 +30,7 @@ if [ -n "$PASSED_NAME" ]; then
     SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 
     if [ ! -d "$SERVER_DIR" ]; then
-        whiptail --title "Error" --msgbox "Server '$SERVER_NAME' does not exist!" 10 60
+        whiptail --title "Error" --msgbox "Server '$SERVER_NAME' does not exist!" "$HEIGHT" "$WIDTH"
         exit 0
     fi
 
@@ -37,7 +43,7 @@ else
         MENU_ITEMS+=("$NAME" "Minecraft server")
     done
 
-    SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" 20 60 10 \
+    SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "${MENU_ITEMS[@]}" \
         3>&1 1>&2 2>&3) || exit 0
 
@@ -57,15 +63,15 @@ fi
 
 #========================= 3. Ask for updated values (pre-filled) ==============================
 MC_VERSION=$(whiptail --title "Minecraft Version" --inputbox \
-    "Enter version:" 10 60 "$version" \
+    "Enter version:" "$HEIGHT" "$WIDTH" "$version" \
     3>&1 1>&2 2>&3) || exit 0
 
 MC_LOADER=$(whiptail --title "Loader" --inputbox \
-    "Enter loader, supported:\nforge, fabric, quilt, neoforge, liteloader" 10 60 "$loader" \
+    "Enter loader, supported:\nforge, fabric, quilt, neoforge" "$HEIGHT" "$WIDTH" "$loader" \
     3>&1 1>&2 2>&3) || exit 0
 
 MC_COLLECTION=$(whiptail --title "Collection" --inputbox \
-    "Modrinth collection ID (optional):" 10 60 "$collection" \
+    "Modrinth collection ID (optional):" "$HEIGHT" "$WIDTH" "$collection" \
     3>&1 1>&2 2>&3) || exit 0
 
 #============================ 4. Save updated config ====================================
@@ -78,7 +84,7 @@ EOF
 
 #==================================== 5. Run Downloader ====================================
 if whiptail --title "Run Modrinth Downloader" --yesno \
-    "Download mods using these settings?" 10 60; then
+    "Download mods using these settings?" "$HEIGHT" "$WIDTH"; then
 
     # Build arguments dynamically
     ARGS=(-v "$MC_VERSION" -l "$MC_LOADER")
@@ -92,5 +98,5 @@ if whiptail --title "Run Modrinth Downloader" --yesno \
     )
 fi
 
-whiptail --title "Done" --msgbox "Modrinth download complete for $SERVER_NAME!" 10 60
+whiptail --title "Done" --msgbox "Modrinth download complete for $SERVER_NAME!" "$HEIGHT" "$WIDTH"
 exit 0
