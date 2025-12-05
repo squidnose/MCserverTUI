@@ -11,8 +11,8 @@ raw_edit_crontab() {
 # 1. Capture the menu choice (the number 1, 2, 3, or 4)
 CHOICE=$(whiptail --title "Choose an Editor" --menu "Select your preferred editor for Crontab" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
 "1" "nano (Beginner-friendly)" \
-"2" "vi/vim (Standard terminal editor)" \
-"3" "kate (Graphical text editor)" \
+"2" "vim (vi) (Standard terminal editor)" \
+"3" "less (Simple, read only, q to quit)" \
 "4" "Cancel" \
 3>&1 1>&2 2>&3)
 
@@ -27,7 +27,7 @@ SELECTED_EDITOR=""
 case "$CHOICE" in
     1) SELECTED_EDITOR="nano" ;;
     2) SELECTED_EDITOR="vi" ;;
-    3) SELECTED_EDITOR="kate" ;;
+    3) SELECTED_EDITOR="less" ;;
 esac
 
 # 3. Export the environment variable
