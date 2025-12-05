@@ -12,6 +12,19 @@ TERM_WIDTH=$(tput cols)
 HEIGHT=$(( TERM_HEIGHT ))
 WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
+#==================================== Center Text Fucntion ====================================
+center_text() {
+#Center text so that it is not on the left
+    local text="$1"
+    local width="$2"
+    local len=${#text}
+
+    # compute left padding
+    local pad=$(( (width - len) / 2 ))
+
+    # return padded string
+    printf "%*s%s" "$pad" "" "$text"
+}
 #==================================== 02. Select a server ====================================
 # Build menu items from directories
 MENU_ITEMS=()
@@ -30,7 +43,7 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage
     "${MENU_ITEMS[@]}" \
     3>&1 1>&2 2>&3) || exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
-#==================================== 03. Load  server config file ====================================
+#==================================== 03. Load server config file ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 if [ -f "$CONF_FILE" ]; then
     source "$CONF_FILE"
@@ -40,291 +53,6 @@ else
     collection=""
 fi
 #==================================== 04. Functions ====================================
-lsr() {
-#Linux Script Runner Terminal User Interface - Modified
-## SCRIPT_DIR should point to the base directory containing your numbered script folders.
-SCRIPT_DIR="$SERVER_DIR"
-
-## Colors
-## Uses NEWT colors file to run with diferent colors
-#export NEWT_COLORS_FILE="$SCRIPT_DIR/0.Tools/5.Config-Files/colors.conf"
-
-## Title
-
-
-#==================================== LSR Functions ====================================
-## Check initial SCRIPT_DIR permissions and existence
-check_base_dir_permissions() {
-
-    # Check if directory exists
-    if [ ! -d "$SCRIPT_DIR" ]; then
-        echo "Error: The directory '$SCRIPT_DIR' does not exist." >&2
-        echo "It should contain your script files." >&2
-        return 0
-    fi
-
-    # Check read permission
-    if [ ! -r "$SCRIPT_DIR" ]; then
-        echo "Error: You do not have READ permission for '$SCRIPT_DIR'." >&2
-        echo "Use: chmod u+r \"$SCRIPT_DIR\"" >&2
-        return 0
-    fi
-
-    # Check execute permission
-    if [ ! -x "$SCRIPT_DIR" ]; then
-        echo "Error: You do not have EXECUTE permission for '$SCRIPT_DIR'." >&2
-        echo "Use: chmod u+x \"$SCRIPT_DIR\"" >&2
-        return 0
-    fi
-}
-modify_jar() {
-    ### The full path to the jar file to change (passed as argument $1).
-    local script_path="$1"
-    ### Extract the script's file name from the full path.
-    local script_name="$(basename "$script_path")"
-    ### Check if the jar file actually exists
-    if [ ! -f "$script_path" ]; then
-        whiptail --msgbox "Error: jar file '$script_name' not found at '$script_path'. How did you do that... LOL" "$HEIGHT" "$WIDTH"
-        return 1
-    fi
-
-### Jarfile Modification
-    echo "=========================================="
-JARFILE_CHOICE=$(whiptail --title "$script_name" --menu "What do you want to do:" "$HEIGHT" "$WIDTH" 5 \
-"1" "Replace from URL" \
-"2" "Rename the .jar file" \
-"3" "Remove the .jar file!" \
-3>&1 1>&2 2>&3)
-case $JARFILE_CHOICE in
-1)
-    local URL
-    URL=$(whiptail --title "Replace the .jar file" --inputbox "Enter the direct download URL for the new .jar file:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    if [[ -z "$URL" ]]; then
-        whiptail --msgbox "No URL provided. Aborted." "$HEIGHT" "$WIDTH"
-        return 0
-    fi
-    if curl -fLo "$script_path" "$URL"; then whiptail --msgbox "JAR successfully replaced!" "$HEIGHT" "$WIDTH"
-        else whiptail --msgbox "Download failed! Old file NOT removed." "$HEIGHT" "$WIDTH"
-    fi
-;;
-2)
-    local NEW_NAME
-    NEW_NAME=$(whiptail --title "Rename the .jar file" --inputbox "Enter a new name for the .jar file:\n dont forget to add .jar file name!!!" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    if [[ -z "$NEW_NAME" ]]; then
-        whiptail --msgbox "No name provided. Aborted." "$HEIGHT" "$WIDTH"
-        return 0
-    fi
-    #I should probably add a waring about not adding the .jar suffix...
-    local EXTRACTED_LOCATOIN="$(dirname "$script_path")"
-    local NEW_NAME_SPACE="$EXTRACTED_LOCATOIN/$NEW_NAME"
-    echo $NEW_NAME_SPACE
-    echo $script_path
-    mv $script_path $NEW_NAME_SPACE
-;;
-3)
-if whiptail --title "REMOVE $script_name?" --yesno "Would you like to remove $script_name?" 10 60; then
-rm $script_path
-fi
-;;
-*) return 0 ;;
-esac
-    echo "=========================================="
-    return 0
-}
-#Display menu logic
-#What does it do:
-    #scan directories
-    #build dynamic menus
-    #handle navigation
-    #read text files
-    #manage exit logic
-    #Filters directory items
-
-display_dynamic_menu() {
-    ### 1. Parameters
-    local title="$1"
-    local current_path="$2"
-    local original_path="$2" # Keep track of the original starting path
-
-    ### 2. Main menu loop (runs until user exits)
-    while true; do
-
-    ### 3. Build dynamic menu options based on current folder
-    local menu_options=()
-
-        ### Add "Go back" option unless we're at the root of the script directory.
-        ### This provides a way to navigate up a level in the folder structure.
-        if [[ "$current_path" != "$original_path" ]]; then
-            menu_options+=("..-back" "Go back to the previous menu")
-        fi
-
-    ### 4. Find folders, scripts, and text files in the current directory.
-        ### I use find with -maxdepth 1 to only look in the current directory.
-        ### Finds all files that are either .sh or not .sh.
-        ### This output is then sorted into .sh and non .sh files/folders.
-        local items
-        items=$(find "$current_path" -maxdepth 1 -mindepth 1 \( -type d -o -type f -name "*.jar" -o -type f ! -name "*.jar" \) | sort)
-
-    ### 5. Process each item found and add it to our menu options array.
-        while read -r item; do # Reads one line at a time from the input
-            local item_name
-            item_name=$(basename "$item")
-
-        ### If the item is a directory, add it to the menu with a label indicating it's a folder.
-            if [ -d "$item" ]; then
-                menu_options+=("$item_name" "(Folder) Enter this folder")
-
-        ### If the item is a script with a '.sh' extension, add it to the menu with a script label.
-            elif [ -f "$item" ] && [[ "$item_name" == *.jar ]]; then
-                menu_options+=("$item_name" "(.jar file) Replace/Rename/Remove")
-
-        ### If the item is a file but not a '.jar' script, we'll assume it's a text file to be read.
-           elif [ -f "$item" ]; then
-                menu_options+=("$item_name" "(File) Edit this file")
-            fi
-        done <<< "$items" # The loop runs once for each path found by find.
-
-        # Add an "Exit" option to the menu. This option is be available at all levels.
-        menu_options+=("Exit" "Exit the script")
-
-    ### 6. Display the Menu
-        # Use whiptail to display the menu to the user.
-        # The user's selection is stored in the 'choice' variable.
-        local choice
-        choice=$(whiptail --title "$TITLE" --backtitle "$BACKTITLE" \
-                          --menu "$title" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-                          "${menu_options[@]}" 3>&1 1>&2 2>&3)
-
-        ### Check the exit status of whiptail.
-        ### If it's not 0, it breaks the loop.
-        ### In the case the user pressed Escape.
-        if [ $? -ne 0 ]; then
-            break
-        fi
-
-        ### Process the user's choice based on the selected option.
-        if [[ "$choice" == "Exit" ]]; then
-        ### The user explicitly chose to exit the script.
-        echo "Done managing servers"
-        return 0
-        ### The user chose to go back. We update the current path to the parent directory.
-        elif [[ "$choice" == "..-back" ]]; then
-
-            current_path=$(dirname "$current_path") #Goes back using dirname
-            title="Go Back" # Updates the title for the next menu display.
-       ### Run a script
-       else
-            local chosen_path="$current_path/$choice" # Reconstructs the full path of what the user selected.
-
-            ### For folders, the path is updated
-            if [ -d "$chosen_path" ]; then
-                current_path="$chosen_path"
-                title="Inside: $choice" # Update the title to reflect the new location.
-            ### For .jar files, the modify_jar funciton is called with the path parsed
-            elif [ -f "$chosen_path" ] && [[ "$chosen_path" == *.jar ]]; then
-                modify_jar "$chosen_path"
-            ### For non .jar Files, edit with nano
-            elif [ -f "$chosen_path" ]; then
-                nano "$chosen_path"
-            ### Fallback for when a selected file or folder is no longer available.
-            else
-                whiptail --msgbox "Error: '$choice' could not be found or is not a valid script." "$HEIGHT" "$WIDTH"
-            fi
-        fi
-    done
-}
-
-
-#==================================== Main LSR Logic ====================================
-
-# 1. Check initial directory permissions (dependency check now in install_deps.sh)
-check_base_dir_permissions
-
-# 2. Start the dynamic menu navigation from the root 'scripts' directory
-display_dynamic_menu "Edit Files for $SERVER_NAME" "$SCRIPT_DIR"
-return 0
-}
-manage_autostart() {
-#this function will regenerate autostart.sh
-#it will also check if there is a corntab entry
-#================ Autostart 1. parameters =========================
-    local SERVER_NAME="$1"
-    local SERVER_DIR="$2"
-    local AUTOSTART="$SERVER_DIR/autostart.sh"
-#====================== Autostart 2. Regenerate autostart.sh ====================================
-## Ask to regenerate autostart.sh
-if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" "$HEIGHT" "$WIDTH" ; then
-cat > "$AUTOSTART" <<EOF
-#!/bin/bash
-SESSION="$SERVER_NAME"
-
-if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
-    tmux new-session -d -s "\$SESSION"
-    tmux send-keys -t "\$SESSION" "cd '$SERVER_DIR'" C-m
-    tmux send-keys -t "\$SESSION" "./run.sh" C-m
-fi
-EOF
-chmod +x "$AUTOSTART"
-echo "autostart.sh regenerated for $SERVER_NAME"
-fi
-
-#==================================== Autostart 3. Check on crontab  ====================================
-local CRONLINE="@reboot $AUTOSTART"
-## Check for existing crontab entry. If it exists, offer to remove it
-   if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
-        if whiptail --title "Cron Entry Exists!" --yesno "Do you wish to remove it?" --defaultno "$HEIGHT" "$WIDTH"; then
-            crontab -l 2>/dev/null | grep -v "$CRONLINE" | crontab -
-        return 0
-        fi
-    else
-    ### If the crontab entry doesnt exist, make it
-    if whiptail --title "Add Cron Autostart?" --yesno "Add @reboot entry to start this server on boot?" "$HEIGHT" "$WIDTH" ; then
-        (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
-            echo "Cron entry added."
-        else
-            echo "Skipped adding cron entry."
-        fi
-    fi
-    echo "Autostart management complete."
-    return 0
-}
-manage_run_sh() {
-#This function will reconfigure run.sh
-#================ run.sh 1. parameters =========================
-    local SERVER_NAME="$1"
-    local SERVER_DIR="$2"
-    local RUNSCRIPT="$SERVER_DIR/run.sh"
-
-#======================= run.sh 2. Ask to regenerate run.sh even if it exists =========================
-## Ask to regenerate run.sh
-if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh one?" "$HEIGHT" "$WIDTH" ; then
-    ### Ask for new memory amount
-    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    JAR_NAME="$SERVER_NAME.jar"
-#======================= run.sh 3. More variables =========================
-### fixes bug, when if no memory amout was selected, only -Xms or -Xmx, it caused a failed start
-    if [[ -n "$MC_XMS" ]]; then
-        RUN_MC_XMS="-Xms$MC_XMS"
-    else
-        RUN_MC_XMS=""
-    fi
-
-    if [[ -n "$MC_XMX" ]]; then
-        RUN_MC_XMX="-Xmx$MC_XMX"
-    else
-        RUN_MC_XMX=""
-    fi
-#======================= run.sh 4. Creates run.sh =========================
-cat > "$RUNSCRIPT" <<EOF
-#!/bin/bash
-java $RUN_MC_XMS $RUN_MC_XMX -jar $JAR_NAME nogui
-EOF
-chmod +x "$RUNSCRIPT"
-echo "created run.sh for $SERVER_NAME"
-fi
-
-}
 startserver_tmux() {
 #======================= startserver 1. Runs mcserver in Tmux =========================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" "$HEIGHT" "$WIDTH" ; then
@@ -334,6 +62,17 @@ tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
 tmux attach -t "$SERVER_NAME"
 fi
 }
+
+edit_server_properties() {
+#============================ server properties 1. Run server.properties editor ====================================
+if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
+    cd "$SCRIPT_OG_DIR/more-scripts/"
+    echo "Loading server.properties file..."
+    bash server_properties_editor.sh --name $SERVER_NAME
+    echo "Ran server.properties editor with $SERVER_NAME flag."
+fi
+}
+
 modrinth_autodownloader() {
 #============================ Modrinth Atodownloader ====================================
 #==================================== Modrinth 1. Load config file ====================================
@@ -355,15 +94,7 @@ if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collec
 fi
 fi
 }
-edit_server_properties() {
-#============================ server properties 1. Run server.properties editor ====================================
-if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
-    cd "$SCRIPT_OG_DIR/more-scripts/"
-    echo "Loading server.properties file..."
-    bash server_properties_editor.sh --name $SERVER_NAME
-    echo "Ran server.properties editor with $SERVER_NAME flag."
-fi
-}
+
 update_server_jar() {
 #==================================== update 1. Load config file ====================================
 if [ -f "$CONF_FILE" ]; then
@@ -406,6 +137,96 @@ case $MC_MENU_LOADER in
     ;;
 esac
 }
+
+lsr() {
+cd "$SCRIPT_OG_DIR/more-scripts/"
+    bash LSR_edit_server_files.sh --name $SERVER_NAME
+    echo "Ran LSR jar file editor with $SERVER_NAME flag."
+}
+
+manage_autostart() {
+#this function will regenerate autostart.sh
+#it will also check if there is a corntab entry
+#================ Autostart 1. parameters =========================
+    local SERVER_NAME="$1"
+    local SERVER_DIR="$2"
+    local AUTOSTART="$SERVER_DIR/autostart.sh"
+#====================== Autostart 2. Regenerate autostart.sh ====================================
+## Ask to regenerate autostart.sh
+if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" "$HEIGHT" "$WIDTH" ; then
+cat > "$AUTOSTART" <<EOF
+#!/bin/bash
+SESSION="$SERVER_NAME"
+
+if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
+    tmux new-session -d -s "\$SESSION"
+    tmux send-keys -t "\$SESSION" "cd '$SERVER_DIR'" C-m
+    tmux send-keys -t "\$SESSION" "./run.sh" C-m
+fi
+EOF
+chmod +x "$AUTOSTART"
+echo "autostart.sh regenerated for $SERVER_NAME"
+fi
+
+#==================================== Autostart 3. Check on crontab  ====================================
+local CRONLINE="@reboot $AUTOSTART"
+## Check for existing crontab entry. If it exists, offer to remove it
+   if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
+        if whiptail --title "Crontab Entry" --yesno "A crontab @reboot entry for $SERVER_NAME exists\nDo you wish to disable automatic start on boot?" --defaultno "$HEIGHT" "$WIDTH"; then
+            crontab -l 2>/dev/null | grep -v "$CRONLINE" | crontab -
+        return 0
+        fi
+    else
+    ### If the crontab entry doesnt exist, make it
+    if whiptail --title "Crontab Entry" --yesno "Add crontab @reboot entry for $SERVER_NAME\nThis will make the server start on boot?" "$HEIGHT" "$WIDTH" ; then
+        (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
+            echo "Cron entry added."
+        else
+            echo "Skipped adding cron entry."
+        fi
+    fi
+    echo "Autostart management complete."
+    return 0
+}
+
+manage_run_sh() {
+#This function will reconfigure run.sh
+#================ run.sh 1. parameters =========================
+    local SERVER_NAME="$1"
+    local SERVER_DIR="$2"
+    local RUNSCRIPT="$SERVER_DIR/run.sh"
+
+#======================= run.sh 2. Ask to regenerate run.sh even if it exists =========================
+## Ask to regenerate run.sh
+if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh one?" "$HEIGHT" "$WIDTH" ; then
+    ### Ask for new memory amount
+    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    JAR_NAME="$SERVER_NAME.jar"
+#======================= run.sh 3. More variables =========================
+### fixes bug, when if no memory amout was selected, only -Xms or -Xmx, it caused a failed start
+    if [[ -n "$MC_XMS" ]]; then
+        RUN_MC_XMS="-Xms$MC_XMS"
+    else
+        RUN_MC_XMS=""
+    fi
+
+    if [[ -n "$MC_XMX" ]]; then
+        RUN_MC_XMX="-Xmx$MC_XMX"
+    else
+        RUN_MC_XMX=""
+    fi
+#======================= run.sh 4. Creates run.sh =========================
+cat > "$RUNSCRIPT" <<EOF
+#!/bin/bash
+java $RUN_MC_XMS $RUN_MC_XMX -jar $JAR_NAME nogui
+EOF
+chmod +x "$RUNSCRIPT"
+echo "created run.sh for $SERVER_NAME"
+fi
+
+}
+
 change_server_name() {
 if whiptail --title "Change Name of $SERVER_NAME?" --yesno "Do you want to change the name of your Server?\n This will also force stop your server!\nSTOP YOU SERVER BEFORE CHANGEING THE NAME!!!" "$HEIGHT" "$WIDTH" ; then
 {
@@ -441,7 +262,8 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
 #==================================== 05. Main Menu ====================================
 while true; do
     # 1. Read the user's choice into the variable MENU_CHOICES
-    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    MENU_CHOICES_TITLE=$(center_text "What would you like to do with $SERVER_NAME" "$WIDTH")
+    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "$MENU_CHOICES_TITLE" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "1" "Open Console (tmux attach)" \
         "2" "Start Server" \
         "3" "Stop Server" \
@@ -461,15 +283,15 @@ while true; do
     1) tmux attach -t "$SERVER_NAME" ;;
     2) startserver_tmux ;;
     3) tmux send-keys -t "$SERVER_NAME" "stop" C-m ;;
-    4) edit_server_properties ;;
+    4) edit_server_properties ;; #external
     5)
-    modrinth_autodownloader
-    update_server_jar
+    modrinth_autodownloader #external
+    update_server_jar #internal
     ;;
     6) lsr ;;
-    7) manage_autostart "$SERVER_NAME" "$SERVER_DIR" ;;
-    8) manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;;
-    9) change_server_name ;;
+    7) manage_autostart "$SERVER_NAME" "$SERVER_DIR" ;; #internal
+    8) manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;; #internal
+    9) change_server_name ;; #internal
     0) exit 0 ;;
     *) echo "Invalid option selected. \nHow did you get here???" ;;
     esac
