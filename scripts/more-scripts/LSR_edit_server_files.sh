@@ -159,17 +159,19 @@ case $JARFILE_CHOICE in
 ;;
 2)
     local NEW_NAME
-    NEW_NAME=$(whiptail --title "Rename the .jar file" --inputbox "Enter a new name for the .jar file:\n dont forget to add .jar file name!!!" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    NEW_NAME=$(whiptail --title "Rename the .jar file" \
+        --inputbox "Enter a new name for the .jar file:\n(You can edit the existing name)" \
+        "$HEIGHT" "$WIDTH" \
+        "$script_name" \
+        3>&1 1>&2 2>&3)
+
     if [[ -z "$NEW_NAME" ]]; then
         whiptail --msgbox "No name provided. Aborted." "$HEIGHT" "$WIDTH"
         return 0
     fi
-    #I should probably add a waring about not adding the .jar suffix...
-    local EXTRACTED_LOCATOIN="$(dirname "$script_path")"
-    local NEW_NAME_SPACE="$EXTRACTED_LOCATOIN/$NEW_NAME"
-    echo $NEW_NAME_SPACE
-    echo $script_path
-    mv $script_path $NEW_NAME_SPACE
+    local EXTRACTED_LOCATION="$(dirname "$script_path")"
+    local NEW_NAME_PATH="$EXTRACTED_LOCATION/$NEW_NAME"
+    mv "$script_path" "$NEW_NAME_PATH"
 ;;
 3)
 if whiptail --title "REMOVE $script_name?" --yesno "Would you like to remove $script_name?" 10 60; then
