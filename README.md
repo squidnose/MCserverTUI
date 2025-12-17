@@ -10,19 +10,19 @@
   - MCserverTUI is only needed for Setting up and manageing your MC server.
 ## Dependencies
 - [whiptail (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
+- ncurses - includes tput that finds the terminal size
 - Crontab support, Tested with cronie and crond - For automation and server startup
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
 - opejnjdk8, 17 and 21 - for Minecraft (My script doesnt use it)
 - either: nano, vim or less for editing text 
-
+### Not required
 - Does not require SystemD
 - Can work on Glibc or Musl 
-- Does not need a specific CPU architecture
+- Does not need a specific CPU architecture 
 
 (Limitations are with Openjdk and Tunneling services)
-
 ## File-Structure:
 - ~/mcservers/<server_name> = MC server locations
   - run.sh | Run shortcut with the Ram ammout with the nogui option
@@ -43,9 +43,9 @@ cd MCserverTUI
 ```
 - MCserverTUI doest require a specific directory, but do not place it in ~/mcservers!
 ### Run on SSH login
-- You can add MCserverTUI in your .bashrc.
-- This makes it esier to acces, at the cost of safety. 
-- DO THIS AT YOUR OWN RISK!
+- You can add MCserverTUI.sh to your .bashrc
+- This makes it automaticly open on login. (Easier, but less secure)
+- DO THIS AT YOUR OWN RISK!:
 ```
 cd MCserverTUI
 ./MC-Server-TUI.sh
