@@ -13,8 +13,9 @@ fi
 #==================================== Parameters ====================================
 
 ## Detect terminal size
-TERM_HEIGHT=$(tput lines)
-TERM_WIDTH=$(tput cols)
+### in case tput is not found, sets to fixed value
+TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
+TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 ## Set TUI size based on terminal size
 HEIGHT=$(( TERM_HEIGHT  ))
 WIDTH=$(( TERM_WIDTH  ))
