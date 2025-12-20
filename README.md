@@ -72,3 +72,8 @@ cd MCserverTUI
 - Auto Update-System
 - remove server
   - Should i add it???
+
+# Disclaimer
+- I used an LLM to help with the programing. 
+- I understand the generated code.
+- It is not a "Copy and Paste" slop script. 
