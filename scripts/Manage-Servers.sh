@@ -13,19 +13,7 @@ TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT=$(( TERM_HEIGHT ))
 WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
-#==================================== Center Text Fucntion ====================================
-center_text() {
-#Center text so that it is not on the left
-    local text="$1"
-    local width="$2"
-    local len=${#text}
 
-    # compute left padding
-    local pad=$(( (width - len) / 2 ))
-
-    # return padded string
-    printf "%*s%s" "$pad" "" "$text"
-}
 #==================================== 02. Select a server ====================================
 # Build menu items from directories
 MENU_ITEMS=()
@@ -44,6 +32,7 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage
     "${MENU_ITEMS[@]}" \
     3>&1 1>&2 2>&3) || exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
+
 #==================================== 03. Load server config file ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 if [ -f "$CONF_FILE" ]; then
@@ -53,8 +42,10 @@ else
     loader=""
     collection=""
 fi
+
 #==================================== 04. Functions ====================================
-startserver_tmux() {
+startserver_tmux()
+{
 #======================= startserver 1. Runs mcserver in Tmux =========================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" "$HEIGHT" "$WIDTH" ; then
 tmux new-session -d -s "$SERVER_NAME"
@@ -62,9 +53,10 @@ tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
 tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
 tmux attach -t "$SERVER_NAME"
 fi
-}
+} #startserver_tmux()
 
-edit_server_properties() {
+edit_server_properties()
+{
 #============================ server properties 1. Run server.properties editor ====================================
 if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
     cd "$SCRIPT_OG_DIR/more-scripts/"
@@ -72,9 +64,10 @@ if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSe
     bash server_properties_editor.sh --name $SERVER_NAME
     echo "Ran server.properties editor with $SERVER_NAME flag."
 fi
-}
+} #edit_server_properties()
 
-modrinth_autodownloader() {
+modrinth_autodownloader()
+{
 #============================ Modrinth Atodownloader ====================================
 #==================================== Modrinth 1. Load config file ====================================
 if [ -f "$CONF_FILE" ]; then
@@ -86,6 +79,7 @@ else
 fi
 MC_VERSION="$version"
 MC_LOADER="$loader"
+
 #============================ Modrinth 2. Run Only if supported loader ====================================
 if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" || "$MC_LOADER" == "liteloader" || "$MC_LOADER" == "quilt" || "$MC_LOADER" == "rift" ]]; then
 if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
@@ -94,9 +88,10 @@ if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collec
     echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
 fi
 fi
-}
+} #modrinth_autodownloader()
 
-update_server_jar() {
+update_server_jar()
+{
 #==================================== update 1. Load config file ====================================
 if [ -f "$CONF_FILE" ]; then
     source "$CONF_FILE"
@@ -107,6 +102,7 @@ else
 fi
 MC_VERSION="$version"
 MC_LOADER="$loader"
+
 #============================ update 2. Update server.jar ====================================
 cd "$SERVER_DIR"
 MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to update/install server jar file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
@@ -137,15 +133,17 @@ case $MC_MENU_LOADER in
     3) return 0
     ;;
 esac
-}
+} #update_server_jar()
 
-lsr() {
+lsr()
+{
 cd "$SCRIPT_OG_DIR/more-scripts/"
     bash LSR_edit_server_files.sh --name $SERVER_NAME
     echo "Ran LSR jar file editor with $SERVER_NAME flag."
-}
+} #lsr()
 
-manage_autostart() {
+manage_autostart()
+{
 #this function will regenerate autostart.sh
 #it will also check if there is a corntab entry
 #================ Autostart 1. parameters =========================
@@ -188,9 +186,10 @@ local CRONLINE="@reboot $AUTOSTART"
     fi
     echo "Autostart management complete."
     return 0
-}
+} #manage_autostart()
 
-manage_run_sh() {
+manage_run_sh()
+{
 #This function will reconfigure run.sh
 #================ run.sh 1. parameters =========================
     local SERVER_NAME="$1"
@@ -226,9 +225,10 @@ chmod +x "$RUNSCRIPT"
 echo "created run.sh for $SERVER_NAME"
 fi
 
-}
+} #manage_run_sh()
 
-change_server_name() {
+change_server_name()
+{
 if whiptail --title "Change Name of $SERVER_NAME?" --yesno "Do you want to change the name of your Server?\n This will also force stop your server!\nSTOP YOU SERVER BEFORE CHANGEING THE NAME!!!" "$HEIGHT" "$WIDTH" ; then
 {
 #===================== name 1. Force Stop the old server=====================
@@ -258,13 +258,11 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"
     manage_run_sh "$SERVER_NAME" "$SERVER_DIR"
 } fi
-}
+} #change_server_name()
 
 #==================================== 05. Main Menu ====================================
 while true; do
-    # 1. Read the user's choice into the variable MENU_CHOICES
-    MENU_CHOICES_TITLE=$(center_text "What would you like to do with $SERVER_NAME" "$WIDTH")
-    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "$MENU_CHOICES_TITLE" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "1" "Open Console (tmux attach)" \
         "2" "Start Server" \
         "3" "Stop Server" \

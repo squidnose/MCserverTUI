@@ -12,6 +12,7 @@ TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT=$(( TERM_HEIGHT ))
 WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
+
 #==================================== 1. Get Info ====================================
 SERVER_NAME=$(whiptail --title "$TITLE" --inputbox "Enter a name for your server:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 [ -z "$SERVER_NAME" ] && exit 0
@@ -38,6 +39,7 @@ case $MC_LOADER_CHOICE in
     *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2)
 esac
 MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth Mods collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+
 #==================================== 2. Save Info ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 cat > "$CONF_FILE" <<EOF
@@ -85,18 +87,21 @@ case $MC_MENU_LOADER in
     ;;
 
 esac
+
 #==================================== 5 Initialize Server Jarfile ====================================
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
-if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Reccomended!" "$HEIGHT" "$WIDTH"; then
+if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Reccomended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
     cd "$SERVER_DIR"
     java -jar $JAR_NAME
 fi
+
 #==================================== 6. Server.properties editor====================================
 if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH"; then
     cd "$SCRIPT_DIR/more-scripts/"
     bash server_properties_editor.sh --name $SERVER_NAME
     echo "Ran server.properties editor with $SERVER_NAME flag."
 fi
+
 #==================================== 7. Memory Config ====================================
 MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
@@ -164,7 +169,7 @@ fi
 
 
 #==================================== 11. Start Server ====================================
-if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" "$HEIGHT" "$WIDTH"; then
+if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server?\nAfter you exit tmux, you will drop back into the main menu." "$HEIGHT" "$WIDTH"; then
 tmux new-session -d -s "$SERVER_NAME"
 tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
 tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
