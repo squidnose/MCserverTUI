@@ -1,5 +1,12 @@
 # MC Server TUI:
 ## A Simple TUI for Minecraft(Java) servers on linux.
+## Features:
+- Setup and manage multiple MCservers with very low resource usage. (Runs in terminal)
+- Setup Wizard with all important settings (Version, Loader, Mods, Ram, config and Autostart)
+- Server Manager to reconfigure settings
+- Update server jar files and mods 
+- Setup periodic backups of your MCserver
+## Knowlage
 - Not reccomended for tech noobies!
 - Requires knowlage about
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
@@ -20,7 +27,7 @@
 - nerd-fonts-otf - For symbols in main menu (Not mandatory)
 ### Not required
 - Does not require SystemD
-- Can work on Glibc or Musl 
+- Can work on Glibc or Musl (Not dependant on any libc) 
 - Does not need a specific CPU architecture 
 
 (Limitations are with Openjdk and Tunneling services)
@@ -65,9 +72,6 @@ cd MCserverTUI
 [[Scripts and their functions]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/0.info.md)
 
 ## Todo
-- Manage Backups for all servvers located in ~/mcservers
-  - One time manula backup
-  - Setup Auto backup with crontab 
 - Manage All Reverse proxys (Playig.gg, ngrok)
   - Make crontabs for them with Tmux 
 - Auto Update-System
