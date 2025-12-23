@@ -32,7 +32,7 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage
     "${MENU_ITEMS[@]}" \
     3>&1 1>&2 2>&3) || exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
-
+echo " Opening $SERVER_NAME server for managing"
 #==================================== 03. Load server config file ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 if [ -f "$CONF_FILE" ]; then
@@ -48,6 +48,7 @@ startserver_tmux()
 {
 #======================= startserver 1. Runs mcserver in Tmux =========================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" "$HEIGHT" "$WIDTH" ; then
+echo " Started MCserver in tmux window labled $SERVER_NAME"
 tmux new-session -d -s "$SERVER_NAME"
 tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
 tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
@@ -60,7 +61,7 @@ edit_server_properties()
 #============================ server properties 1. Run server.properties editor ====================================
 if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
     cd "$SCRIPT_OG_DIR/more-scripts/"
-    echo "Loading server.properties file..."
+    echo " Loading server.properties file..."
     bash server_properties_editor.sh --name $SERVER_NAME
     echo "Ran server.properties editor with $SERVER_NAME flag."
 fi
@@ -115,7 +116,7 @@ case $MC_MENU_LOADER in
     JAR_NAME="$SERVER_NAME.jar"
     SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
     wget -O "$JAR_NAME" "$SERVER_URL"
-    echo "manual server jar url"
+    echo " manual server jar url"
     ;;
     2)
     JAR_NAME="$SERVER_NAME.jar"
@@ -128,7 +129,7 @@ case $MC_MENU_LOADER in
     if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
     wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
     fi
-    echo "MCjarfiles API called"
+    echo " MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
     ;;
     3) return 0
     ;;
@@ -137,9 +138,9 @@ esac
 
 lsr()
 {
-cd "$SCRIPT_OG_DIR/more-scripts/"
+    cd "$SCRIPT_OG_DIR/more-scripts/"
     bash LSR_edit_server_files.sh --name $SERVER_NAME
-    echo "Ran LSR jar file editor with $SERVER_NAME flag."
+    echo " Ran LSR jar file editor with $SERVER_NAME flag."
 } #lsr()
 
 manage_autostart()
@@ -164,7 +165,7 @@ if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
 fi
 EOF
 chmod +x "$AUTOSTART"
-echo "autostart.sh regenerated for $SERVER_NAME"
+echo " autostart.sh regenerated for $SERVER_NAME"
 fi
 
 #==================================== Autostart 3. Check on crontab  ====================================
@@ -203,6 +204,7 @@ if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh on
     MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
     MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
     JAR_NAME="$SERVER_NAME.jar"
+echo " New run.sh made with: $MC_XMS min, $MC_XMX max, using $JAR_NAME name"
 #======================= run.sh 3. More variables =========================
 ### fixes bug, when if no memory amout was selected, only -Xms or -Xmx, it caused a failed start
     if [[ -n "$MC_XMS" ]]; then
@@ -231,8 +233,10 @@ change_server_name()
 {
 if whiptail --title "Change Name of $SERVER_NAME?" --yesno "Do you want to change the name of your Server?\n This will also force stop your server!\nSTOP YOU SERVER BEFORE CHANGEING THE NAME!!!" "$HEIGHT" "$WIDTH" ; then
 {
+echo " Started renaming process"
 #===================== name 1. Force Stop the old server=====================
 tmux kill-session -t "$SERVER_NAME"
+echo "Killed $SERVER_NAME tmux session"
 #===================== name 2.Ask for the new name =====================
 SERVER_NAME_NEW=$(whiptail --title "$TITLE" --inputbox "Enter a NEW name for your server:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || return 0
 OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
@@ -240,20 +244,24 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
     if crontab -l >/dev/null 2>&1; then
         crontab -l | grep -v "@reboot $OLD_AUTOSTART" | crontab -
     fi
+echo "Removed cron entry for old name"
 #===================== name 4. Remove run.sh and autostart.sh ============================
     cd $SERVER_DIR
     rm run.sh
     rm autostart.sh
+echo "Removed run.sh and autostart.sh with old names"
 #===================== name 5. Rename server jar ============================
     JAR_NAME_OLD="$SERVER_NAME.jar"
     JAR_NAME_NEW="$SERVER_NAME_NEW.jar"
     mv $JAR_NAME_OLD $JAR_NAME_NEW
+echo "Renamed the jar file with new name"
 #===================== name 6. Rename server directory ============================
     cd "$HOME/mcservers" || return 0
     mv "$SERVER_NAME" "$SERVER_NAME_NEW"
     # Update internal variable
     SERVER_NAME="$SERVER_NAME_NEW"
     SERVER_DIR="$HOME/mcservers/$SERVER_NAME"
+echo "Renamed the server direcotry"
 #===================== name 7. Regenerate autostart ==============================
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"
     manage_run_sh "$SERVER_NAME" "$SERVER_DIR"
@@ -263,35 +271,53 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
 #==================================== 05. Main Menu ====================================
 while true; do
     MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        "1" "Open Console (tmux attach)" \
-        "2" "Start Server" \
-        "3" "Stop Server" \
-        "4" "Edit server.properties" \
-        "5" "Update $SERVER_NAME.jar file (And modrinth mods)" \
-        "6" "Edit Files (LSR)" \
-        "7" "Add or Reconfigure Autostart Fetures" \
-        "8" "Add or Reconfigure Memory ammout" \
-        "9" "Change server Name" \
-        "0" "Exit" \
+    "1" "  Open Console (tmux attach)" \
+    "2" "  Start Server" \
+    "3" "  Stop Server" \
+    "4" "  Edit server.properties" \
+    "5" "  Update $SERVER_NAME.jar file (and mods)" \
+    "6" "  Edit Files (LSR)" \
+    "7" "  Add or Reconfigure Autostart Features" \
+    "8" "  Add or Reconfigure Memory Amount" \
+    "9" "  Change Server Name" \
+    "0" "  Exit" \
         3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
         echo "Menu canceled. Exiting."
         exit 0
     fi
     case $MENU_CHOICES in
-    1) tmux attach -t "$SERVER_NAME" ;;
-    2) startserver_tmux ;;
-    3) tmux send-keys -t "$SERVER_NAME" "stop" C-m ;;
-    4) edit_server_properties ;; #external
-    5)
-    modrinth_autodownloader #external
-    update_server_jar #internal
+    1)
+        echo " Opened Server Console"
+        tmux attach -t "$SERVER_NAME"
+
     ;;
-    6) lsr ;;
-    7) manage_autostart "$SERVER_NAME" "$SERVER_DIR" ;; #internal
-    8) manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;; #internal
-    9) change_server_name ;; #internal
-    0) exit 0 ;;
+    2)
+        startserver_tmux
+    ;;
+    3)
+        echo " Stopped $SERVER_NAME server"
+        tmux send-keys -t "$SERVER_NAME" "stop" C-m
+
+    ;;
+    4)
+        edit_server_properties
+    ;; #external script
+    5)
+        modrinth_autodownloader #external script
+        update_server_jar #internal functoin
+    ;;
+    6)
+        lsr ;;
+    7)
+        manage_autostart "$SERVER_NAME" "$SERVER_DIR" ;; #internal
+    8)
+        manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;; #internal
+    9)
+        change_server_name ;; #internal
+    0)
+        echo " Exited Mange Servers"
+        exit 0 ;;
     *) echo "Invalid option selected. \nHow did you get here???" ;;
     esac
 done
