@@ -22,9 +22,9 @@
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
-- opejnjdk8, 17 and 21 - for Minecraft (My script doesnt use it)
+- opejnjdk 8, 17 and 21 - for Minecraft (My script doesnt use it)
 - Text editor/viewer - nano, vim, less, kate, mousepad - for editing text files
-- nerd-fonts-otf - For symbols in main menu (Not mandatory)
+- nerd-fonts-symbols-ttf - For symbols in main menu (Not mandatory)
 ### Not required
 - Does not require SystemD
 - Can work on Glibc or Musl (Not dependant on any libc) 
