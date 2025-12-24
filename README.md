@@ -39,10 +39,15 @@
 
 ## How to use:
 ### Setup Dependencies:
-- Either install all the depencencies or run setup.sh
+- I higly reccomended to install all your depencencies manually
+- However you can also run **setup.sh**
 ```
 ./setup.sh
 ```
+- This works great for Voidlinux and Archlinux
+- With other distros you may need to manually install:
+  - Older or Newever openjdk versions
+  - Nerd fonts symbols ttf
 ### Download and run the Git version:
 ```
 git clone https://github.com/squidnose/MCserverTUI.git

@@ -3,12 +3,12 @@ clear
 echo "Wellcome to my MCserverTUI script"
 echo "Before you run my script, we are going to need some dependecies"
 echo "Select You linux distro:"
-echo "1. Ubuntu 20.04 and Higher"
-echo "2. Debian 12(Not reccomended)"
-echo "3. Debian 13(Not reccomended)"
-echo "4. Voidlinux"
-echo "5. Archlinux(Untested)"
-echo "6. Fedora(Untested, Java 8 and 17 removed???)"
+echo "1. Ubuntu 22.04 and Higher(Tested)"
+echo "2. Debian 12(MC 1.17 - 1.20.4)"
+echo "3. Debian 13(MC 1.20.5+)"
+echo "4. Voidlinux(Tested)"
+echo "5. Archlinux(Extra Repo needed)"
+echo "6. Fedora(MC 1.20.5+)"
 echo "7. Not on the list?"
 read -r -p "Enter your choice (1-6):" CHOICE
 case $CHOICE in
@@ -17,6 +17,7 @@ echo "Installing MCserverTUI dependecies"
 sudo apt install newt python3 tmux curl wget
 echo "Installing Minecraft Java dependecies"
 sudo apt install openjdk-8-jdk-headless openjdk-8-jre-headless openjdk-17-jdk-headless openjdk-17-jre-headless openjdk-21-jdk-headless openjdk-21-jre-headless
+echo "Manually install nerd fonts for nicer looking TUI"
 ;;
 2)
 echo "Installing MCserverTUI dependecies"
@@ -26,6 +27,7 @@ sudo apt install openjdk-17-jdk-headless openjdk-17-jre-headless
 echo "DEBIAN 12 DOESNT SUPPORT JAVA 21 FOR MC 1.20.5 AND NEWER"
 echo "DEBIAN 12 DOESNT SUPPORT JAVA 8 FOR MC 1.16.5 AND OLDER"
 echo "Either manually install Java 21 and 8 or use a diferent distro..."
+echo "Manually install nerd fonts for nicer looking TUI"
 ;;
 3)
 echo "Installing MCserverTUI dependecies"
@@ -34,6 +36,7 @@ echo "Installing Minecraft Java dependecies"
 sudo apt install openjdk-21-jdk-headless openjdk-21-jre-headless
 echo "DEBIAN 13 DOESNT SUPPORT JAVA 17 or 8 FOR MC 1.20.4 AND OLDER"
 echo "Either manually install Java 17 and 8 or use a diferent distro..."
+echo "Manually install nerd fonts for nicer looking TUI"
 ;;
 4)
 echo "Installing MCserverTUI dependecies"
@@ -52,6 +55,8 @@ echo "Enabling Crontab service"
 sudo systemctl enable cronie.service
 echo "Installing Minecraft Java dependecies"
 sudo pacman -S  jdk8-openjdk jre8-openjdk-headless jdk17-openjdk jre17-openjdk-headless jdk21-openjdk jre21-openjdk-headless
+echo "Installing nerd font symbols"
+sudo pacman -S ttf-nerd-fonts-symbols
 ;;
 6)
 echo "Installing MCserverTUI dependecies"
@@ -59,8 +64,10 @@ sudo dnf install newt cronie python3 tmux curl wget
 echo "Enabling Crontab service"
 sudo systemctl enable cronie.service
 echo "Installing Minecraft Java dependecies"
-sudo dnf install java-1.8.0-openjdk java-17-openjdk java-21-openjdk
-echo "If you got an error, java 8 and 17 are probably no longer in fedora..."
+sudo dnf install java-21-openjdk
+echo "Fedora DOESNT SUPPORT JAVA 17 or 8 FOR MC 1.20.4 AND OLDER"
+echo "Either manually install Java 17 and 8 or use a diferent distro..."
+echo "Manually install nerd fonts for nicer looking TUI"
 ;;
 7)
 echo "If you distro is not listed or it did not work."
