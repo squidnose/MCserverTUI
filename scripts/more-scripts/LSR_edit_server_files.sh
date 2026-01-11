@@ -176,44 +176,7 @@ check_base_dir_permissions()
     fi
 }
 
-## Generic Function to run a script
-run_script()
-{
-    ### The full path to the script to run (passed as argument $1).
-    local script_path="$1"
-    ### Extract the script's file name from the full path.
-    local script_name="$(basename "$script_path")"
 
-    ### Check if the script file actually exists
-    if [ ! -f "$script_path" ]; then
-        whiptail --msgbox "Error: Script '$script_name' not found at '$script_path'. How did you do that... LOL" "$HEIGHT" "$WIDTH"
-        return 1
-    fi
-
-    ### Executable permissions check
-    if [ ! -x "$script_path" ]; then
-        whiptail --msgbox "Script '$script_name' is not executable. Attempting to add permissions..." "$HEIGHT" "$WIDTH"
-        chmod +x "$script_path"
-        if [ $? -ne 0 ]; then #Grab the exit status of the previous command(chmod) if failed then message
-            whiptail --msgbox "Error: Failed to make '$script_name' executable. Cannot run. Check your permissions." "$HEIGHT" "$WIDTH"
-            return 1
-        fi
-    fi
-
-### Confirmation Logic
-    if ! (whiptail --title "Confirm Run" --yesno "Are you sure you want to run '$script_name'?" 10 60); then
-        echo "User cancelled running '$script_name'." >&2
-        return 0 # User chose not to run, return to menu
-    fi
-
-### Script Execution
-    echo "=========================================="
-    echo "Running $script_path"
-    "$script_path"
-    echo "Ran $script_path"
-    read -p "Done, press enter to continue"
-    return 0
-}
 
 #Display menu logic
 #What does it do:
@@ -269,7 +232,7 @@ display_dynamic_menu()
 ###======================== Filtre File Types - 1/2 Edit to extend supported file types ========================
             case "$item_name" in
                 *.sh)
-                    menu_options+=("$item_name" "(Script) Run this script")
+                    menu_options+=("$item_name" "(Script) Edit using $EDITOR")
                     ;;
                 *.md)
                     menu_options+=("$item_name" "(Markdown) Read/Edit using $EDITOR")
@@ -284,7 +247,7 @@ display_dynamic_menu()
                     menu_options+=("$item_name" "(Jar) Replace/Rename/Remove jar file")
                     ;;
                 *)
-                    menu_options+=("$item_name" "(File) Edit or Run")
+                    menu_options+=("$item_name" "(File) Edit using $EDITOR")
                     ;;
             esac
         done <<< "$items"
@@ -332,21 +295,9 @@ display_dynamic_menu()
             else
 ###======================== Other Files - 2/2 dit to extend supported file types ========================
                 case "$choice" in
-                    *.sh) run_script "$chosen_path" ;; #For scripts
-                    *.md|*.txt|*.conf|*.yaml) $EDITOR "$chosen_path" ;; #(for files)
+                    *.md|*.txt|*.conf|*.yaml) $EDITOR "$chosen_path" </dev/tty >/dev/tty ;; #(for files)
                     *.jar) modify_jar "$chosen_path" ;;
-                    *)  ## Unknown / Other Files
-                        ##Offer action menu: Run or Edit
-                        local action
-                        action=$(whiptail --title "$TITLE" --backtitle "$BACKTITLE" --menu "What would you like to do with:\n\n$choice" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-                            "edit"  "Edit using $EDITOR" \
-                            "run"   "Run as script/binary" \
-                            3>&1 1>&2 2>&3)
-                        case "$action" in
-                            run) run_script "$chosen_path" ;;
-                            edit) $EDITOR "$chosen_path" ;;
-                        esac
-                    ;;
+                    *)  $EDITOR "$chosen_path" </dev/tty >/dev/tty ;;
                 esac
 
             fi
@@ -364,9 +315,6 @@ echo " Debug Output, please chek for any errors:"
 echo "=========================================="
 # 1. Check initial directory permissions (dependency check now in install_deps.sh)
 check_base_dir_permissions
-
-# 2. Set all .sh scripts to executable
-find scripts/ -type f -name "*.sh" -exec chmod +x {} \;
 
 # 3. Start the dynamic menu navigation from the root 'scripts' directory
 display_dynamic_menu "Main Menu" "$SCRIPT_DIR"
