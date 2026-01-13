@@ -22,9 +22,18 @@
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
-- opejnjdk 8, 17 and 21 - for Minecraft (My script doesnt use it)
 - Text editor/viewer - nano, vim, less, kate, mousepad - for editing text files
 - nerd-fonts-symbols-ttf - For symbols in main menu (Not mandatory)
+## Java for Minecraft
+- Diferent Minecraft versoins uses diferent java versions.
+  - Java 8  | MC 1.16.5 and older
+  - Java 17 | MC 1.17 - 1.20.4
+  - Java 21 | MC 1.20.5 - 1.21.11
+  - Java 25 | MC 26.1 and Newer
+- openjdk is mostly used on Linux for Java, you will thus need to install:
+  - openjdk8-jdk, openjdk17-jdk, openjdk21-jdk, openjdk25-jdk
+  - You can also use JRE, but JDK is more comatible with mods.
+
 ### Not required
 - Does not require SystemD
 - Can work on Glibc or Musl (Not dependant on any libc) 

@@ -53,7 +53,7 @@ echo "Saved config to $CONF_FILE"
 if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" || "$MC_LOADER" == "liteloader" || "$MC_LOADER" == "quilt" || "$MC_LOADER" == "rift" ]]; then
 if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
     cd "$SCRIPT_DIR/more-scripts/"
-    bash modrith-downloader.sh --name $SERVER_NAME
+    bash modrinth-downloader.sh --name $SERVER_NAME
     echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
 fi
 fi
