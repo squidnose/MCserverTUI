@@ -295,12 +295,6 @@ display_dynamic_menu()
         ### Process the user's choice based on the selected option.
     case "$choice" in
         Exit)
-            ### The user explicitly chose to exit the script.
-            echo "=========================================="
-            echo "=========================================="
-            echo "  Thank you for using My Linux-Script-Runner TUI!   "
-            echo "=========================================="
-            read -p "Press Enter To continue"
             exit 0
         ;;
        "..-back")
@@ -342,11 +336,6 @@ done
 
 
 #==================================== Main Script Logic ====================================
-
-clear # Clear the screen before the first menu appears.
-echo "=========================================="
-echo " Debug Output, please chek for any errors:"
-echo "=========================================="
 # 1. Check initial directory permissions (dependency check now in install_deps.sh)
 check_base_dir_permissions
 

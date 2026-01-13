@@ -55,14 +55,7 @@ cd MCserverTUI
 ./MCserverTUI.sh
 ```
 - MCserverTUI doest require a specific directory, but do not place it in ~/mcservers!
-### Run on SSH login
-- You can add MCserverTUI.sh to your .bashrc
-- This makes it automaticly open on login. (Easier, but less secure)
-- DO THIS AT YOUR OWN RISK!:
-```
-cd MCserverTUI
-./MC-Server-TUI.sh
-```
+
 (If you have placed MCserverTUI in ~ )
 ## What scripts to run?
 ### setup.sh
