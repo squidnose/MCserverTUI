@@ -23,7 +23,6 @@
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
 - Text editor/viewer - nano, vim, less, kate, mousepad - for editing text files
-- nerd-fonts-symbols-ttf - For symbols in main menu (Not mandatory)
 ## Java for Minecraft
 - Diferent Minecraft versoins uses diferent java versions.
   - Java 8  | MC 1.16.5 and older
