@@ -2,11 +2,21 @@
 ## Fixed menu system, i used to use LSR. This is more KISS:)
 
 set -euo pipefail
-#============================ Script location ============================
+#============================ Logging ============================
+STATE_DIR="$HOME/.local/state/MCserverTUI"
+MC_TUI_LOGFILE="$STATE_DIR/mcservertui.log"
+mkdir -p "$STATE_DIR"
+
+echlog() {
+    local msg="$*"
+    echo "$msg"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+}
+#============================ Debuging ============================
 clear # Clear the screen before the first menu appears.
-echo "=========================================="
-echo " Debug Output, please chek for any errors:"
-echo "=========================================="
+echlog "=========================================="
+echlog " Debug Output, please chek for any errors:"
+echlog "=========================================="
 
 #============================ Script location ============================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
@@ -22,7 +32,7 @@ WIDTH="$TERM_WIDTH"
 MENU_HEIGHT=$((HEIGHT - 10))
 ### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
-LOGFILE="$HOME/rsync-backups.log"
+RSYNC_LOGFILE="$HOME/.local/state/MCserverTUI/rsync-backups.log"
 TITLE="MC server TUI"
 
 #============================ Helpers ============================
@@ -48,74 +58,73 @@ while true; do
         watch_java      "👁  Watch All java processes" \
         crontab         "⏱  View or Manually Edit $USER"s" crontab" \
         colors          "🎨 Change the Colors of the TUI" \
+        mc_tui_log      "📜 Open/Edit the log file of MCserverTUI logfile" \
         exit            "X  Exit" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
 case "$CHOICE" in
     info)
         EDITOR=$(choose_editor) || continue
-        echo "=========================================="
-        echo "ℹ Opening info.md Documentation using $EDITOR"
+        echlog "ℹ Opening info.md Documentation using $EDITOR"
         "$EDITOR" "$SCRIPT_DIR/0.info.md"
     ;;
     new_server)
-        echo "=========================================="
-        echo "➕ Running New Server Script"
+        echlog "➕ Running New Server Script"
         "$SCRIPT_DIR/New-Server.sh"
     ;;
     manage_servers)
-        echo "=========================================="
-        echo "🛠  Running Manage Servers Script"
+        echlog "🛠  Running Manage Servers Script"
         "$SCRIPT_DIR/Manage-Servers.sh"
     ;;
     backup_servers)
-        echo "=========================================="
-        echo "🌐 Running Manage MC server Backup Script"
-        "$SCRIPT_DIR/Backup-MC-Servers.sh"
+        echlog "🌐 Running Manage MC server Backup Script"
+        "$SCRIPT_DIR/Backups-RSYNC-TUI/Backup-MC-Servers.sh"
     ;;
     backup_logs)
     ##See if the log file exists
-        if [ ! -f "$LOGFILE" ]; then
-            whiptail --title "Logfile not found" --msgbox "No logfile found at:$LOGFILE" $HEIGHT $WIDTH
-            echo "Log File Not Found! A logged backup has probably not been run yet."
+        if [ ! -f "$RSYNC_LOGFILE" ]; then
+            whiptail --title "Logfile not found" --msgbox "No logfile found at:$RSYNC_LOGFILE" $HEIGHT $WIDTH
+            echlog "Log File Not Found! A logged backup has probably not been run yet."
         else
 
     ##Choose editor
         EDITOR=$(choose_editor) || continue
-        echo "=========================================="
-        echo "📜 Opening $LOGFILE using $EDITOR"
-        "$EDITOR" "$LOGFILE"
+        echlog "📜 Opening $RSYNC_LOGFILE using $EDITOR"
+        "$EDITOR" "$RSYNC_LOGFILE"
         fi
     ;;
     watch_java)
-        echo "👁 wathing java processes "
+        echlog "👁 wathing java processes "
         watch -n 1 "ps -ef | grep java"
     ;;
     crontab)
         ##Choose editor
         EDITOR=$(choose_editor) || continue
-        echo "=========================================="
-        echo "⏱ Opening Crontab using $EDITOR"
+        echlog "⏱ Opening Crontab using $EDITOR"
         ##Open Crontab
         export EDITOR
         crontab -e
     ;;
     colors)
-        echo "🎨 Running Color Changing Script"
+        echlog "🎨 Running Color Changing Script"
         "$SCRIPT_DIR/Colors/set-colors.sh"
     ;;
+    mc_tui_log)
+        EDITOR=$(choose_editor) || continue
+        echlog "📜 Opening $MC_TUI_LOGFILE using $EDITOR"
+        "$EDITOR" "$MC_TUI_LOGFILE"
+    ;;
     exit)
-        echo "=========================================="
-        echo "=========================================="
-        echo " Thank you for using My MC-server-TUI! "
-        echo "=========================================="
+        echlog "=========================================="
+        echlog " Thank you for using My MC-server-TUI! "
+        echlog "=========================================="
         exit 0
     ;;
     *)
-        echo "Error, unknown menu optoin"
-        echo "=========================================="
-        echo "=========================================="
-        echo " Thank you for using My MC-server-TUI! "
-        echo "=========================================="
+        echlog "=========================================="
+        echlog "Error, unknown menu optoin"
+        echlog "=========================================="
+        echlog " Thank you for using My MC-server-TUI! "
+        echlog "=========================================="
         exit 0
     ;;
     esac

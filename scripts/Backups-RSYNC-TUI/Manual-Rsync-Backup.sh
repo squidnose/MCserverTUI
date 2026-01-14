@@ -16,7 +16,7 @@ MENU_HEIGHT=$(( HEIGHT - 10 ))
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 
 #============================ Variables ============================
-TITLE="New Rsync Backup Entry"
+TITLE="Manual Rsync Backup"
 
 #============================ Functions ============================
 error()
@@ -49,7 +49,7 @@ while getopts ":i:o:" opt; do
 done
 
 #============================ Confirmation ============================
-(whiptail --title "$TITLE" --yesno "Hi $USER, do you wish setup a NEW backup option?" 10 60;) || exited
+(whiptail --title "$TITLE" --yesno "Hi $USER, do you wish to run a MANUAL backup?" 10 60;) || exited
 
 #============================ Source directory ============================
 SRC=$(whiptail --title "Source - $TITLE" \
@@ -70,8 +70,22 @@ DST_DIR=$(normalize_dir "$DST_DIR")
 #Adding the name for the folder with the date
     DST="${DST_DIR}Manual-$(date +%Y-%m-%d_%H-%M)/"
 
+#============================ Dry-run preview ============================
+if whiptail --title "Preview Restore (Dry Run)" --yesno \
+"Do you want to PREVIEW what will change before restoring?
+
+No files will be modified.
+This will show:
+- Files that will be copied
+- Press Q to exit" \
+"$HEIGHT" "$WIDTH"; then
+
+    rsync -aAX --dry-run --itemize-changes "$SRC" "$DST" | less
+
+fi
+
 #============================ Backup confirmation ============================
-whiptail --title "Confirm Manual Backup" --yesno \
+whiptail --title "$TITLE" --yesno \
 "Run manual backup now?
 
 Source:
@@ -92,12 +106,13 @@ mkdir -p "$DST" || error "Cannot create backup directory"
 case "$RUN_MODE" in
     normal)
         echo "Backup in progress, please wait..."
-        rsync -aAX "$SRC" "$DST"
+        rsync -aAXv "$SRC" "$DST"
+        read -p "Press Enter to Continue"
         ;;
     tmux)
         command -v tmux >/dev/null || error "tmux is not installed"
         SESSION="manual-backup-$(date +%Y%m%d%H%M%S)"
-        tmux new-session -d -s "$SESSION" "rsync -aAX \"$SRC\" \"$DST\"; echo; echo 'Backup finished. Press Enter to exit.'; read"
+        tmux new-session -d -s "$SESSION" "rsync -aAXv \"$SRC\" \"$DST\"; echo; echo 'Backup finished. Press Enter to exit.'; read"
         if whiptail --title "tmux Session Started" --yesno "Backup is running in tmux session: $SESSION Do you want to attach now?" $HEIGHT $WIDTH; then
         tmux attach -t "$SESSION"
         else

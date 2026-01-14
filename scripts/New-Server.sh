@@ -1,4 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#============================ Logging ============================
+STATE_DIR="$HOME/.local/state/MCserverTUI"
+MC_TUI_LOGFILE="$STATE_DIR/mcservertui.log"
+mkdir -p "$STATE_DIR"
+
+echlog() {
+    local msg="$*"
+    echo "$msg"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+}
 #==================================== MC Server Setup Wizard ====================================
 TITLE="New Server Setup"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
@@ -39,6 +49,7 @@ case $MC_LOADER_CHOICE in
     *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2)
 esac
 MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth Mods collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+echlog "New $MC_LOADER server named $SERVER_NAME on version $MC_VERSION with this modrinth ID: $MOD_COLLECTION"
 
 #==================================== 2. Save Info ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
@@ -47,14 +58,14 @@ version=$MC_VERSION
 loader=$MC_LOADER
 collection=$MOD_COLLECTION
 EOF
-echo "Saved config to $CONF_FILE"
+echlog "Saved config to $CONF_FILE"
 
 #==================================== 3.Offer Modrinth Downloader ====================================
 if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" || "$MC_LOADER" == "liteloader" || "$MC_LOADER" == "quilt" || "$MC_LOADER" == "rift" ]]; then
 if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
     cd "$SCRIPT_DIR/more-scripts/"
     bash modrinth-downloader.sh --name $SERVER_NAME
-    echo "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
+    echlog "Ran Modrinth Collection Downloader with $SERVER_NAME flag."
 fi
 fi
 
@@ -70,7 +81,7 @@ case $MC_MENU_LOADER in
     JAR_NAME="$SERVER_NAME.jar"
     SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
     wget -O "$JAR_NAME" "$SERVER_URL"
-    echo "manual server jar url"
+    echlog "manual server jar url"
     ;;
     2)
     JAR_NAME="$SERVER_NAME.jar"
@@ -83,7 +94,7 @@ case $MC_MENU_LOADER in
     if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
     wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
     fi
-    echo "MCjarfiles API called"
+    echlog "MCjarfiles API called"
     ;;
 
 esac
@@ -99,7 +110,7 @@ fi
 if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH"; then
     cd "$SCRIPT_DIR/more-scripts/"
     bash server_properties_editor.sh --name $SERVER_NAME
-    echo "Ran server.properties editor with $SERVER_NAME flag."
+    echlog "Ran server.properties editor with $SERVER_NAME flag."
 fi
 
 #==================================== 7. Memory Config ====================================
@@ -160,10 +171,10 @@ EOF
     CRONLINE="@reboot $AUTOSTART"
 
     if (crontab -l 2>/dev/null | grep -F "$CRONLINE" >/dev/null); then
-        echo "Cron entry already exists. Skipping."
+        echlog "Cron entry already exists. Skipping."
     else
         (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
-        echo "Autostart enabled and cronjob added."
+        echlog "Autostart enabled and cronjob added."
     fi
 fi
 
