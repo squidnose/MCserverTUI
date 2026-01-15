@@ -3,9 +3,13 @@
 
 set -euo pipefail
 #============================ Logging ============================
-STATE_DIR="$HOME/.local/state/MCserverTUI"
-MC_TUI_LOGFILE="$STATE_DIR/mcservertui.log"
-mkdir -p "$STATE_DIR"
+mkdir -p "$HOME/.local/state/MCserverTUI"
+MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
+
+# For rsync backups
+mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
+LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
+LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
 
 echlog() {
     local msg="$*"
@@ -32,7 +36,6 @@ WIDTH="$TERM_WIDTH"
 MENU_HEIGHT=$((HEIGHT - 10))
 ### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
-RSYNC_LOGFILE="$HOME/.local/state/MCserverTUI/rsync-backups.log"
 TITLE="MC server TUI"
 
 #============================ Helpers ============================
@@ -54,11 +57,10 @@ while true; do
         new_server      "➕ Setup a New MC server" \
         manage_servers  "🛠  Manage existing MC servers" \
         backup_servers  "🌐 Manage MC server Backups" \
-        backup_logs     "📜 View Backup Logs" \
+        logs            "📜 View Logs" \
         watch_java      "👁  Watch All java processes" \
         crontab         "⏱  View or Manually Edit $USER"s" crontab" \
         colors          "🎨 Change the Colors of the TUI" \
-        mc_tui_log      "📜 Open/Edit the log file of MCserverTUI logfile" \
         exit            "X  Exit" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
 case "$CHOICE" in
@@ -79,17 +81,25 @@ case "$CHOICE" in
         echlog "🌐 Running Manage MC server Backup Script"
         "$SCRIPT_DIR/Backups-RSYNC-TUI/Backup-MC-Servers.sh"
     ;;
-    backup_logs)
-    ##See if the log file exists
-        if [ ! -f "$RSYNC_LOGFILE" ]; then
-            whiptail --title "Logfile not found" --msgbox "No logfile found at:$RSYNC_LOGFILE" $HEIGHT $WIDTH
-            echlog "Log File Not Found! A logged backup has probably not been run yet."
+    logs)
+        # Choose a log file
+        LOGFILE_CHOICE=$(whiptail --title "Log File Choice" --menu "Choose what log file to load?" $HEIGHT $WIDTH $MENU_HEIGHT \
+        "$LOGFILE_CRON"    "Automated Backups with Cron" \
+        "$LOGFILE_MANUAL"  "Manual backups and backup Restore operations" \
+        "$MC_TUI_LOGFILE"  "MCserverTUI output logs" \
+        3>&1 1>&2 2>&3) || continue
+
+        # See if the log file exists
+        if [ ! -f "$LOGFILE_CHOICE" ]; then
+            whiptail --title "Logfile not found" --msgbox "No logfile found at:$LOGFILE_CHOICE" $HEIGHT $WIDTH
+            echlog "Log File: $LOGFILE_CHOICE Not Found!"
         else
 
-    ##Choose editor
+        ##Choose editor
         EDITOR=$(choose_editor) || continue
-        echlog "📜 Opening $RSYNC_LOGFILE using $EDITOR"
-        "$EDITOR" "$RSYNC_LOGFILE"
+        echo "=========================================="
+        echlog "Opening $LOGFILE_CHOICE using $EDITOR"
+        "$EDITOR" "$LOGFILE_CHOICE"
         fi
     ;;
     watch_java)
@@ -107,11 +117,6 @@ case "$CHOICE" in
     colors)
         echlog "🎨 Running Color Changing Script"
         "$SCRIPT_DIR/Colors/set-colors.sh"
-    ;;
-    mc_tui_log)
-        EDITOR=$(choose_editor) || continue
-        echlog "📜 Opening $MC_TUI_LOGFILE using $EDITOR"
-        "$EDITOR" "$MC_TUI_LOGFILE"
     ;;
     exit)
         echlog "=========================================="

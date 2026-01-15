@@ -23,7 +23,7 @@ MENU_HEIGHT=$(( HEIGHT - 10 ))
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 
 #============================ Variables ============================
-LOGFILE="$HOME/rsync-backups.log" ##Logs whenever backup is made (Opt-Out)
+LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log" ##Logs whenever backup is made (Opt-Out)
 TITLE="New Rsync Backup Entry"
 
 #============================ Functions ============================
@@ -200,12 +200,12 @@ LOG_MODE=$(whiptail --title "Logging - $TITLE" --menu "Enable logging?" "$HEIGHT
 
 case "$LOG_MODE" in
     yes)
-        CMD="sh -c 'echo \"[\$(date)] Backup start | period=$PERIOD | source=$SRC | destination=$DST_DIR\" >> \"$LOGFILE\"; \
-        rsync $RSYNC_OPTS \"$SRC\" \"$DST\" >> \"$LOGFILE\" 2>&1'"
+        CMD="sh -c 'echo \"[\$(date)] Backup start | period=$PERIOD | source=$SRC | destination=$DST_DIR\" >> \"$LOGFILE_CRON\"; \
+        rsync $RSYNC_OPTS \"$SRC\" \"$DST\" >> \"$LOGFILE_CRON\" 2>&1'"
         ;;
     no)
         CMD="sh -c 'rsync $RSYNC_OPTS \"$SRC\" \"$DST\"'"
-        LOGFILE="None - Logging disabled" #Log file now no longer represents a file or location.
+        LOGFILE_CRON="None - Logging disabled" #Log file now no longer represents a file or location.
         ;;
     *)
         error "Invalid logging option"
@@ -225,12 +225,12 @@ $TIME_DISPLAY
 $CRONLINE
 
 === Log file: ===
-$LOGFILE" $HEIGHT $WIDTH || exited
+$LOGFILE_CRON" $HEIGHT $WIDTH || exited
 
 #============================ Install cron job ============================
 (
     crontab -l 2>/dev/null
-    echo "#Backup | source=$SRC | destination=$DST_DIR | $TIME_DISPLAY | Logs:$LOGFILE"
+    echo "#Backup | source=$SRC | destination=$DST_DIR | $TIME_DISPLAY | Logs:$LOGFILE_CRON"
     echo "$CRONLINE"
 ) | crontab -
 echo "Made this cronline: $CRONLINE"

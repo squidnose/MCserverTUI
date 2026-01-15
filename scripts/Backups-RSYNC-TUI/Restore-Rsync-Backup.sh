@@ -2,6 +2,16 @@
 ##Finds the locatoin of bash
 set -euo pipefail
 ##Prevents silent failure
+#============================ Logging ============================
+mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
+LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
+# Echo and Log into file
+echlog() {
+    local msg="$*"
+    echo "$msg"
+    # if you dont want logs, comment this line:
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$LOGFILE_MANUAL"
+}
 
 #============================ Term Size============================
 ## Detect terminal size
@@ -33,7 +43,8 @@ normalize_dir() ##Ensure directory path ends with a trailing slash for rsync
 }
 exited() #Exit 0 with a echo debug notice
 {
-    echo "exited out of Restore-Rsync-Backup mid script"
+    echlog "exited out of Restore-Rsync-Backup mid script"
+    echlog "=========================================="
     exit 0
 }
 
@@ -48,6 +59,10 @@ while getopts ":i:o:" opt; do
         *) error "Invalid option" ;;
     esac
 done
+echlog "=========================================="
+echlog "Restore-Rsync-Backup ran with theese parameters:"
+echlog "Source: $SRC_PRE"
+echlog "Destination: $DST_PRE"
 
 #============================ Confirmation ============================
 (whiptail --title "$TITLE" --yesno "Hi $USER, do you wish RESTORE from backup?" 10 60;) || exited
@@ -74,6 +89,10 @@ DST_DIR=$(normalize_dir "$DST_DIR")
 [ -n "$DST" ] || error "Destination is empty"
 [ "$DST" != "/" ] || error "Refusing to restore into /"
 
+echlog "Changed to theese parameters:"
+echlog "Source: $SRC_PRE"
+echlog "Destination: $DST_PRE"
+
 #============================ Dry-run preview ============================
 if whiptail --title "Preview Restore (Dry Run)" --yesno \
 "Do you want to PREVIEW what will change before restoring?
@@ -85,7 +104,7 @@ This will show:
 - It will only show changes
 - Press Q to exit" \
 "$HEIGHT" "$WIDTH"; then
-
+    echlog "Dry run mode ran"
     rsync -aAX --delete --dry-run --itemize-changes "$SRC" "$DST" | less
 
 fi
@@ -111,11 +130,12 @@ mkdir -p "$DST" || error "Cannot create backup directory"
 
 case "$RUN_MODE" in
     normal)
-        echo "Restoration in progress, please wait..."
+        echlog "Normal (CLI) Backup run mode Selected"
         rsync -aAXv --delete "$SRC" "$DST"
         read -p "Press Enter to Continue"
         ;;
     tmux)
+        echlog "TMUX Backup run mode Selected"
         command -v tmux >/dev/null || error "tmux is not installed"
         SESSION="restore-backup-$(date +%Y%m%d%H%M%S)"
         tmux new-session -d -s "$SESSION" "rsync -aAXv --delete \"$SRC\" \"$DST\"; echo; echo 'Restoration finished. Press Enter to exit.'; read"
@@ -139,5 +159,5 @@ $SRC
 
 Destination:
 $DST" $HEIGHT $WIDTH
-
+echlog "=========================================="
 exit 0

@@ -3,6 +3,16 @@
 set -euo pipefail
 ##Prevents silent failure
 
+#============================ Logging ============================
+mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
+LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
+# Echo and Log into file
+echlog() {
+    local msg="$*"
+    echo "$msg"
+    # if you dont want logs, comment this line:
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$LOGFILE_MANUAL"
+}
 #============================ Term Size============================
 ## Detect terminal size
 ### incase tput is not found, sets to fixed value
@@ -33,7 +43,8 @@ normalize_dir() ##Ensure directory path ends with a trailing slash for rsync
 }
 exited() #Exit 0 with a echo debug notice
 {
-    echo "exited out of Manual-Rsync-Backup mid script"
+    echlog "exited out of Manual-Rsync-Backup mid script"
+    echlog "=========================================="
     exit 0
 }
 #============================ Parse flags ============================
@@ -47,6 +58,10 @@ while getopts ":i:o:" opt; do
         *) error "Invalid option" ;;
     esac
 done
+echlog "=========================================="
+echlog "Manual-Rsync-Backup ran with theese parameters:"
+echlog "Source: $SRC_PRE"
+echlog "Destination: $DST_PRE"
 
 #============================ Confirmation ============================
 (whiptail --title "$TITLE" --yesno "Hi $USER, do you wish to run a MANUAL backup?" 10 60;) || exited
@@ -69,6 +84,9 @@ DST_DIR=$(normalize_dir "$DST_DIR")
 
 #Adding the name for the folder with the date
     DST="${DST_DIR}Manual-$(date +%Y-%m-%d_%H-%M)/"
+echlog "Changed to theese parameters:"
+echlog "Source: $SRC_PRE"
+echlog "Destination: $DST_PRE"
 
 #============================ Dry-run preview ============================
 if whiptail --title "Preview Restore (Dry Run)" --yesno \
@@ -79,7 +97,7 @@ This will show:
 - Files that will be copied
 - Press Q to exit" \
 "$HEIGHT" "$WIDTH"; then
-
+    echlog "Dry run mode ran"
     rsync -aAX --dry-run --itemize-changes "$SRC" "$DST" | less
 
 fi
@@ -105,11 +123,12 @@ mkdir -p "$DST" || error "Cannot create backup directory"
 
 case "$RUN_MODE" in
     normal)
-        echo "Backup in progress, please wait..."
+        echlog "Normal (CLI) Backup run mode Selected"
         rsync -aAXv "$SRC" "$DST"
         read -p "Press Enter to Continue"
         ;;
     tmux)
+        echlog "TMUX Backup run mode Selected"
         command -v tmux >/dev/null || error "tmux is not installed"
         SESSION="manual-backup-$(date +%Y%m%d%H%M%S)"
         tmux new-session -d -s "$SESSION" "rsync -aAXv \"$SRC\" \"$DST\"; echo; echo 'Backup finished. Press Enter to exit.'; read"
@@ -133,5 +152,5 @@ $SRC
 
 Destination:
 $DST" $HEIGHT $WIDTH
-
+echlog "=========================================="
 exit 0
