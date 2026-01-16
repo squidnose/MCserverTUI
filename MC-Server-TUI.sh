@@ -19,7 +19,7 @@ echlog() {
 #============================ Debuging ============================
 clear # Clear the screen before the first menu appears.
 echlog "=========================================="
-echlog " Debug Output, please chek for any errors:"
+echlog " Debug Output, please check for any errors:"
 echlog "=========================================="
 
 #============================ Script location ============================
@@ -92,13 +92,12 @@ case "$CHOICE" in
         # See if the log file exists
         if [ ! -f "$LOGFILE_CHOICE" ]; then
             whiptail --title "Logfile not found" --msgbox "No logfile found at:$LOGFILE_CHOICE" $HEIGHT $WIDTH
-            echlog "Log File: $LOGFILE_CHOICE Not Found!"
+            echlog "📜 Log File: $LOGFILE_CHOICE Not Found!"
         else
 
         ##Choose editor
         EDITOR=$(choose_editor) || continue
-        echo "=========================================="
-        echlog "Opening $LOGFILE_CHOICE using $EDITOR"
+        echlog "📜 Opening $LOGFILE_CHOICE using $EDITOR"
         "$EDITOR" "$LOGFILE_CHOICE"
         fi
     ;;
@@ -126,7 +125,7 @@ case "$CHOICE" in
     ;;
     *)
         echlog "=========================================="
-        echlog "Error, unknown menu optoin"
+        echlog " Error, unknown menu optoin"
         echlog "=========================================="
         echlog " Thank you for using My MC-server-TUI! "
         echlog "=========================================="

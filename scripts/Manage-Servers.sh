@@ -1,10 +1,9 @@
 #!/bin/bash
 #This script uses a modified version of my LSR
 #==================================== MC Server Managment ====================================
-#============================ Logging ============================
-STATE_DIR="$HOME/.local/state/MCserverTUI"
-MC_TUI_LOGFILE="$STATE_DIR/mcservertui.log"
-mkdir -p "$STATE_DIR"
+#============================ 00. Logging ============================
+mkdir -p "$HOME/.local/state/MCserverTUI"
+MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 
 echlog() {
     local msg="$*"
