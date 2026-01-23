@@ -22,7 +22,7 @@
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
-- Text editor/viewer - nano, vim, less, kate, mousepad - for editing text files
+- Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files
 ## Java for Minecraft
 - Diferent Minecraft versoins uses diferent java versions.
   - Java 8  | MC 1.16.5 and older
@@ -60,7 +60,7 @@
 ```
 git clone https://github.com/squidnose/MCserverTUI.git
 cd MCserverTUI
-./MCserverTUI.sh
+./MC-Server-TUI.sh
 ```
 - MCserverTUI doest require a specific directory, but do not place it in ~/mcservers!
 
@@ -76,6 +76,18 @@ cd MCserverTUI
 
 ### MCserver scripts
 [[Scripts and their functions]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/0.info.md)
+
+### Reccomended distros
+- The main deciding factor in reccomending a good distro is the Java compatibility
+- Not all distros have Older and Newever java version
+- Minecraft uses Java: 8, 17, 21, 25
+- The only distros that have all of them are:
+  - Ubuntu LTS (Tested)
+  - Voidlinux (Tested)
+  - Archlinux
+  - FreeBSD (Not Linux)
+- Hence they are reccomended.
+- If you need a diferent version of Java then the one provided by your distro, then install java manually. 
 
 ## Todo
 - Manage All Reverse proxys (Playig.gg, ngrok)

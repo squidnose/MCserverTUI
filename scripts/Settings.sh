@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-## Fixed menu system, i used to use LSR. This is more KISS:)
-
 set -euo pipefail
+
 #============================ Logging ============================
 mkdir -p "$HOME/.local/state/MCserverTUI"
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
@@ -24,7 +23,7 @@ echlog " Debug Output, please check for any errors:"
 echlog "=========================================="
 
 #============================ Script location ============================
-SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 #============================ newt colors ============================
 export NEWT_COLORS_FILE="$SCRIPT_DIR/Colors/colors.conf"
@@ -37,66 +36,66 @@ WIDTH="$TERM_WIDTH"
 MENU_HEIGHT=$((HEIGHT - 10))
 ### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
-TITLE="MC server TUI"
+TITLE="MC server TUI - Settings"
 
 #============================ Helpers ============================
 choose_editor()
 {
     whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        mdr         "Simple Terminal Markdown Reader (q to quit)" \
-        nano        "Simple terminal editor (CTR+X to quit)" \
         less        "Simple, read only (q to quit)" \
+        nano        "Simple terminal editor (CTR+X to quit)" \
         vim         "Advanced terminal editor (No one knows how to quit)" \
         kate        "KDEs graphical notepad" \
         mousepad    "XFCEs graphical notepad" \
         3>&1 1>&2 2>&3
 }
 
-#============================ Main menu ============================
+#============================ Helpers ============================
 while true; do
     CHOICE=$(whiptail --title "$TITLE" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        info            "ℹ️ Help - What to Do?" \
-        new_server      "➕ Setup a New MC server" \
-        manage_servers  "🛠 Manage existing MC servers" \
-        backup_servers  "🌐 Manage MC server Backups" \
-        settings        "⚙️ TUI Settings and Logs" \
-        exit            "X  Exit" \
+        logs            "📜 View Logs for TUI's and Backups" \
+        watch_java      "👁  Watch All java processes" \
+        crontab         "⏱  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
+        colors          "🎨 Change the Colors of the TUI" \
+        go_back         "..  Go Back" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
-case "$CHOICE" in
-    info)
+    case "$CHOICE" in
+    logs)
+    # Choose a log file
+    LOGFILE_CHOICE=$(whiptail --title "Log File Choice" --menu "Choose what log file to load?" $HEIGHT $WIDTH $MENU_HEIGHT \
+    "$LOGFILE_CRON"    "Automated Backups with Cron" \
+    "$LOGFILE_MANUAL"  "Manual backups and backup Restore operations" \
+    "$MC_TUI_LOGFILE"  "MCserverTUI output logs" \
+    3>&1 1>&2 2>&3) || continue
+
+    # See if the log file exists
+    if [ ! -f "$LOGFILE_CHOICE" ]; then
+        whiptail --title "Logfile not found" --msgbox "No logfile found at:$LOGFILE_CHOICE" $HEIGHT $WIDTH
+        echlog "📜 Log File: $LOGFILE_CHOICE Not Found!"
+    else
+
+    ##Choose editor
+    EDITOR=$(choose_editor) || continue
+    echlog "📜 Opening $LOGFILE_CHOICE using $EDITOR"
+    "$EDITOR" "$LOGFILE_CHOICE"
+    fi
+    ;;
+    watch_java)
+        echlog "👁 wathing java processes "
+        watch -n 1 "ps -ef | grep java"
+    ;;
+    crontab)
+        ##Choose editor
         EDITOR=$(choose_editor) || continue
-        echlog "ℹ️ Opening 1.Info-Main-Menu.md Documentation using $EDITOR"
-        "$EDITOR" "$SCRIPT_DIR/1.Info-Main-Menu.md"
+        echlog "⏱ Opening Crontab using $EDITOR"
+        ##Open Crontab
+        export EDITOR
+        crontab -e
     ;;
-    new_server)
-        echlog "➕ Running New Server Script"
-        "$SCRIPT_DIR/New-Server.sh"
+    colors)
+        echlog "🎨 Running Color Changing Script"
+        "$SCRIPT_DIR/Colors/set-colors.sh"
     ;;
-    manage_servers)
-        echlog "🛠  Running Manage Servers Script"
-        "$SCRIPT_DIR/Manage-Servers.sh"
-    ;;
-    backup_servers)
-        echlog "🌐 Running Manage MC server Backup Script"
-        "$SCRIPT_DIR/Backups-RSYNC-TUI/Backup-MC-Servers.sh"
-    ;;
-    settings)
-        echlog "⚙️ Opening Settings"
-        "$SCRIPT_DIR/Settings.sh"
-    ;;
-    exit)
-        echlog "=========================================="
-        echlog " Thank you for using My MC-server-TUI! "
-        echlog "=========================================="
-        exit 0
-    ;;
-    *)
-        echlog "=========================================="
-        echlog " Error, unknown menu optoin"
-        echlog "=========================================="
-        echlog " Thank you for using My MC-server-TUI! "
-        echlog "=========================================="
-        exit 0
-    ;;
+    *) exit 0 ;;
     esac
 done

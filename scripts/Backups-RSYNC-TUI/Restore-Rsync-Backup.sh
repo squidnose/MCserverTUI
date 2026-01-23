@@ -65,7 +65,7 @@ echlog "Source: $SRC_PRE"
 echlog "Destination: $DST_PRE"
 
 #============================ Confirmation ============================
-(whiptail --title "$TITLE" --yesno "Hi $USER, do you wish RESTORE from backup?" 10 60;) || exited
+(whiptail --title "$TITLE" --yesno "Hi ${USER:-$(id -un 2>/dev/null || echo User)}, do you wish RESTORE from backup?" 10 60;) || exited
 
 #============================ Source directory ============================
 SRC=$(whiptail --title "Source - $TITLE" \

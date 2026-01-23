@@ -295,7 +295,7 @@ while true; do
     "7" "⏱  Add or Reconfigure Autostart Features" \
     "8" "🧠 Add or Reconfigure Memory Amount" \
     "9" "✏  Change Server Name" \
-    "0" "X  Exit" \
+    "0" "X  Go Back .." \
         3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
         echlog "X $SERVER_NAME MCserver: Menu canceled. Exiting."

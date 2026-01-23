@@ -119,7 +119,7 @@ while getopts ":i:o:" opt; do
 done
 
 #============================ Confirmation ============================
-(whiptail --title "$TITLE" --yesno "Hi $USER, do you wish setup a NEW backup option?" 10 60;) || exited
+(whiptail --title "$TITLE" --yesno "Hi ${USER:-$(id -un 2>/dev/null || echo User)}, do you wish setup a NEW backup option?" 10 60;) || exited
 
 #============================ Source directory ============================
 SRC=$(whiptail --title "Source - $TITLE" \

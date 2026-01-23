@@ -39,12 +39,14 @@ echo "DEBIAN 13 DOESNT SUPPORT JAVA 17 or 8 FOR MC 1.20.4 AND OLDER"
 echo "Either manually install Java 17 and 8 or use a diferent distro..."
 ;;
 4)
-echo "Installing MCserverTUI Dependencies"
-sudo xbps-install -Syu newt cronie python3 tmux curl wget
+echo "Installing MCserverTUI Dependencies(Newt, Cronie, python3, tmux, curl, wget)"
+sudo xbps-install -Su newt cronie python3 tmux curl wget
+echo "Installing Nano, Less and mdr text editors/viewers"
+sudo xbps-install -Su nano less mdr
 echo "Enabling Crontab service"
 sudo ln -s /etc/sv/cronie/ /var/service/
 echo "Installing Minecraft Java Dependencies"
-sudo xbps-install -Syu openjdk8 openjdk8-jre openjdk17 openjdk17-jre openjdk21 openjdk21-jre
+sudo xbps-install -Su openjdk8 openjdk8-jre openjdk17 openjdk17-jre openjdk21 openjdk21-jre openjdk25 openjdk25-jre
 ;;
 5)
 echo "Installing MCserverTUI Dependencies"

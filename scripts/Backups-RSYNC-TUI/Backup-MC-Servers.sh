@@ -18,9 +18,10 @@ MC_ROOT="$HOME/mcservers"
 choose_editor()
 {
     whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        nano        "Simple terminal editor (Beginner-friendly)" \
-        less        "Simple, read only, q to quit" \
-        vim         "Advanced terminal editor (Standard terminal editor)" \
+        mdr         "Simple Terminal Markdown Reader (q to quit)" \
+        nano        "Simple terminal editor (CTR+X to quit)" \
+        less        "Simple, read only (q to quit)" \
+        vim         "Advanced terminal editor (No one knows how to quit)" \
         kate        "KDEs graphical notepad" \
         mousepad    "XFCEs graphical notepad" \
         3>&1 1>&2 2>&3
@@ -43,28 +44,28 @@ BACKUP_DIR="$HOME/Backups/mcservers/$SERVER_NAME"
 #============================ Main Menu ============================
 while true; do
     CHOICE=$(whiptail --title "Choose Backup Options" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        info        "Help - How does this work?" \
-        new_backup  "Create a new Periodic Backup" \
-        manual      "Run a manual backup" \
-        restore     "Restore from backup" \
-        exit        "Exit" \
+        info        "ℹ️ Help - How does this work?" \
+        new_backup  "➕ Create a new Periodic Backup" \
+        manual      "🛠 Run a manual backup" \
+        restore     "🔄 Restore from backup" \
+        go_back     "X Go back .." \
         3>&1 1>&2 2>&3) || exit 0
 
 case "$CHOICE" in
     info)
         EDITOR=$(choose_editor) || continue
         echo "=========================================="
-        echo "Opening How-To-Backup.md Documentation using $EDITOR"
+        echo "ℹ️ Opening How-To-Backup.md Documentation using $EDITOR"
         "$EDITOR" "$SCRIPT_DIR/How-To-Backup.md"
     ;;
     new_backup)
         echo "=========================================="
-        echo "Running New Rsync Backup Script"
+        echo "➕ Running New Rsync Backup Script"
         "$SCRIPT_DIR/Periodic-Rsync-Backup.sh" -i "$SERVER_DIR" -o "$BACKUP_DIR"
     ;;
     manual)
         echo "=========================================="
-        echo "Running Manual Backup Script"
+        echo "🛠 Running Manual Backup Script"
         "$SCRIPT_DIR/Manual-Rsync-Backup.sh" -i "$SERVER_DIR" -o "$BACKUP_DIR"
     ;;
     restore)
@@ -103,11 +104,11 @@ case "$CHOICE" in
             SRC="$BACKUP_DIR/$SNAPSHOT/"
             DST="$SERVER_DIR/"
         echo "=========================================="
-        echo "Running Restore Backup Script using $SNAPSHOT backup"
+        echo "🔄 Running Restore Backup Script using $SNAPSHOT backup"
         "$SCRIPT_DIR/Restore-Rsync-Backup.sh" -i "$SRC" -o "$DST"
     ;;
 
-    exit) exit 0 ;;
+    go_back) exit 0 ;;
     *) exit 0 ;;
 esac
 done
