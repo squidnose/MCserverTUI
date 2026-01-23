@@ -32,6 +32,10 @@
 - openjdk is mostly used on Linux for Java, you will thus need to install:
   - openjdk8-jdk, openjdk17-jdk, openjdk21-jdk, openjdk25-jdk
   - You can also use JRE, but JDK is more comatible with mods.
+- If you can find the desired Java versoin on your distros repo, id reccomended this:
+  - https://sdkman.io/install/
+  - It manually install java 
+  - May not be as secure as distro package
 
 ### Not required
 - Does not require SystemD
