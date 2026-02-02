@@ -102,9 +102,10 @@ if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "ne
 elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" || "$MC_LOADER" == "velocity" ]]; then
     whiptail --title "$TITLE" --msgbox "Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)" "$HEIGHT" "$WIDTH"
     echlog "⬆ $SERVER_NAME Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)"
-elif
-echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
+else
+    echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
 fi
+
 } #modrinth_autodownloader()
 
 update_server_jar()
