@@ -93,7 +93,7 @@ MC_LOADER="$loader"
 #============================ Modrinth 2. Run Only if supported loader ====================================
 if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" || "$MC_LOADER" == "liteloader" || "$MC_LOADER" == "quilt" || "$MC_LOADER" == "rift" ]]; then
     if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
-        cd "$SCRIPT_DIR/more-scripts/"
+        cd "$SCRIPT_OG_DIR/more-scripts/"
         bash modrinth-downloader.sh --name $SERVER_NAME
         echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with"
     else
