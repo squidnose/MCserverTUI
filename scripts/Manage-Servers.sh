@@ -99,7 +99,10 @@ if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "ne
     else
         echlog "⬆ $SERVER_NAME MCserver: Did NOT run Modrinth colection downloader"
     fi
-else
+elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" || "$MC_LOADER" == "velocity" ]]; then
+    whiptail --title "$TITLE" --msgbox "Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)" "$HEIGHT" "$WIDTH"
+    echlog "⬆ $SERVER_NAME Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)"
+elif
 echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
 fi
 } #modrinth_autodownloader()
@@ -128,15 +131,15 @@ case $MC_MENU_LOADER in
     1)
     JAR_NAME="$SERVER_NAME.jar"
     if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
-    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+    elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+    elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+    elif [[ "$MC_LOADER" == "velocity" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
     fi
-    if [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
-    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
-    fi
-    if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
-    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
-    fi
-    echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
+        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
     ;;
     2)
     JAR_NAME="$SERVER_NAME.jar"

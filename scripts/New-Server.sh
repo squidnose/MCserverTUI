@@ -30,13 +30,14 @@ SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
 MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.10):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_LOADER_CHOICE=$(whiptail --title "$TITLE" --menu "Choose a Loader/Server SW:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    "1" "vanilla" \
-    "2" "fabric" \
-    "3" "forge" \
-    "4" "neoforge" \
-    "5" "paper" \
-    "6" "purpur" \
-    "7" "Enter a loader name manually" \
+    "1" "Vanilla - From Mojang" \
+    "2" "Fabric - More perfomance and Good mods" \
+    "3" "Forge - Slower but really good mods" \
+    "4" "neoforge - Better version of Forge" \
+    "5" "Paper - Lightweigt but sometimes less precise" \
+    "6" "Purpur - Better version of Paper" \
+    "7" "Velocity - Proxy for connecting multiple servers and diferent versions" \
+    "8" "Enter a loader name manually" \
     3>&1 1>&2 2>&3)
 case $MC_LOADER_CHOICE in
     1) MC_LOADER="vanilla" ;;
@@ -45,8 +46,9 @@ case $MC_LOADER_CHOICE in
     4) MC_LOADER="neoforge" ;;
     5) MC_LOADER="paper" ;;
     6) MC_LOADER="purpur" ;;
-    7) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) ;;
-    *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2)
+    7) MC_LOADER="velocity" ;;
+    *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) ;;
+
 esac
 MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth Mods collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 echlog "New $MC_LOADER server named $SERVER_NAME on version $MC_VERSION with this modrinth ID: $MOD_COLLECTION"
@@ -69,6 +71,10 @@ if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collec
 fi
 fi
 
+if [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" || "$MC_LOADER" == "velocity" ]]; then
+    whiptail --title "$TITLE" --msgbox "Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)" "$HEIGHT" "$WIDTH"
+fi
+
 #==================================== 4.Install a loader ====================================
 cd "$SERVER_DIR"
 
@@ -85,20 +91,20 @@ case $MC_MENU_LOADER in
     ;;
     2)
     JAR_NAME="$SERVER_NAME.jar"
-    if [[ "$MC_LOADER" == "vanilla" ]]; then
-    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+    if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+    elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+    elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+    elif [[ "$MC_LOADER" == "velocity" ]]; then
+        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
     fi
-    if [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
-    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
-    fi
-    if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
-    wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
-    fi
-    echlog "MCjarfiles API called"
+        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
     ;;
 
 esac
-
+if [[ $MC_LOADER != "velocity" ]] then
 #==================================== 5 Initialize Server Jarfile ====================================
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
 if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Reccomended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
@@ -112,7 +118,7 @@ if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSe
     bash server_properties_editor.sh --name $SERVER_NAME
     echlog "Ran server.properties editor with $SERVER_NAME flag."
 fi
-
+fi
 #==================================== 7. Memory Config ====================================
 MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
@@ -138,11 +144,14 @@ EOF
 
 chmod +x "$SERVER_DIR/run.sh"
 
+if [[ $MC_LOADER != "velocity" ]] then
 #==================================== 9. EULA ====================================
 if whiptail --title "EULA" --yesno "Do you agree to the Minecraft EULA?" "$HEIGHT" "$WIDTH"; then
     echo "eula=true" > "$SERVER_DIR/eula.txt"
 else
     echo "eula=false" > "$SERVER_DIR/eula.txt"
+fi
+
 fi
 
 #==================================== 10. Cron Autostart ====================================
