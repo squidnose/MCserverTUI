@@ -88,16 +88,39 @@ if whiptail --title "Run Modrinth Downloader" --yesno \
     "Download mods using these settings?" "$HEIGHT" "$WIDTH"; then
 
     # Build arguments dynamically
-    ARGS=(-v "$MC_VERSION" -l "$MC_LOADER")
-
+    ARGS=(-v "$MC_VERSION" -l "$MC_LOADER" -u)
     [ -n "$MC_COLLECTION" ] && ARGS+=(-c "$MC_COLLECTION")
+
+    if [[ "$MC_LOADER" == "fabric" || \
+          "$MC_LOADER" == "forge" || \
+          "$MC_LOADER" == "neoforge" || \
+          "$MC_LOADER" == "liteloader" || \
+          "$MC_LOADER" == "quilt" || \
+          "$MC_LOADER" == "rift" ]]; then
+
+        DOWNLOADER="modrinth-autodownloader.py"
+
+    elif [[ "$MC_LOADER" == "paper" || \
+            "$MC_LOADER" == "purpur" || \
+            "$MC_LOADER" == "folia" || \
+            "$MC_LOADER" == "spigot" || \
+            "$MC_LOADER" == "velocity" ]]; then
+
+        DOWNLOADER="modrinth-plugin-autodownloader.py"
+
+    else
+        whiptail --title "Error" --msgbox \
+            "Unsupported loader: $MC_LOADER" "$HEIGHT" "$WIDTH"
+        exit 0
+    fi
 
     # Run Python *inside the server directory*
     (
         cd "$SERVER_DIR" || exit
-        python3 "$SCRIPT_DIR/modrinth-autodownloader.py" "${ARGS[@]}"
+        python3 "$SCRIPT_DIR/$DOWNLOADER" "${ARGS[@]}"
     )
 fi
+
 
 whiptail --title "Done" --msgbox "Modrinth download complete for $SERVER_NAME!" "$HEIGHT" "$WIDTH"
 exit 0

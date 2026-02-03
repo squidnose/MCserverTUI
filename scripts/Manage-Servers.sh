@@ -91,17 +91,24 @@ MC_VERSION="$version"
 MC_LOADER="$loader"
 
 #============================ Modrinth 2. Run Only if supported loader ====================================
-if [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" || "$MC_LOADER" == "liteloader" || "$MC_LOADER" == "quilt" || "$MC_LOADER" == "rift" ]]; then
+if [[   "$MC_LOADER" == "fabric" || \
+        "$MC_LOADER" == "forge" ||  \
+        "$MC_LOADER" == "neoforge" || \
+        "$MC_LOADER" == "liteloader" || \
+        "$MC_LOADER" == "quilt" || \
+        "$MC_LOADER" == "rift" || \
+        "$MC_LOADER" == "paper" || \
+        "$MC_LOADER" == "purpur" || \
+        "$MC_LOADER" == "folia" || \
+        "$MC_LOADER" == "spigot" || \
+        "$MC_LOADER" == "velocity" ]]; then
     if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
         cd "$SCRIPT_OG_DIR/more-scripts/"
         bash modrinth-downloader.sh --name $SERVER_NAME
-        echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with"
+        echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
     else
         echlog "⬆ $SERVER_NAME MCserver: Did NOT run Modrinth colection downloader"
     fi
-elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" || "$MC_LOADER" == "velocity" ]]; then
-    whiptail --title "$TITLE" --msgbox "Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)" "$HEIGHT" "$WIDTH"
-    echlog "⬆ $SERVER_NAME Curenlty can not download $MC_LOADER plugins. This feature is being worked on:)"
 else
     echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
 fi
