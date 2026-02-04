@@ -1,10 +1,10 @@
 # MC Server TUI:
-## A Simple TUI for Minecraft(Java) servers on linux.
+## A Simple TUI for Minecraft(Java) servers on Linux and BSD.
 ## Features:
-- Setup and manage multiple MCservers with very low resource usage. (Runs in terminal)
+- Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
 - Setup Wizard with all important settings (Version, Loader, Mods, Ram, config and Autostart)
 - Server Manager to reconfigure settings
-- Update server jar files and mods 
+- Update server jar files and mods/plugins
 - Setup periodic backups of your MCserver
 ## Knowlage
 - Not reccomended for tech noobies!
@@ -12,55 +12,55 @@
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
   - Keybinds or nano or vim or less (You can choose). 
   - Keybinds of tmux
-- The Goal of this TUI is Simplicity and robustness. It works on any linux distro if the depencencies are met. 
+- The Goal of this TUI is Simplicity and robustness.
+- It should work on any Linux or BSD distro, if the depencencies are met. 
 - You dont need MCserverTUI to run your MC server. 
   - MCserverTUI is only needed for Setting up and manageing your MC server.
 ## Dependencies
 - [whiptail (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
-- ncurses - includes tput that finds the terminal size
+- ncurses - includes tput that finds the terminal size (Not manditory)
 - Crontab support, Tested with cronie and crond - For automation and server startup
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
-- Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files
-## Java for Minecraft
-- Diferent Minecraft versoins uses diferent java versions.
-  - Java 8  | MC 1.16.5 and older
-  - Java 17 | MC 1.17 - 1.20.4
-  - Java 21 | MC 1.20.5 - 1.21.11
-  - Java 25 | MC 26.1 and Newer
-- openjdk is mostly used on Linux for Java, you will thus need to install:
+- Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files (Not manditory)
+- nnn - File browser (Not manditory)
+- ncdu - Disk Usage Analyzer (Not manditory)
+
+### Java for Minecraft
+- Diferent Minecraft versions uses diferent java versions:
+
+| Java V. |     Minecraft V.    |
+|:-------:|:-------------------:|
+|  Java 8 | MC 1.16.5 and older |
+| Java 17 |   MC 1.17 - 1.20.4  |
+| Java 21 | MC 1.20.5 - 1.21.11 |
+| Java 25 |  MC 26.1 and Newer  |
+
+  - Some mods/plugins require an older version of Java to operate, despite the MCserver using a newer one!
+    - It is reccomended to install all java versions for maximum compatibility. 
+- openjdk is usually used on Linux and BSD. Thus you will need to install:
   - openjdk8-jdk, openjdk17-jdk, openjdk21-jdk, openjdk25-jdk
-  - You can also use JRE, but JDK is more comatible with mods.
-- If you can find the desired Java versoin on your distros repo, id reccomended this:
+  - You can also use JRE, but JDK is more comatible with mods/plugins.
+- If you can not find the desired Java version in your distros repo, id reccomended this:
   - https://sdkman.io/install/
-  - It manually install java 
+  - It manually installs Java 
   - May not be as secure as distro package
 
 ### Not required
 - Does not require SystemD
-- Can work on Glibc or Musl (Not dependant on any libc) 
-- Does not need a specific CPU architecture 
+- Can work on Glibc, Musl and BSD etc. (Not dependant on a specific libc) 
+- Does not need a specific CPU architecture. (Limitations with some depencencies)
 
 (Limitations are with Openjdk and Tunneling services)
 ## File-Structure:
-- ~/mcservers/<server_name> = MC server locations
+- Fixed MCserver location.
+- ~/mcservers/<server_name> = MCserver locations
   - run.sh | Run shortcut with the Ram ammout with the nogui option
   - autostart.sh | Autostart script with tmux commands
   - server-version.conf | MC version, Loader and Modrith colection ID
 
-## How to use:
-### Setup Dependencies:
-- I higly reccomended to install all your depencencies manually
-- However you can also run **setup.sh**
-```
-./setup.sh
-```
-- This works great for Voidlinux and Archlinux
-- With other distros you may need to manually install:
-  - Older or Newever openjdk versions
-  - Nerd fonts symbols ttf
-### Download and run the Git version:
+## Download and run the latest Git version:
 ```
 git clone https://github.com/squidnose/MCserverTUI.git
 cd MCserverTUI
@@ -68,20 +68,24 @@ cd MCserverTUI
 ```
 - MCserverTUI doest require a specific directory, but do not place it in ~/mcservers!
 
-(If you have placed MCserverTUI in ~ )
-## What scripts to run?
-### setup.sh
+## setup.sh
 - Will setup Dependecnies and services for some linux distros.
-- If your distro doesnt have a preset, you will have to manually instal depencencies.
+- I higly reccomended to install all your depencencies manually.
+- However you can also run **setup.sh**
 
-### MCserverTUI.sh
-- uses My [[Linux-Script-Runner]](https://codeberg.org/squidnose-code/Linux-Script-Runner)
-- runs all script located in the scripts dirctory.
+```
+./setup.sh
+```
+- Works well with Ubuntu, Voidlinux and Archlinux
+- Other distros may lack Older or Newever openjdk versions.
+  - Either manually install a .deb, .rpm package
+  - Or use https://sdkman.io/install/
 
-### MCserver scripts
-[[Scripts and their functions]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/0.info.md)
+## MCserver scripts
+- MC-Server-TUI.sh is the main menu for all functions in the form of scripts.
+- [[Scripts and their functions]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/0.info.md)
 
-### Reccomended distros
+## Reccomended distros
 - The main deciding factor in reccomending a good distro is the Java compatibility
 - Not all distros have Older and Newever java version
 - Minecraft uses Java: 8, 17, 21, 25
@@ -94,11 +98,18 @@ cd MCserverTUI
 - If you need a diferent version of Java then the one provided by your distro, then install java manually. 
 
 ## Todo
-- Manage All Reverse proxys (Playig.gg, ngrok)
+- Manage more Reverse proxys (Playig.gg, ngrok, FPR)
   - Make crontabs for them with Tmux 
-- Auto Update-System
-- remove server
-  - Should i add it???
+- LSR: Add file from URL button
+- Add official Piston Data API (Kinda Hard)
+- Duplicate MCerver Button
+- Remove MCserver (Should i add it???)
+- Showcase Videos:
+  - 1. Motivation ("Selling it")
+  - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
+  - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
+  - 4. Modded MCserver (Forge+Create+Terrain Mods)
+  - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
 
 # Disclaimer
 - I used an LLM to help with the programing. 

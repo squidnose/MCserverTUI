@@ -56,6 +56,7 @@ while true; do
         logs            "📜 View Logs for TUI's and Backups" \
         watch_java      "👁  Watch All java processes" \
         crontab         "⏱  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
+        term_util       "📟 Open ~/mcservers with Terminal Tools(Eg: Disk Usage)" \
         colors          "🎨 Change the Colors of the TUI" \
         go_back         "..  Go Back" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
@@ -91,6 +92,17 @@ while true; do
         ##Open Crontab
         export EDITOR
         crontab -e
+    ;;
+    term_util)
+        TERMINAL_UTIL=$(whiptail --title "$TITLE" --menu \
+        "What terminal util for All MCservers woudld you like to run?\nQ to Quit" \
+        "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "ncdu"  "Disk Space Usage Analyzer" \
+        "nnn"   "File Explorer" \
+        3>&1 1>&2 2>&3)
+        echlog "📟 using $TERMINAL_UTIL"
+        cd ~/mcservers/
+        $TERMINAL_UTIL
     ;;
     colors)
         echlog "🎨 Running Color Changing Script"

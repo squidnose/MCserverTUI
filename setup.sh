@@ -13,7 +13,7 @@ read -r -p "Enter your choice (1-5):" CHOICE
 case $CHOICE in
 1)
 echo "Installing MCserverTUI Dependencies"
-sudo apt install newt python3 tmux curl wget
+sudo apt install newt python3 tmux curl wget nano nnn ncdu
 echo "Installing Java 8, 17, 21  Minecraft Dependencies"
 sudo apt install openjdk-8-jdk-headless openjdk-8-jre-headless openjdk-17-jdk-headless openjdk-17-jre-headless openjdk-21-jdk-headless openjdk-21-jre-headless
 echo "Installing Java 25 Minecraft Dependency"
@@ -21,7 +21,7 @@ sudo apt install openjdk-25-jdk-headless
 ;;
 2)
 echo "Installing MCserverTUI Dependencies"
-sudo apt install newt python3 tmux curl wget
+sudo apt install newt python3 tmux curl wget nano nnn ncdu
 echo "Installing Minecraft Java Dependencies"
 sudo apt install openjdk-17-jdk-headless openjdk-17-jre-headless
 echo "DEBIAN 12 DOESNT SUPPORT JAVA 25 FOR MC 26.1 AND NEWER"
@@ -31,7 +31,7 @@ echo "Install manually using: https://sdkman.io/install/"
 ;;
 3)
 echo "Installing MCserverTUI Dependencies"
-sudo apt install newt python3 tmux curl wget
+sudo apt install newt python3 tmux curl wget nano nnn ncdu
 echo "Installing Minecraft Java Dependencies"
 sudo apt install openjdk-21-jdk-headless openjdk-21-jre-headless openjdk-25-jdk-headless openjdk-25-jre-headless
 echo "DEBIAN 13 DOESNT SUPPORT JAVA 8 FOR MC 1.16.5 AND OLDER"
@@ -42,7 +42,7 @@ echo "Install manually using: https://sdkman.io/install/"
 echo "Installing MCserverTUI Dependencies(Newt, Cronie, python3, tmux, curl, wget)"
 sudo xbps-install -Su newt cronie python3 tmux curl wget
 echo "Installing Nano, Less and mdr text editors/viewers"
-sudo xbps-install -Su nano less mdr
+sudo xbps-install -Su nano less mdr nnn ncdu
 echo "Enabling Crontab service"
 sudo ln -s /etc/sv/cronie/ /var/service/
 echo "Installing Minecraft Java Dependencies"
@@ -50,7 +50,7 @@ sudo xbps-install -Su openjdk8 openjdk8-jre openjdk17 openjdk17-jre openjdk21 op
 ;;
 5)
 echo "Installing MCserverTUI Dependencies"
-sudo pacman -S newt cronie python tmux curl wget
+sudo pacman -S newt cronie python tmux curl wget nano nnn ncdu
 echo "Enabling Crontab service"
 sudo systemctl enable cronie.service
 echo "Installing Minecraft Java Dependencies"

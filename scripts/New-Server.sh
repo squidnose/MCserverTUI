@@ -28,12 +28,12 @@ SERVER_NAME=$(whiptail --title "$TITLE" --inputbox "Enter a name for your server
 [ -z "$SERVER_NAME" ] && exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
-MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.10):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.11):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_LOADER_CHOICE=$(whiptail --title "$TITLE" --menu "Choose a Loader/Server SW:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "Vanilla - From Mojang" \
     "2" "Fabric - More perfomance and Good mods" \
     "3" "Forge - Slower but really good mods" \
-    "4" "neoforge - Better version of Forge" \
+    "4" "NeoForge - Better version of Forge" \
     "5" "Paper - Lightweigt but sometimes less precise" \
     "6" "Purpur - Better version of Paper" \
     "7" "Velocity - Proxy for connecting multiple servers and diferent versions" \
@@ -62,7 +62,7 @@ collection=$MOD_COLLECTION
 EOF
 echlog "Saved config to $CONF_FILE"
 
-#==================================== 3.Offer Modrinth Downloader ====================================
+#============================ 3. Modrinth Downloader - Run Only if supported loader ====================================
 if [[   "$MC_LOADER" == "fabric" || \
         "$MC_LOADER" == "forge" ||  \
         "$MC_LOADER" == "neoforge" || \
@@ -74,8 +74,10 @@ if [[   "$MC_LOADER" == "fabric" || \
         "$MC_LOADER" == "folia" || \
         "$MC_LOADER" == "spigot" || \
         "$MC_LOADER" == "velocity" ]]; then
-    if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
-        cd "$SCRIPT_OG_DIR/more-scripts/"
+    if whiptail --title "$TITLE" --yesno \
+"Would you also like to run Modrinth Collection Downloader?\n\
+For $SERVER_NAME MCserver with $MC_LOADER loader." "$HEIGHT" "$WIDTH"; then
+        cd "$SCRIPT_DIR/more-scripts/"
         bash modrinth-downloader.sh --name $SERVER_NAME
         echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
     else

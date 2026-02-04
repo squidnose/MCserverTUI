@@ -102,7 +102,9 @@ if [[   "$MC_LOADER" == "fabric" || \
         "$MC_LOADER" == "folia" || \
         "$MC_LOADER" == "spigot" || \
         "$MC_LOADER" == "velocity" ]]; then
-    if whiptail --title "$TITLE" --yesno "Would you also like to run Modrinth Collection Downloader?" "$HEIGHT" "$WIDTH"; then
+    if whiptail --title "$TITLE" --yesno \
+"Would you also like to run Modrinth Collection Downloader?\n \
+For $SERVER_NAME MCserver with $MC_LOADER loader." "$HEIGHT" "$WIDTH"; then
         cd "$SCRIPT_OG_DIR/more-scripts/"
         bash modrinth-downloader.sh --name $SERVER_NAME
         echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
@@ -306,6 +308,7 @@ while true; do
     "7" "⏱  Add or Reconfigure Autostart Features" \
     "8" "🧠 Add or Reconfigure Memory Amount" \
     "9" "✏  Change Server Name" \
+    "T" "📟 Terminal Utils" \
     "0" "X  Go Back .." \
         3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
@@ -341,6 +344,17 @@ while true; do
         manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;; #internal
     9)
         change_server_name ;; #internal
+    T)
+        TERMINAL_UTIL=$(whiptail --title "$TITLE" --menu \
+        "What terminal util for $SERVER_NAME woudld you like to run?\nQ to Quit" \
+        "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "ncdu"  "Disk Space Usage Analyzer" \
+        "nnn"   "File Explorer" \
+        3>&1 1>&2 2>&3)
+        echlog "📟 $SERVER_NAME opened using $TERMINAL_UTIL"
+        cd $SERVER_DIR
+        $TERMINAL_UTIL
+    ;;
     0)
         echlog "X $SERVER_NAME MCserver: Exited Mange Servers"
         exit 0 ;;
