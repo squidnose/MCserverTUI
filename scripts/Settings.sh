@@ -57,6 +57,7 @@ while true; do
         watch_java      "👁  Watch All java processes" \
         crontab         "⏱  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
         term_util       "📟 Open ~/mcservers with Terminal Tools(Eg: Disk Usage)" \
+        localtonet      "🔃 Configure LocalToNet reverse proxy service" \
         colors          "🎨 Change the Colors of the TUI" \
         go_back         "..  Go Back" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
@@ -103,6 +104,10 @@ while true; do
         echlog "📟 using $TERMINAL_UTIL"
         cd ~/mcservers/
         $TERMINAL_UTIL
+    ;;
+    localtonet)
+        echlog "🔃 Running Localtonet.sh reverse proxy service"
+        "$SCRIPT_DIR/Tunneling-Services/Localtonet.sh"
     ;;
     colors)
         echlog "🎨 Running Color Changing Script"
