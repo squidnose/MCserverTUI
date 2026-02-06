@@ -27,6 +27,7 @@
     - Can be used for: Vanilla, Fabric, Forge, Neoforge, Paper, Purpur and Velocity(Proxy).
     - Vanilla can only download releases, for alphas, betas and snapshots you have to use the manual install URL. 
     - Velocity always downloads the latest version(Warning!).
+- Only supports Minecraft versions 1.8.8 and higher
 
 ## Supported Loaders Overview
 |                  | MCjarfiles API | Modrinth Colection Downloader |

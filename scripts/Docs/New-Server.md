@@ -29,7 +29,7 @@
 - MCjarfiles only supports a certain amount of server.jar files
     - Vanilla, Paper, Purpur, Fabric, Forge, Neoforge, Velocity
 - Manual allows you to download a specific version
-    - eg: Alphas, Betas, Snapshots, New or Experimental loaders
+    - for: Snapshots, MC older than 1.8.8, New or Experimental loaders
 
 ## Initialize MCserver
 - Initialize server, runs the server without eula.txt being agreen apon
