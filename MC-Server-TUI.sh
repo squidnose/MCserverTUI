@@ -64,9 +64,16 @@ while true; do
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
 case "$CHOICE" in
     info)
+        INFO_FILE=$(whiptail --title "ℹ️ - $TITLE" --menu "What are you curious about?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+            "Plan-MCserver.md"  "What do you want to achive?" \
+            "Main-Menu.md"      "Basic usage and terminology" \
+            "New-Server.md"     "How to setup a New MCserver" \
+            "Manage-Servers.md" "How to manage MCservers" \
+            "Tunneling.md"      "Manage reverse proxy Tunnels" \
+        3>&1 1>&2 2>&3)
         EDITOR=$(choose_editor) || continue
-        echlog "ℹ️ Opening 1.Info-Main-Menu.md Documentation using $EDITOR"
-        "$EDITOR" "$SCRIPT_DIR/1.Info-Main-Menu.md"
+        echlog "ℹ️ Opening $INFO_FILE Documentation using $EDITOR"
+        "$EDITOR" "$SCRIPT_DIR/Docs/$INFO_FILE"
     ;;
     new_server)
         echlog "➕ Running New Server Script"

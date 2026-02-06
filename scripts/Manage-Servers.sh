@@ -101,6 +101,8 @@ if [[   "$MC_LOADER" == "fabric" || \
         "$MC_LOADER" == "purpur" || \
         "$MC_LOADER" == "folia" || \
         "$MC_LOADER" == "spigot" || \
+        "$MC_LOADER" == "bukkit" || \
+        "$MC_LOADER" == "sponge" || \
         "$MC_LOADER" == "velocity" ]]; then
     if whiptail --title "$TITLE" --yesno \
 "Would you also like to run Modrinth Collection Downloader?\n \

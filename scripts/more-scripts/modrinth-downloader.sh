@@ -102,6 +102,8 @@ if whiptail --title "Run Modrinth Downloader" --yesno \
             "$MC_LOADER" == "purpur" || \
             "$MC_LOADER" == "folia" || \
             "$MC_LOADER" == "spigot" || \
+            "$MC_LOADER" == "bukkit" || \
+            "$MC_LOADER" == "sponge" || \
             "$MC_LOADER" == "velocity" ]]; then
 
             # Build arguments dynamically
