@@ -57,13 +57,23 @@ echo "Installing Minecraft Java Dependencies"
 sudo pacman -S  jdk8-openjdk jre8-openjdk-headless jdk17-openjdk jre17-openjdk-headless jdk21-openjdk jre21-openjdk-headless jdk25-openjdk jre25-openjdk-headless
 ;;
 *)
+clear
 echo "If you distro is not listed or it did not work."
-echo "Manually install theese Dependencies"
-echo "For my TUI: newt(Whiptale) and crontab support(check by running crontab -e)"
-echo "For Minecraft: Java 8, 17, 21 and 25"
-echo "Search for openjdk in you package manager"
-echo "If you can not find a desired openjdk version, use this:"
-echo "https://sdkman.io/install/"
+echo "Manually install theese Dependencies:"
+echo " newt (Whiptale - for TUI menu system)"
+echo " dialog (For detecting the terminal size)"
+echo " tmux (for server console)"
+echo " python3 (For modrinth colection downloader)"
+echo " curl and wget (for downloading files)"
+echo " crontab support(check by running crontab -e)"
+echo "   Search crontab support for your distro"
+echo " nano, vim, less, kate, mousepad (Text editor/viewer of choice)"
+echo " mdr (For rendering MarkDown .md files in terminal)"
+echo " nnn and ncdu (cool terminal utils)"
+echo " Java 8, 17, 21 and 25 (For Minecraft)"
+echo "   Search for openjdk in you package manager"
+echo "   If you can not find a desired openjdk version, use this:"
+echo "   https://sdkman.io/install/"
 esac
 
 

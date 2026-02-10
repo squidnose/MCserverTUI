@@ -1,5 +1,5 @@
 # MC Server TUI:
-## A Simple TUI for Minecraft(Java) servers on Linux and BSD.
+## A Simple TUI for Minecraft(Java) servers for Linux and BSD OS
 ## Features:
 - Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
 - Setup Wizard with all important settings (Version, Loader, Mods, Ram, config and Autostart)
@@ -112,11 +112,12 @@ cd MCserverTUI
 # Todo
 - Manage more Reverse proxy's (Playig.gg, ngrok, FRP)
   - Make crontabs for them with Tmux 
-- LSR: Add file from URL button
 - Add official Piston Data API (Kinda Hard)
 - Add more store fronts like CurseForge and HangarPapermc (Kinda Hard)
-- Duplicate MCserver Button
-- Remove MCserver (Should i add it???)
+- Check if MCserver allready exists
+  - Add to new server logic
+  - Duplicate MCserver Button
+  - Remove MCserver (Should i add it???)
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)

@@ -234,7 +234,7 @@ display_dynamic_menu()
         ### Add "Go back" option unless we're at the root of the script directory.
         ### This provides a way to navigate up a level in the folder structure.
         if [[ "$current_path" != "$original_path" ]]; then
-            menu_options+=("..-back" "Go back to the previous menu")
+            menu_options+=("   ..-back" "Go back to the previous menu")
         fi
 
     ### 4. Find folders, scripts, and text files in the current directory.
@@ -275,7 +275,8 @@ display_dynamic_menu()
             esac
         done <<< "$items"
         # Add an "Exit" option to the menu. This option is be available at all levels.
-        menu_options+=("Exit" "Exit the script")
+        menu_options+=("   + Add" "Add file from URL")
+        menu_options+=("   x Exit" "Exit the script")
 
 
     ### 6. Display the Menu
@@ -294,10 +295,22 @@ display_dynamic_menu()
 
         ### Process the user's choice based on the selected option.
     case "$choice" in
-        Exit)
+        "   x Exit")
             exit 0
         ;;
-       "..-back")
+        "   + Add")
+                #Add file from URL
+                local URL_ADD
+                URL_ADD=$(whiptail --title "Add file from URL" --inputbox "Enter the direct download URL:" \
+                "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+                if [[ -z "$URL_ADD" ]]; then
+                    whiptail --msgbox "No URL provided. Aborted." "$HEIGHT" "$WIDTH"
+                    continue
+                elif wget --content-disposition -P "$current_path" "$URL_ADD"; then whiptail --msgbox "File successfully Added!" "$HEIGHT" "$WIDTH"
+                    else whiptail --msgbox "Download failed!" "$HEIGHT" "$WIDTH"
+                fi
+        ;;
+       "   ..-back")
             ### The user chose to go back. We update the current path to the parent directory.
             current_path=$(dirname "$current_path") #Goes back using dirname
             title="Go Back" # Updates the title for the next menu display.

@@ -70,10 +70,17 @@ case "$CHOICE" in
             "New-Server.md"     "How to setup a New MCserver" \
             "Manage-Servers.md" "How to manage MCservers" \
             "Tunneling.md"      "Manage reverse proxy Tunnels" \
+            "README.md"         "Front page - Git Readme file" \
         3>&1 1>&2 2>&3)
         EDITOR=$(choose_editor) || continue
-        echlog "ℹ️ Opening $INFO_FILE Documentation using $EDITOR"
-        "$EDITOR" "$SCRIPT_DIR/Docs/$INFO_FILE"
+
+        if [[ "$INFO_FILE" == "README.md" ]]; then
+            echlog "ℹ️ Opening $INFO_FILE Documentation using $EDITOR"
+            "$EDITOR" "$INFO_FILE"
+        else
+            echlog "ℹ️ Opening $INFO_FILE Documentation using $EDITOR"
+            "$EDITOR" "$SCRIPT_DIR/Docs/$INFO_FILE"
+        fi
     ;;
     new_server)
         echlog "➕ Running New Server Script"
