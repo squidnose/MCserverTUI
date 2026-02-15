@@ -76,11 +76,11 @@
 - The main deciding factor in reccomending a good distro is the Java compatibility
 - Not all distros have Older and Newer java version
 - Minecraft uses Java: 8, 17, 21, 25
-- The only distros that have all of them are:
+- Distros that have all of them are:
   - Ubuntu LTS (Tested)
   - Voidlinux (Tested)
-  - Archlinux
-  - FreeBSD (Not Linux)
+  - Archlinux (Un-Tested)
+  - FreeBSD (Tested)
 - Hence they are recommended.
 - If you need a diferent version of Java then the one provided by your distro, then install java manually. 
 
@@ -100,7 +100,7 @@ cd MCserverTUI
 ```
 ./setup.sh
 ```
-- Works well with Ubuntu, Voidlinux and Archlinux
+- Works well with Ubuntu and Voidlinux 
 - Other distros may lack Older or Newer openjdk versions.
   - Either manually install a .deb, .rpm package
   - Or use https://sdkman.io/install/
@@ -109,12 +109,8 @@ cd MCserverTUI
 - MC-Server-TUI.sh is the main menu for all functions in the form of scripts.
 - [[Docs]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/Docs/)
 
-
 # Todo
 - Manage more Reverse proxy's (Playig.gg, ngrok, FRP)
-  - Make crontabs for them with Tmux 
-- Add official Piston Data API (Kinda Hard)
-- Add more store fronts like CurseForge and HangarPapermc (Kinda Hard)
 - Check if MCserver allready exists
   - Add to new server logic
   - Duplicate MCserver Button
@@ -125,7 +121,6 @@ cd MCserverTUI
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
-- Freebsd: Change all #!/bin/bash to #!/usr/bin/env bash
 
 # Disclaimer
 - I used an LLM to help with the programming. 

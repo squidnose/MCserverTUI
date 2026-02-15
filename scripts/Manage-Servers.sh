@@ -13,7 +13,7 @@ echlog() {
 #==================================== 01. Parameters ====================================
 TITLE="MC server Managment"
 MC_ROOT="$HOME/mcservers"
-SCRIPT_OG_DIR="$(dirname "$(realpath "$0")")"
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ## Detect terminal size
 ### in case tput is not found, sets to fixed value
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
@@ -32,7 +32,7 @@ for d in "$MC_ROOT"/*; do
     MENU_ITEMS+=("$NAME" "Minecraft server") ## Add them to the menu
 done
 ## Check if mcserver exist:
-if [[ -z $MENU_ITEMS ]]; then
+if [[ ${#MENU_ITEMS[@]} -eq 0 ]]; then
 whiptail --msgbox "No Servers Found, please make a New one:)\nOr put your existing MCserver directory in ~/mcservers/" "$HEIGHT" "$WIDTH"
 exit 0
 fi
@@ -42,6 +42,7 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage
     3>&1 1>&2 2>&3) || exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 echlog "🛠 $SERVER_NAME MCserver: Opening for managing"
+
 #==================================== 03. Load server config file ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 if [ -f "$CONF_FILE" ]; then
@@ -69,17 +70,18 @@ edit_server_properties()
 {
 #============================ server properties 1. Run server.properties editor ====================================
 if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
-    cd "$SCRIPT_OG_DIR/more-scripts/"
+    cd "$SCRIPT_DIR/more-scripts/"
     echlog "⚙ $SERVER_NAME MCserver: Loading server.properties file..."
     bash server_properties_editor.sh --name $SERVER_NAME
     echlog "⚙ $SERVER_NAME MCserver: Ran server.properties line editor."
 fi
 } #edit_server_properties()
 
-modrinth_autodownloader()
+content_downloader()
 {
-#============================ Modrinth Atodownloader ====================================
-#==================================== Modrinth 1. Load config file ====================================
+#Download Content for MCserver Operations
+#============================ 03. Content Downloader ====================================
+#========================  A. Load config file ==================================
 if [ -f "$CONF_FILE" ]; then
     source "$CONF_FILE"
 else
@@ -90,99 +92,53 @@ fi
 MC_VERSION="$version"
 MC_LOADER="$loader"
 
-#============================ Modrinth 2. Run Only if supported loader ====================================
-if [[   "$MC_LOADER" == "fabric" || \
-        "$MC_LOADER" == "forge" ||  \
-        "$MC_LOADER" == "neoforge" || \
-        "$MC_LOADER" == "liteloader" || \
-        "$MC_LOADER" == "quilt" || \
-        "$MC_LOADER" == "rift" || \
-        "$MC_LOADER" == "paper" || \
-        "$MC_LOADER" == "purpur" || \
-        "$MC_LOADER" == "folia" || \
-        "$MC_LOADER" == "spigot" || \
-        "$MC_LOADER" == "bukkit" || \
-        "$MC_LOADER" == "sponge" || \
-        "$MC_LOADER" == "velocity" ]]; then
-    MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
-"Install Mods / Plugins for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
+#=========================  B. Main Menu ====================================
+while true; do
+MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
+"Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
 "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-"modrinth" "Use Modrinth Collection ID" \
-"manual"   "Manual URL Downloader" \
-"skip"     "Do not install anything" \
-    3>&1 1>&2 2>&3) || return 0
+"modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
+"mcjarfiles" "Download Server.jar files using MCjarfiles API" \
+"manual"     "Manual File Downloader Manager (Mods and Server.jar)" \
+"X"          "Go Back" \
+3>&1 1>&2 2>&3) || return 0
 
     case "$MC_DOWNLOAD_CHOICE" in
         modrinth)
-            cd "$SCRIPT_OG_DIR/more-scripts/" || return 0
+            cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash modrinth-downloader.sh --name "$SERVER_NAME"
             echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
         ;;
+        mcjarfiles)
+        cd "$SERVER_DIR"
+        JAR_NAME="$SERVER_NAME.jar"
+        if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+        elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+        elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+        elif [[ "$MC_LOADER" == "velocity" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
+        fi
+        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
+        ;;
         manual)
-            cd "$SCRIPT_OG_DIR/more-scripts/" || return 0
+            cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash manual-downloader.sh --name "$SERVER_NAME"
             echlog "⬆ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
         ;;
-        skip)
-            echlog "⬆ $SERVER_NAME MCserver: Skipped mod/plugin installation"
+        *)
+        return 0
         ;;
     esac
-else
-    echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
-fi
+done
 
-} #modrinth_autodownloader()
-
-update_server_jar()
-{
-#==================================== update 1. Load config file ====================================
-if [ -f "$CONF_FILE" ]; then
-    source "$CONF_FILE"
-else
-    version=""
-    loader=""
-    collection=""
-fi
-MC_VERSION="$version"
-MC_LOADER="$loader"
-
-#============================ update 2. Update server.jar ====================================
-cd "$SERVER_DIR"
-MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to update/install server jar file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    "1" "MCjarfiles API(Modded and Vanila)" \
-    "2" "manual URL" \
-    "3" "Dont update" \
-    3>&1 1>&2 2>&3)
-case $MC_MENU_LOADER in
-    1)
-    JAR_NAME="$SERVER_NAME.jar"
-    if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
-    elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
-    elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
-    elif [[ "$MC_LOADER" == "velocity" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
-    fi
-        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
-    ;;
-    2)
-    JAR_NAME="$SERVER_NAME.jar"
-    SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    wget -O "$JAR_NAME" "$SERVER_URL"
-    echlog "⬆ $SERVER_NAME MCserver: Manual server jar url entered: $SERVER_URL"
-    ;;
-    3)
-    echlog "⬆ $SERVER_NAME MCserver: Did NOT update server jar file"
-    return 0
-    ;;
-esac
-} #update_server_jar()
+} #content_downloader()
 
 lsr()
 {
-    cd "$SCRIPT_OG_DIR/more-scripts/"
+    cd "$SCRIPT_DIR/more-scripts/"
     bash LSR_edit_server_files.sh --name $SERVER_NAME
     echlog "📂 $SERVER_NAME MCserver: Ran LSR file browser/editor."
 } #lsr()
@@ -290,14 +246,14 @@ OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
     fi
 echlog "✏ $SERVER_NAME MCserver: Removed cron entry for old name"
 #===================== name 4. Remove run.sh and autostart.sh ============================
-    cd $SERVER_DIR
+    cd "$SERVER_DIR"
     rm run.sh
     rm autostart.sh
 echlog "✏ $SERVER_NAME MCserver: Removed run.sh and autostart.sh with old names"
 #===================== name 5. Rename server jar ============================
     JAR_NAME_OLD="$SERVER_NAME.jar"
     JAR_NAME_NEW="$SERVER_NAME_NEW.jar"
-    mv $JAR_NAME_OLD $JAR_NAME_NEW
+    mv "$JAR_NAME_OLD" "$JAR_NAME_NEW"
 echlog "✏ $SERVER_NAME MCserver: Renamed the jar file with new name"
 #===================== name 6. Rename server directory ============================
     cd "$HOME/mcservers" || return 0
@@ -319,7 +275,7 @@ while true; do
     "2" "▶  Start Server" \
     "3" "⏹  Stop Server" \
     "4" "⚙  Edit server.properties" \
-    "5" "⬆  Update $SERVER_NAME.jar file (and mods)" \
+    "5" "⬆  Install/Update content (Server.jar, mods and plugins)" \
     "6" "📂 Edit Files (LSR)" \
     "7" "⏱  Add or Reconfigure Autostart Features" \
     "8" "🧠 Add or Reconfigure Memory Amount" \
@@ -349,8 +305,7 @@ while true; do
         edit_server_properties
     ;; #external script
     5)
-        modrinth_autodownloader #external script
-        update_server_jar #internal functoin
+        content_downloader
     ;;
     6)
         lsr ;;

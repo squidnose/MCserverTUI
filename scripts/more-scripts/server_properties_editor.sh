@@ -55,7 +55,14 @@ else
     SERVER_DIR="$MC_ROOT/$SERVER_NAME"
     CONF_FILE="$SERVER_DIR/server.properties"
 fi
-
+#==================================== 2. check if the config file exists or not ====================================
+# Check if server.properties exists
+if [ ! -f "$CONF_FILE" ]; then
+    whiptail --title "Not Available" --msgbox \
+"This server does not have a server.properties file.\n\
+(Probably a proxy like Velocity)" "$HEIGHT" "$WIDTH"
+    return 0
+fi
 
 #==================================== 3. Functions====================================
 # 1. load the server.properties file

@@ -62,27 +62,21 @@ collection=$MOD_COLLECTION
 EOF
 echlog "Saved config to $CONF_FILE"
 
-#============================ 3. Modrinth Downloader - Run Only if supported loader ====================================
-if [[   "$MC_LOADER" == "fabric" || \
-        "$MC_LOADER" == "forge" ||  \
-        "$MC_LOADER" == "neoforge" || \
-        "$MC_LOADER" == "liteloader" || \
-        "$MC_LOADER" == "quilt" || \
-        "$MC_LOADER" == "rift" || \
-        "$MC_LOADER" == "paper" || \
-        "$MC_LOADER" == "purpur" || \
-        "$MC_LOADER" == "folia" || \
-        "$MC_LOADER" == "spigot" || \
-        "$MC_LOADER" == "bukkit" || \
-        "$MC_LOADER" == "sponge" || \
-        "$MC_LOADER" == "velocity" ]]; then
-    MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
-"Install Mods / Plugins for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
+
+content_downloader()
+{
+#Download Content for MCserver Operations
+#============================ 03. Content Downloader ====================================
+#=========================  B. Main Menu ====================================
+while true; do
+MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
+"Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
 "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-"modrinth" "Use Modrinth Collection ID" \
-"manual"   "Manual URL Downloader" \
-"skip"     "Do not install anything" \
-    3>&1 1>&2 2>&3) || return 0
+"modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
+"mcjarfiles" "Download Server.jar files using MCjarfiles API" \
+"manual"     "Manual File Downloader Manager (Mods and Server.jar)" \
+"X"          "Continue" \
+3>&1 1>&2 2>&3) || return 0
 
     case "$MC_DOWNLOAD_CHOICE" in
         modrinth)
@@ -90,49 +84,37 @@ if [[   "$MC_LOADER" == "fabric" || \
             bash modrinth-downloader.sh --name "$SERVER_NAME"
             echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
         ;;
+        mcjarfiles)
+        cd "$SERVER_DIR"
+        JAR_NAME="$SERVER_NAME.jar"
+        if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+        elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+        elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+        elif [[ "$MC_LOADER" == "velocity" ]]; then
+            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
+        fi
+        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
+        ;;
         manual)
             cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash manual-downloader.sh --name "$SERVER_NAME"
             echlog "⬆ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
         ;;
-        skip)
-            echlog "⬆ $SERVER_NAME MCserver: Skipped mod/plugin installation"
+        *)
+        return 0
         ;;
     esac
-else
-    echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
-fi
+done
 
-#==================================== 4.Install a loader ====================================
-cd "$SERVER_DIR"
+} #content_downloader()
+content_downloader
 
-MC_MENU_LOADER=$(whiptail --title "$TITLE" --menu "How would you like to install server jar file" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    "1" "manual URL" \
-    "2" "MCjarfiles API(Modded and Vanilla)" \
-    3>&1 1>&2 2>&3)
-case $MC_MENU_LOADER in
-    1)
-    JAR_NAME="$SERVER_NAME.jar"
-    SERVER_URL=$(whiptail --title "$TITLE" --inputbox "Enter server URL" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    wget -O "$JAR_NAME" "$SERVER_URL"
-    echlog "manual server jar url"
-    ;;
-    2)
-    JAR_NAME="$SERVER_NAME.jar"
-    if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
-    elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
-    elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
-    elif [[ "$MC_LOADER" == "velocity" ]]; then
-        wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
-    fi
-        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
-    ;;
-
-esac
+#==================================== 4 Run Only of not proxy ====================================
 if [[ $MC_LOADER != "velocity" ]] then
+
 #==================================== 5 Initialize Server Jarfile ====================================
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
 if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Reccomended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
@@ -146,7 +128,8 @@ if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSe
     bash server_properties_editor.sh --name $SERVER_NAME
     echlog "Ran server.properties editor with $SERVER_NAME flag."
 fi
-fi
+fi # Not run if proxy
+
 #==================================== 7. Memory Config ====================================
 MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
