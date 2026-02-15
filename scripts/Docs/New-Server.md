@@ -25,6 +25,10 @@
 - Modrinth ID (For mods, Not Manditory)
 - If using a modded server, you will be offered to run the modrinth-collection-downloader
 
+## Manual Downloader
+- Manual Downloader allows for downloading files to a specific place in your MCserver directory
+- Ment for .jar files, but is not limited by the .jar suffix
+
 ## Jarfile install method
 - MCjarfiles only supports a certain amount of server.jar files
     - Vanilla, Paper, Purpur, Fabric, Forge, Neoforge, Velocity
