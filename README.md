@@ -125,6 +125,7 @@ cd MCserverTUI
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
+- Freebsd: Change all #!/bin/bash to #!/usr/bin/env bash
 
 # Disclaimer
 - I used an LLM to help with the programming. 

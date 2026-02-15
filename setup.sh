@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 clear
 echo "Wellcome to my MCserverTUI script"
 echo "Before you run my script, we are going to need some Dependencies"

@@ -166,7 +166,7 @@ MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "
 
 #==================================== 8. Create run.sh ====================================
 cat > "$SERVER_DIR/run.sh" <<EOF
-#!/bin/bash
+#!/usr/bin/env bash
 java $RUN_MC_XMS $RUN_MC_XMX -jar $JAR_NAME nogui
 EOF
 
@@ -189,7 +189,7 @@ if whiptail --title "Enable automatic startup?" --yesno "Add cronjob for autosta
 
     # Create autostart script in the server folder
     cat > "$AUTOSTART" <<EOF
-#!/bin/bash
+#!/usr/bin/env bash
 # Autostart script for server: $SERVER_NAME
 
 SESSION="$SERVER_NAME"

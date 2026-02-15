@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #===================================================
 # TUI Theme Switcher for Voidlinux Post Install TUI
 #===================================================

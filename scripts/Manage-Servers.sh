@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #This script uses a modified version of my LSR
 #==================================== MC Server Managment ====================================
 #============================ 00. Logging ============================
@@ -199,7 +199,7 @@ manage_autostart()
 ## Ask to regenerate autostart.sh
 if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" "$HEIGHT" "$WIDTH" ; then
 cat > "$AUTOSTART" <<EOF
-#!/bin/bash
+#!/usr/bin/env bash
 SESSION="$SERVER_NAME"
 
 if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
@@ -264,7 +264,7 @@ echlog "🧠 $SERVER_NAME MCserver: New run.sh made with: $MC_XMS min, $MC_XMX m
     fi
 #======================= run.sh 4. Creates run.sh =========================
 cat > "$RUNSCRIPT" <<EOF
-#!/bin/bash
+#!/usr/bin/env bash
 java $RUN_MC_XMS $RUN_MC_XMX -jar $JAR_NAME nogui
 EOF
 chmod +x "$RUNSCRIPT"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #==================================== locations and parameters ====================================
 #For server Chooser
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"

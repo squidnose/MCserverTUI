@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #==================================== location ====================================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 MC_ROOT="$HOME/mcservers"
