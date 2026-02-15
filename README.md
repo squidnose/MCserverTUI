@@ -31,6 +31,7 @@
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
+- jq - for Manual Downloader
 - Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files (Not mandatory)
 - nnn - File browser (Not mandatory)
 - ncdu - Disk Usage Analyzer (Not mandatory)

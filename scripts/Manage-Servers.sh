@@ -104,15 +104,29 @@ if [[   "$MC_LOADER" == "fabric" || \
         "$MC_LOADER" == "bukkit" || \
         "$MC_LOADER" == "sponge" || \
         "$MC_LOADER" == "velocity" ]]; then
-    if whiptail --title "$TITLE" --yesno \
-"Would you also like to run Modrinth Collection Downloader?\n \
-For $SERVER_NAME MCserver with $MC_LOADER loader." "$HEIGHT" "$WIDTH"; then
-        cd "$SCRIPT_OG_DIR/more-scripts/"
-        bash modrinth-downloader.sh --name $SERVER_NAME
-        echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
-    else
-        echlog "⬆ $SERVER_NAME MCserver: Did NOT run Modrinth colection downloader"
-    fi
+    MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
+"Install Mods / Plugins for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
+"$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+"modrinth" "Use Modrinth Collection ID" \
+"manual"   "Manual URL Downloader" \
+"skip"     "Do not install anything" \
+    3>&1 1>&2 2>&3) || return 0
+
+    case "$MC_DOWNLOAD_CHOICE" in
+        modrinth)
+            cd "$SCRIPT_OG_DIR/more-scripts/" || return 0
+            bash modrinth-downloader.sh --name "$SERVER_NAME"
+            echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
+        ;;
+        manual)
+            cd "$SCRIPT_OG_DIR/more-scripts/" || return 0
+            bash manual-downloader.sh --name "$SERVER_NAME"
+            echlog "⬆ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
+        ;;
+        skip)
+            echlog "⬆ $SERVER_NAME MCserver: Skipped mod/plugin installation"
+        ;;
+    esac
 else
     echlog "⬆ $SERVER_NAME MCserver: Loader presumed to be Vanila, no mods will be downloaded"
 fi
