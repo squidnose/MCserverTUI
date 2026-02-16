@@ -8,15 +8,17 @@
 - Setup periodic backups of your MCserver
 - Setup Reverse Proxies for home server
 - The TUI resizes to the size of you console (For Mobile)
+
 ## Use Case
 - Use on a VPS instead of "Minecraft Server Hosting" at a way lower cost (2.2x - 4.8x cheaper)
 - Turn a old PC into a Minecraft server
 - Use parts of the code to make something else:)
+
 ## Knowledge
 - Not recommended for tech newbies!
 - Requires knowlage about
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
-  - Keybinds or nano or vim or less (You can choose). 
+  - Keybinds of nano or vim or less (You can choose). 
   - Keybinds of tmux
 - The Goal of this TUI is Simplicity and robustness.
 - It should work on any Linux or BSD distro, if the dependencies are met. 
@@ -94,9 +96,9 @@ cd MCserverTUI
 - MCserverTUI doesn’t require a specific directory, but do NOT place it in ~/mcservers!
 
 ## setup.sh
-- Will setup Dependencies and services for some linux distros.
 - I highly recommended to install all your dependencies manually.
 - However you can also run **setup.sh**
+- It will setup Dependencies and services for some linux distros.
 
 ```
 ./setup.sh
