@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
+
 #============================ Logging ============================
 STATE_DIR="$HOME/.local/state/MCserverTUI"
 MC_TUI_LOGFILE="$STATE_DIR/mcservertui.log"
 mkdir -p "$STATE_DIR"
 
-echlog() {
+echlog()
+{
     local msg="$*"
     echo "$msg"
     echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
 }
+
 #==================================== MC Server Setup Wizard ====================================
 TITLE="New Server Setup"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
@@ -62,12 +65,11 @@ collection=$MOD_COLLECTION
 EOF
 echlog "Saved config to $CONF_FILE"
 
-
+#============================ 03. Content Downloader ====================================
+#Download Content for MCserver Operations
 content_downloader()
 {
-#Download Content for MCserver Operations
-#============================ 03. Content Downloader ====================================
-#=========================  B. Main Menu ====================================
+#=========================  A. Main Menu ====================================
 while true; do
 MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
 "Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
@@ -155,7 +157,9 @@ EOF
 
 chmod +x "$SERVER_DIR/run.sh"
 
+# Only run if not Velocity proxy
 if [[ $MC_LOADER != "velocity" ]] then
+
 #==================================== 9. EULA ====================================
 if whiptail --title "EULA" --yesno "Do you agree to the Minecraft EULA?" "$HEIGHT" "$WIDTH"; then
     echo "eula=true" > "$SERVER_DIR/eula.txt"
@@ -201,6 +205,11 @@ fi
 
 #==================================== 11. Start Server ====================================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server?\nAfter you exit tmux, you will drop back into the main menu." "$HEIGHT" "$WIDTH"; then
+## Ensure tmux exists
+if ! command -v tmux >/dev/null 2>&1; then
+    whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
+    exit 0
+fi
 tmux new-session -d -s "$SERVER_NAME"
 tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
 tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m

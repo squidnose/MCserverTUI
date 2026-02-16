@@ -59,24 +59,27 @@ else
     SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 fi
 
-CONFIG_FILE="$SERVER_DIR/manual-downloads.json"
-
 #==================================== 3. Ensure config exists ====================================
+CONFIG_FILE="$SERVER_DIR/manual-downloads.json"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo '{ "entries": [] }' > "$CONFIG_FILE"
 fi
 
 #==================================== 3. Functions ====================================
-save_json() {
+save_json()
+{
     echo "$1" > "$CONFIG_FILE"
 }
 
-load_json() {
+load_json()
+{
     cat "$CONFIG_FILE"
 }
 
 #==================================== 3.1 Add Entry ====================================
-add_entry() {
+add_entry()
+{
+    #Add a New Entry to the list
     NAME=$(whiptail --inputbox "Entry name(ideally without spaces):" "$HEIGHT" "$WIDTH" \
         3>&1 1>&2 2>&3) || return 0
     [ -z "$NAME" ] && return 0
@@ -86,19 +89,23 @@ add_entry() {
     [ -z "$URL" ] && return 0
 
     # Select Relative Path from presets
-    PATH_CHOICE=$(whiptail --title "Select Download Location" --menu \
+    PATH_CHOICE=$(whiptail --title "Select File Path" --menu \
     "Choose where the file should be downloaded inside the server folder:" \
     "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "root" "In the MCserver root (For server .jar files)" \
         "mods" "Fabric, Forge" \
         "plugins" "Paper, Spigot, Velocity" \
-        "geyser-velocity" "plugins/Geyser-Velocity/extensions - Geyser extensions (Velocity)" \
-        "geyser-spigot" "plugins/Geyser-Spigot/extensions - Geyser extensions (Spigot)" \
+        "geyser-fabric"     "config/Geyser-Fabric/extensions - Geyser extensions (Fabric)" \
+        "geyser-velocity"   "plugins/Geyser-Velocity/extensions - Geyser extensions (Velocity)" \
+        "geyser-spigot"     "plugins/Geyser-Spigot/extensions - Geyser extensions (Spigot)" \
         "manual" "Manual input" \
         3>&1 1>&2 2>&3) || return 0
 
     case "$PATH_CHOICE" in
+        root) PATH_REL="." ;;
         mods) PATH_REL="mods";;
         plugins) PATH_REL="plugins" ;;
+        geyser-fabric) PATH_REL="config/Geyser-Fabric/extensions" ;;
         geyser-velocity) PATH_REL="plugins/Geyser-Velocity/extensions" ;;
         geyser-spigot) PATH_REL="plugins/Geyser-Spigot/extensions" ;;
         manual)
@@ -107,13 +114,27 @@ add_entry() {
             "$HEIGHT" "$WIDTH" \
             3>&1 1>&2 2>&3) || return 0
 
+            #If not dir, then asume the root server dir
             [ -z "$PATH_REL" ] && PATH_REL="."
         ;;
     esac
 
-    FILENAME=$(whiptail --inputbox "Filename:" "$HEIGHT" "$WIDTH" "$NAME.jar" \
-        3>&1 1>&2 2>&3) || return 0
+    #Preload file name
+    ## If in server root, preload server name to base jarname on (for autostart feature)
+    ## Else in diferent dir, then use name of download entry for name of jar
+    if [[ "$PATH_REL" == "." ]]; then
+        FILENAME_PRELOAD="$SERVER_NAME.jar"
+    else
+        FILENAME_PRELOAD="$NAME.jar"
+    fi
+    FILENAME=$(whiptail --inputbox "Filename(Reccomended file name preloaded):" \
+    "$HEIGHT" "$WIDTH" "$FILENAME_PRELOAD" \
+    3>&1 1>&2 2>&3) || return 0
 
+    #Just in case the user lacks inteligence and or is testing the limits of my script:
+    [ -z "$FILENAME" ] && FILENAME="$FILENAME_PRELOAD"
+
+    #Save entry
     JSON=$(load_json)
     NEW_JSON=$(echo "$JSON" | jq \
         --arg name "$NAME" \
@@ -121,39 +142,48 @@ add_entry() {
         --arg path "$PATH_REL" \
         --arg file "$FILENAME" \
         '.entries += [{name:$name, url:$url, path:$path, filename:$file}]')
-
     save_json "$NEW_JSON"
 }
 
 #==================================== 3.2 Edit Entry ====================================
-edit_entry() {
+edit_entry()
+{
+    #Load existing entry
     INDEX="$1"
     JSON=$(load_json)
-
     ENTRY=$(echo "$JSON" | jq ".entries[$INDEX]")
-
     NAME=$(echo "$ENTRY" | jq -r '.name')
     URL=$(echo "$ENTRY" | jq -r '.url')
     PATH_REL=$(echo "$ENTRY" | jq -r '.path')
-    FILE=$(echo "$ENTRY" | jq -r '.filename')
+    FILENAME=$(echo "$ENTRY" | jq -r '.filename')
 
-    NAME=$(whiptail --inputbox "Entry name:" "$HEIGHT" "$WIDTH" "$NAME" 3>&1 1>&2 2>&3) || return 0
+    #Ask for data entrie again, with preloaded values of the existing entry
+    NAME=$(whiptail --inputbox "Entry Name:" "$HEIGHT" "$WIDTH" "$NAME" 3>&1 1>&2 2>&3) || return 0
     URL=$(whiptail --inputbox "Download URL:" "$HEIGHT" "$WIDTH" "$URL" 3>&1 1>&2 2>&3) || return 0
-    PATH_REL=$(whiptail --inputbox "Relative path(mods, plugins, plugins/Geyser-Velocity):" "$HEIGHT" "$WIDTH" "$PATH_REL" 3>&1 1>&2 2>&3) || return 0
-    FILE=$(whiptail --inputbox "Filename, You must add suffix! (.jar):" "$HEIGHT" "$WIDTH" "$FILE" 3>&1 1>&2 2>&3) || return 0
+    PATH_REL=$(whiptail --inputbox "File Path:" "$HEIGHT" "$WIDTH" "$PATH_REL" 3>&1 1>&2 2>&3) || return 0
+    FILENAME=$(whiptail --inputbox "Filename:" "$HEIGHT" "$WIDTH" "$FILENAME" 3>&1 1>&2 2>&3) || return 0
 
+    #Just in case the user lacks inteligence and or is testing the limits of my script:
+    if [[ "$PATH_REL" == "." ]]; then
+        FILENAME_PRELOAD="$SERVER_NAME.jar"
+    else
+        FILENAME_PRELOAD="$NAME.jar"
+    fi
+    [ -z "$FILENAME" ] && FILENAME="$FILENAME_PRELOAD"
+
+    #Save entry
     NEW_JSON=$(echo "$JSON" | jq \
         --arg name "$NAME" \
         --arg url "$URL" \
         --arg path "$PATH_REL" \
-        --arg file "$FILE" \
+        --arg file "$FILENAME" \
         ".entries[$INDEX] = {name:\$name, url:\$url, path:\$path, filename:\$file}")
-
     save_json "$NEW_JSON"
 }
 
 #==================================== 3.3 Remove Entry ====================================
-remove_entry() {
+remove_entry()
+{
     INDEX="$1"
     JSON=$(load_json)
     NEW_JSON=$(echo "$JSON" | jq "del(.entries[$INDEX])")
@@ -161,37 +191,36 @@ remove_entry() {
 }
 
 #==================================== 3.4 List Entries ====================================
-manage_entries() {
+manage_entries()
+{
     while true; do
+        #Load Entry names and create menu based of them
         JSON=$(load_json)
-
         MAP=()
         COUNT=$(echo "$JSON" | jq '.entries | length')
-
         for ((i=0; i<COUNT; i++)); do
             NAME=$(echo "$JSON" | jq -r ".entries[$i].name")
             MAP+=("$i" "$NAME")
         done
-
         MAP=("add" "+ Add entry" "${MAP[@]}")
-
         CHOICE=$(whiptail --title "Manage Download Entries" --menu \
-            "Server: $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-            "${MAP[@]}" 3>&1 1>&2 2>&3) || return 0
+        "Server: $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "${MAP[@]}" 3>&1 1>&2 2>&3) || return 0
 
+        #Options
         case "$CHOICE" in
             add) add_entry ;;
             *)
-                ACTION=$(whiptail --menu "Entry Options" "$HEIGHT" "$WIDTH" 5 \
-                    "edit" "Edit entry" \
-                    "remove" "Remove entry" \
-                    "back" "Back" \
-                    3>&1 1>&2 2>&3) || continue
+                ACTION=$(whiptail --menu "Entry Options" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+                "edit" "Edit entry" \
+                "remove" "Remove entry" \
+                "back" "Back" \
+                3>&1 1>&2 2>&3) || continue
 
                 case "$ACTION" in
                     edit) edit_entry "$CHOICE" ;;
                     remove) remove_entry "$CHOICE" ;;
-                    *) ;;
+                    *) continue ;;
                 esac
             ;;
         esac
@@ -199,41 +228,43 @@ manage_entries() {
 }
 
 #==================================== 3.5 Download All ====================================
-download_all() {
+download_all()
+{
+    #Load Entries
     JSON=$(load_json)
     COUNT=$(echo "$JSON" | jq '.entries | length')
-
     [ "$COUNT" -eq 0 ] && {
         whiptail --msgbox "No entries configured." "$HEIGHT" "$WIDTH"
         return 0
     }
 
+    #to mark entries as either Successful for not
     SUCCESS=()
     FAIL=()
 
+    #Download entries one by one (Not paralel)
     for ((i=0; i<COUNT; i++)); do
         NAME=$(echo "$JSON" | jq -r ".entries[$i].name")
         URL=$(echo "$JSON" | jq -r ".entries[$i].url")
         PATH_REL=$(echo "$JSON" | jq -r ".entries[$i].path")
         FILE=$(echo "$JSON" | jq -r ".entries[$i].filename")
 
+        #Make sure the Directory exists
         TARGET_DIR="$SERVER_DIR/$PATH_REL"
         mkdir -p "$TARGET_DIR"
         FULL_PATH="$TARGET_DIR/$FILE"
 
         whiptail --infobox "Downloading:\n$NAME\n\nFrom:\n$URL\n\nTo:\n$FULL_PATH" "$HEIGHT" "$WIDTH"
-
         if curl -fL -o "$FULL_PATH" "$URL"; then
             SUCCESS+=("$NAME")
         else
+            # in case of failire, offer solutions
             FAIL+=("$NAME")
-
             CHOICE=$(whiptail --menu "Download failed for $NAME" "$HEIGHT" "$WIDTH" 5 \
                 "edit" "Edit entry" \
                 "skip" "Skip to next" \
                 "abort" "Abort all" \
                 3>&1 1>&2 2>&3) || continue
-
             case "$CHOICE" in
                 edit) edit_entry "$i" ;;
                 abort) break ;;
@@ -241,25 +272,22 @@ download_all() {
             esac
         fi
     done
-
+    #Download Summary
     SUMMARY="Download Summary\n\nSuccessful:\n"
     for s in "${SUCCESS[@]}"; do SUMMARY+="$s\n"; done
-
     SUMMARY+="\nFailed:\n"
     for f in "${FAIL[@]}"; do SUMMARY+="$f\n"; done
-
     whiptail --msgbox "$SUMMARY" "$HEIGHT" "$WIDTH"
 }
 
 #==================================== 4. Main Menu ====================================
 while true; do
-    CHOICE=$(whiptail --title "Download Manager - $SERVER_NAME" --menu \
-        "Select an option:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    CHOICE=$(whiptail --title "Manual File Downloader Manager - $SERVER_NAME" --menu \
+    "Select an option:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         manage "Manage download entries" \
         run    "Download all entries" \
         exit   "Exit" \
-        3>&1 1>&2 2>&3) || exit 0
-
+    3>&1 1>&2 2>&3) || exit 0
     case "$CHOICE" in
         manage) manage_entries ;;
         run) download_all ;;
@@ -267,3 +295,26 @@ while true; do
     esac
 done
 
+#Json file example:
+#{
+#  "entries": [
+#    {
+#      "name": "Geyser",
+#      "url": "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity",
+#      "path": "plugins",
+#      "filename": "geyser.jar"
+#    },
+#    {
+#      "name": "floodgate",
+#      "url": "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/velocity",
+#      "path": "plugins",
+#      "filename": "floodgate.jar"
+#    },
+#    {
+#      "name": "MCXboxBroadcast",
+#      "url": "https://github.com/MCXboxBroadcast/Broadcaster/releases/download/130/MCXboxBroadcastExtension.jar",
+#      "path": "plugins/Geyser-Velocity/extensions",
+#      "filename": "MCXboxBroadcast.jar"
+#    }
+#  ]
+#}

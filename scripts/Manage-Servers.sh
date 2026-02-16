@@ -5,7 +5,8 @@
 mkdir -p "$HOME/.local/state/MCserverTUI"
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 
-echlog() {
+echlog()
+{
     local msg="$*"
     echo "$msg"
     echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
@@ -56,6 +57,11 @@ fi
 #==================================== 04. Functions ====================================
 startserver_tmux()
 {
+## Ensure tmux exists
+        if ! command -v tmux >/dev/null 2>&1; then
+            whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
+            exit 0
+        fi
 #======================= startserver 1. Runs mcserver in Tmux =========================
 if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" "$HEIGHT" "$WIDTH" ; then
 echlog "▶ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
@@ -82,6 +88,7 @@ content_downloader()
 #Download Content for MCserver Operations
 #============================ 03. Content Downloader ====================================
 #========================  A. Load config file ==================================
+# I load it a seccond time, because the info could change after runnig this part again
 if [ -f "$CONF_FILE" ]; then
     source "$CONF_FILE"
 else
@@ -289,6 +296,11 @@ while true; do
     fi
     case $MENU_CHOICES in
     1)
+        ## Ensure tmux exists
+        if ! command -v tmux >/dev/null 2>&1; then
+            whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
+            exit 0
+        fi
         echlog "🖥 $SERVER_NAME MCserver: Opening Server Console..."
         tmux attach -t "$SERVER_NAME"
 
@@ -323,7 +335,7 @@ while true; do
         "nnn"   "File Explorer" \
         3>&1 1>&2 2>&3)
         echlog "📟 $SERVER_NAME opened using $TERMINAL_UTIL"
-        cd $SERVER_DIR
+        cd "$SERVER_DIR"
         $TERMINAL_UTIL
     ;;
     0)

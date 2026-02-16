@@ -7,7 +7,7 @@
 - Update server jar files and its mods/plugins
 - Setup periodic backups of your MCserver
 - Setup Reverse Proxies for home server
-- The TUI resizes to the size of you console
+- The TUI resizes to the size of you console (For Mobile)
 ## Use Case
 - Use on a VPS instead of "Minecraft Server Hosting" at a way lower cost (2.2x - 4.8x cheaper)
 - Turn a old PC into a Minecraft server
@@ -65,11 +65,12 @@
 ## File-Structure:
 - Fixed MCserver location.
 
-| ~/mcservers/(MCserver-name) |                      MCserver location                     |
-|:---------------------------:|:----------------------------------------------------------:|
-|            run.sh           |   Run shortcut with the Ram amount with the nogui option   |
-|         autostart.sh        | Autostart script that runs run.sh in tmux window on boot.  |
-|     server-version.conf     |Info about: MC version, MC Loader and Modrinth collection ID|
+| ~/mcservers/(MCserver-name) |                       MCserver location                      |
+|:---------------------------:|:------------------------------------------------------------:|
+|            run.sh           |    Run shortcut with the Ram amount with the nogui option    |
+|         autostart.sh        |   Autostart script that runs run.sh in tmux window on boot.  |
+|     server-version.conf     | Info about: MC version, MC Loader and Modrinth collection ID |
+|    manual-downloads.json    |              List of all manual Download Entries             |
 
 # Setup 
 ## Recommended distros
@@ -111,8 +112,8 @@ cd MCserverTUI
 
 # Todo
 - Manage more Reverse proxy's (Playig.gg, ngrok, FRP)
-- Check if MCserver allready exists
-  - Add to new server logic
+- Apply Check if MCserver allready exists logic to:
+  - Add to new server
   - Duplicate MCserver Button
   - Remove MCserver (Should i add it???)
 - Showcase Videos:

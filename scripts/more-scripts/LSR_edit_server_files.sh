@@ -64,6 +64,7 @@ else
     loader=""
     collection=""
 fi
+
 #==================================== 6. Choose a editor ====================================
 EDITOR=$(whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
         nano        "Simple terminal editor (Beginner-friendly)" \
@@ -79,7 +80,8 @@ EDITOR=$(whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH
 SCRIPT_DIR="$SERVER_DIR"
 
 #==================================== LSR Functions ====================================
-modify_jar() {
+modify_jar()
+{
     ### The full path to the jar file to change (passed as argument $1).
     local script_path="$1"
     ### Extract the script's file name from the full path.

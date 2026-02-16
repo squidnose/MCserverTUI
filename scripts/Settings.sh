@@ -10,7 +10,8 @@ mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
 LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
 LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
 
-echlog() {
+echlog()
+{
     local msg="$*"
     echo "$msg"
     echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"

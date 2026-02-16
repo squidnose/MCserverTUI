@@ -20,20 +20,36 @@
   - Paper
   - Purpur
   - Velocity (Proxy)
-  
+
 ## Modrinth Colection ID
 - Modrinth ID (For mods, Not Manditory)
-- If using a modded server, you will be offered to run the modrinth-collection-downloader
+- Here are some IDs from the authour:
 
-## Manual Downloader
+| Name              | ID       | Link                                     |
+|-------------------|----------|------------------------------------------|
+| Fabric SMP        | ziTsdV9j | https://modrinth.com/collection/ziTsdV9j |
+| Mini games Fabric | OUp16QoH | https://modrinth.com/collection/OUp16QoH |
+| Velocity Proxy    | qHGqiN0h | https://modrinth.com/collection/qHGqiN0h |
+
+**Content in theese colections will change over time**
+**Make your own collections!!!**
+
+## Download Content
+- Download Content Either manually or Automaticly (based on name, version, loader and Modrinth collection ID)
+
+### MCjarfiles
+- only supports a certain amount of server.jar files:
+- Vanilla, Paper, Purpur, Fabric, Forge, Neoforge, Velocity
+
+### Modrinth Colection Downloader
+- Automaticly downloads and updates mods and plugins
+- Uses info from server-version.conf file (MC Loader, Version number and Collection ID)
+
+### Manual Downloader
 - Manual Downloader allows for downloading files to a specific place in your MCserver directory
 - Ment for .jar files, but is not limited by the .jar suffix
-
-## Jarfile install method
-- MCjarfiles only supports a certain amount of server.jar files
-    - Vanilla, Paper, Purpur, Fabric, Forge, Neoforge, Velocity
-- Manual allows you to download a specific version
-    - for: Snapshots, MC older than 1.8.8, New or Experimental loaders
+- Manual allows you to download a specific version:
+    - ex: Snapshots, MC older than 1.8.8, New or Experimental loaders
 
 ## Initialize MCserver
 - Initialize server, runs the server without eula.txt being agreen apon

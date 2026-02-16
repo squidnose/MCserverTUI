@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #==================================== location ====================================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 MC_ROOT="$HOME/mcservers"
@@ -10,6 +11,7 @@ TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT=$(( TERM_HEIGHT ))
 WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
+
 #==================================== 0. Parse CLI flags ====================================
 PASSED_NAME=""
 while [[ "$#" -gt 0 ]]; do
@@ -24,6 +26,7 @@ while [[ "$#" -gt 0 ]]; do
             ;;
     esac
 done
+
 #==================================== 1. Select a server ====================================
 if [ -n "$PASSED_NAME" ]; then
     # Bypass menu, validate directory
@@ -76,7 +79,6 @@ MC_COLLECTION=$(whiptail --title "Collection" --inputbox \
     3>&1 1>&2 2>&3) || exit 0
 
 #============================ 4. Save updated config ====================================
-
 cat > "$CONF_FILE" <<EOF
 version=$MC_VERSION
 loader=$MC_LOADER
@@ -120,6 +122,7 @@ if whiptail --title "Run Modrinth Downloader" --yesno \
     (
         cd "$SERVER_DIR" || exit
         python3 "$SCRIPT_DIR/modrinth-autodownloader.py" "${ARGS[@]}"
+        read -p "Press anything to continue"
     )
 fi
 
