@@ -117,7 +117,6 @@ cd MCserverTUI
 - Unsure if i want to implement (Because it seems like to much bloat):
   - Duplicate MCserver
   - Remove MCserver 
-  - XMX and XMS check if the user entered a space (ie 2 G instead of 2G)
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
