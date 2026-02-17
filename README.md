@@ -76,7 +76,7 @@
 
 # Setup 
 ## Recommended distros
-- The main deciding factor in reccomending a good distro is the Java compatibility
+- The main deciding factor in recomending a good distro is the Java compatibility
 - Not all distros have Older and Newer java version
 - Minecraft uses Java: 8, 17, 21, 25
 - Distros that have all of them are:
@@ -114,10 +114,10 @@ cd MCserverTUI
 
 # Todo
 - Manage more Reverse proxy's (Playig.gg, ngrok, FRP)
-- Apply Check if MCserver allready exists logic to:
-  - Add to new server
-  - Duplicate MCserver Button
-  - Remove MCserver (Should i add it???)
+- Unsure if i want to implement (Because it seems like to much bloat):
+  - Duplicate MCserver
+  - Remove MCserver 
+  - XMX and XMS check if the user entered a space (ie 2 G instead of 2G)
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)

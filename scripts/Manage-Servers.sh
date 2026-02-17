@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #This script uses a modified version of my LSR
-#==================================== MC Server Managment ====================================
+#==================================== MC Server Management ====================================
 #============================ 00. Logging ============================
 mkdir -p "$HOME/.local/state/MCserverTUI"
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
@@ -12,7 +12,7 @@ echlog()
     echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
 }
 #==================================== 01. Parameters ====================================
-TITLE="MC server Managment"
+TITLE="MC server Management"
 MC_ROOT="$HOME/mcservers"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ## Detect terminal size
@@ -63,7 +63,7 @@ startserver_tmux()
             exit 0
         fi
 #======================= startserver 1. Runs mcserver in Tmux =========================
-if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server" "$HEIGHT" "$WIDTH" ; then
+if whiptail --title "Start Server?" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
 echlog "▶ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
 tmux new-session -d -s "$SERVER_NAME"
 tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
@@ -196,6 +196,9 @@ local CRONLINE="@reboot $AUTOSTART"
     return 0
 } #manage_autostart()
 
+# Helper for manage_run_sh()
+validate_mem(){ [[ "$1" =~ ^[0-9]+[MG]$ ]] }
+
 manage_run_sh()
 {
 #This function will reconfigure run.sh
@@ -210,8 +213,18 @@ if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh on
     ### Ask for new memory amount
     MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
     MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+
+    ### Validate that memory doesnt have spaces or small M or G
+    ### If the user did not do a good job, replace with blank
+    if ! validate_mem "$MC_XMS"; then
+        MC_XMS=""
+    fi
+    if ! validate_mem "$MC_XMX"; then
+        MC_XMX=""
+    fi
+
     JAR_NAME="$SERVER_NAME.jar"
-echlog "🧠 $SERVER_NAME MCserver: New run.sh made with: $MC_XMS min, $MC_XMX max, using $JAR_NAME name"
+    echlog "🧠 $SERVER_NAME MCserver: New run.sh made with: $MC_XMS min, $MC_XMX max, using $JAR_NAME name"
 #======================= run.sh 3. More variables =========================
 ### fixes bug, when if no memory amout was selected, only -Xms or -Xmx, it caused a failed start
     if [[ -n "$MC_XMS" ]]; then
@@ -228,7 +241,7 @@ echlog "🧠 $SERVER_NAME MCserver: New run.sh made with: $MC_XMS min, $MC_XMX m
 #======================= run.sh 4. Creates run.sh =========================
 cat > "$RUNSCRIPT" <<EOF
 #!/usr/bin/env bash
-java $RUN_MC_XMS $RUN_MC_XMX -jar $JAR_NAME nogui
+java $RUN_MC_XMS $RUN_MC_XMX -jar "$JAR_NAME" nogui
 EOF
 chmod +x "$RUNSCRIPT"
 echlog "$SERVER_NAME MCserver: created run.sh for $SERVER_NAME"
@@ -238,15 +251,38 @@ fi
 
 change_server_name()
 {
-if whiptail --title "Change Name of $SERVER_NAME?" --yesno "Do you want to change the name of your Server?\n This will also force stop your server!\nSTOP YOU SERVER BEFORE CHANGEING THE NAME!!!" "$HEIGHT" "$WIDTH" ; then
+if whiptail --title "Change Name of $SERVER_NAME?" --yesno \
+"Do you want to change the name of your Server?
+This will also force stop your server!\n
+STOP YOUR SERVER BEFORE CHANGING THE NAME!!!" "$HEIGHT" "$WIDTH" ; then
 {
 echlog "✏ $SERVER_NAME MCserver: Started renaming process"
 #===================== name 1. Force Stop the old server=====================
 tmux kill-session -t "$SERVER_NAME"
 echlog "✏ $SERVER_NAME MCserver: Killed $SERVER_NAME tmux session"
+
 #===================== name 2.Ask for the new name =====================
-SERVER_NAME_NEW=$(whiptail --title "$TITLE" --inputbox "Enter a NEW name for your server:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || return 0
+# If the name exists, complain
+while true; do
+    SERVER_NAME_NEW=$(whiptail --title "$TITLE" --inputbox \
+    "Enter a NEW name for your server:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || return 0
+
+    # If empty then return 0
+    [ -z "$SERVER_NAME_NEW" ] && return 0
+
+    ## Incase name exists, it will complain:)
+    if [ -d "$MC_ROOT/$SERVER_NAME_NEW" ]; then
+        whiptail --title "Server Already Exists" --msgbox \
+"A server named '$SERVER_NAME_NEW' already exists in:\n$MC_ROOT\n
+    Choose A diferent name!\n
+You will be now prompted to enter the name again or press cancel to exit " "$HEIGHT" "$WIDTH"
+        continue
+    else
+        break
+    fi
+done
 OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
+
 #===================== name 3. Remove cron entry for old name =====================
     if crontab -l >/dev/null 2>&1; then
         crontab -l | grep -v "@reboot $OLD_AUTOSTART" | crontab -

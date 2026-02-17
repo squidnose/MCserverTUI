@@ -79,16 +79,17 @@ load_json()
 #==================================== 3.1 Add Entry ====================================
 add_entry()
 {
-    #Add a New Entry to the list
+    # Add a New Entry to the list
     NAME=$(whiptail --inputbox "Entry name(ideally without spaces):" "$HEIGHT" "$WIDTH" \
         3>&1 1>&2 2>&3) || return 0
     [ -z "$NAME" ] && return 0
 
+    # URL adress to download from
     URL=$(whiptail --inputbox "Download URL:" "$HEIGHT" "$WIDTH" \
         3>&1 1>&2 2>&3) || return 0
     [ -z "$URL" ] && return 0
 
-    # Select Relative Path from presets
+   # Select Relative Path from presets
     PATH_CHOICE=$(whiptail --title "Select File Path" --menu \
     "Choose where the file should be downloaded inside the server folder:" \
     "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
@@ -100,7 +101,6 @@ add_entry()
         "geyser-spigot"     "plugins/Geyser-Spigot/extensions - Geyser extensions (Spigot)" \
         "manual" "Manual input" \
         3>&1 1>&2 2>&3) || return 0
-
     case "$PATH_CHOICE" in
         root) PATH_REL="." ;;
         mods) PATH_REL="mods";;
@@ -114,12 +114,12 @@ add_entry()
             "$HEIGHT" "$WIDTH" \
             3>&1 1>&2 2>&3) || return 0
 
-            #If not dir, then asume the root server dir
+            # If not dir, then asume the root server dir
             [ -z "$PATH_REL" ] && PATH_REL="."
         ;;
     esac
 
-    #Preload file name
+    # Preload file name
     ## If in server root, preload server name to base jarname on (for autostart feature)
     ## Else in diferent dir, then use name of download entry for name of jar
     if [[ "$PATH_REL" == "." ]]; then
@@ -127,14 +127,14 @@ add_entry()
     else
         FILENAME_PRELOAD="$NAME.jar"
     fi
-    FILENAME=$(whiptail --inputbox "Filename(Reccomended file name preloaded):" \
+    FILENAME=$(whiptail --inputbox "Filename(Recommended file name preloaded):" \
     "$HEIGHT" "$WIDTH" "$FILENAME_PRELOAD" \
     3>&1 1>&2 2>&3) || return 0
 
-    #Just in case the user lacks inteligence and or is testing the limits of my script:
+    # Just in case the user lacks inteligence and or is testing the limits of my script:
     [ -z "$FILENAME" ] && FILENAME="$FILENAME_PRELOAD"
 
-    #Save entry
+    # Save entry
     JSON=$(load_json)
     NEW_JSON=$(echo "$JSON" | jq \
         --arg name "$NAME" \
@@ -148,7 +148,7 @@ add_entry()
 #==================================== 3.2 Edit Entry ====================================
 edit_entry()
 {
-    #Load existing entry
+    # Load existing entry
     INDEX="$1"
     JSON=$(load_json)
     ENTRY=$(echo "$JSON" | jq ".entries[$INDEX]")
@@ -157,13 +157,13 @@ edit_entry()
     PATH_REL=$(echo "$ENTRY" | jq -r '.path')
     FILENAME=$(echo "$ENTRY" | jq -r '.filename')
 
-    #Ask for data entrie again, with preloaded values of the existing entry
+    # Ask for data entrie again, with preloaded values of the existing entry
     NAME=$(whiptail --inputbox "Entry Name:" "$HEIGHT" "$WIDTH" "$NAME" 3>&1 1>&2 2>&3) || return 0
     URL=$(whiptail --inputbox "Download URL:" "$HEIGHT" "$WIDTH" "$URL" 3>&1 1>&2 2>&3) || return 0
     PATH_REL=$(whiptail --inputbox "File Path:" "$HEIGHT" "$WIDTH" "$PATH_REL" 3>&1 1>&2 2>&3) || return 0
     FILENAME=$(whiptail --inputbox "Filename:" "$HEIGHT" "$WIDTH" "$FILENAME" 3>&1 1>&2 2>&3) || return 0
 
-    #Just in case the user lacks inteligence and or is testing the limits of my script:
+    # Just in case the user lacks inteligence and or is testing the limits of my script:
     if [[ "$PATH_REL" == "." ]]; then
         FILENAME_PRELOAD="$SERVER_NAME.jar"
     else
@@ -171,7 +171,7 @@ edit_entry()
     fi
     [ -z "$FILENAME" ] && FILENAME="$FILENAME_PRELOAD"
 
-    #Save entry
+    # Save entry
     NEW_JSON=$(echo "$JSON" | jq \
         --arg name "$NAME" \
         --arg url "$URL" \
@@ -194,7 +194,7 @@ remove_entry()
 manage_entries()
 {
     while true; do
-        #Load Entry names and create menu based of them
+        # Load Entry names and create menu based of them
         JSON=$(load_json)
         MAP=()
         COUNT=$(echo "$JSON" | jq '.entries | length')
@@ -207,7 +207,7 @@ manage_entries()
         "Server: $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "${MAP[@]}" 3>&1 1>&2 2>&3) || return 0
 
-        #Options
+        # Options
         case "$CHOICE" in
             add) add_entry ;;
             *)
@@ -230,7 +230,7 @@ manage_entries()
 #==================================== 3.5 Download All ====================================
 download_all()
 {
-    #Load Entries
+    # Load Entries
     JSON=$(load_json)
     COUNT=$(echo "$JSON" | jq '.entries | length')
     [ "$COUNT" -eq 0 ] && {
@@ -238,22 +238,23 @@ download_all()
         return 0
     }
 
-    #to mark entries as either Successful for not
+    # to mark entries as either Successful for not
     SUCCESS=()
     FAIL=()
 
-    #Download entries one by one (Not paralel)
+    # Download entries one by one (Not paralel)
     for ((i=0; i<COUNT; i++)); do
         NAME=$(echo "$JSON" | jq -r ".entries[$i].name")
         URL=$(echo "$JSON" | jq -r ".entries[$i].url")
         PATH_REL=$(echo "$JSON" | jq -r ".entries[$i].path")
         FILE=$(echo "$JSON" | jq -r ".entries[$i].filename")
 
-        #Make sure the Directory exists
+        # Make sure the Directory exists
         TARGET_DIR="$SERVER_DIR/$PATH_REL"
         mkdir -p "$TARGET_DIR"
         FULL_PATH="$TARGET_DIR/$FILE"
 
+        # Download file
         whiptail --infobox "Downloading:\n$NAME\n\nFrom:\n$URL\n\nTo:\n$FULL_PATH" "$HEIGHT" "$WIDTH"
         if curl -fL -o "$FULL_PATH" "$URL"; then
             SUCCESS+=("$NAME")
@@ -272,7 +273,8 @@ download_all()
             esac
         fi
     done
-    #Download Summary
+
+    # Download Summary
     SUMMARY="Download Summary\n\nSuccessful:\n"
     for s in "${SUCCESS[@]}"; do SUMMARY+="$s\n"; done
     SUMMARY+="\nFailed:\n"
@@ -290,7 +292,13 @@ while true; do
     3>&1 1>&2 2>&3) || exit 0
     case "$CHOICE" in
         manage) manage_entries ;;
-        run) download_all ;;
+        run)
+            if whiptail --title "Do you wish to continue?" --yesno \
+            "This will immediately overwrite all existing files downloaded by this manager. \
+            \n\nMake sure you have backups if needed." --defaultno "$HEIGHT" "$WIDTH"; then
+                download_all
+            fi
+        ;;
         exit) exit 0 ;;
     esac
 done

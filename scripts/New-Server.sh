@@ -27,8 +27,31 @@ WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
 
 #==================================== 1. Get Info ====================================
-SERVER_NAME=$(whiptail --title "$TITLE" --inputbox "Enter a name for your server:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-[ -z "$SERVER_NAME" ] && exit 0
+# New server Name
+while true; do
+    SERVER_NAME=$(whiptail --title "$TITLE" --inputbox \
+    "Enter a name for your server:" "$HEIGHT" "$WIDTH" \
+    3>&1 1>&2 2>&3) || exit 0
+
+    # If empty then exit 0
+    [ -z "$SERVER_NAME" ] && exit 0
+    SERVER_DIR="$MC_ROOT/$SERVER_NAME"
+
+    ## Incase name exists, it will complain:)
+    if [ -d "$SERVER_DIR" ]; then
+        whiptail --title "Server Already Exists" --msgbox \
+"A server named '$SERVER_NAME' already exists in:\n$MC_ROOT\n
+Choose the following:\n
+        A. Choose a different name
+        B. Manage the existing server (You can regenerate all files in there)
+        C. Remove the folder in ~/mcservers/$SERVER_NAME to delete the server\n
+You will be now prompted to enter the name again or press cancel to exit " "$HEIGHT" "$WIDTH"
+        continue
+    else
+        break
+    fi
+done
+
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
 MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.11):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
@@ -64,7 +87,8 @@ loader=$MC_LOADER
 collection=$MOD_COLLECTION
 EOF
 echlog "Saved config to $CONF_FILE"
-
+#Jarfile Name
+JAR_NAME="$SERVER_NAME.jar"
 #============================ 03. Content Downloader ====================================
 #Download Content for MCserver Operations
 content_downloader()
@@ -88,7 +112,6 @@ MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
         ;;
         mcjarfiles)
         cd "$SERVER_DIR"
-        JAR_NAME="$SERVER_NAME.jar"
         if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
             wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
         elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
@@ -119,7 +142,7 @@ if [[ $MC_LOADER != "velocity" ]] then
 
 #==================================== 5 Initialize Server Jarfile ====================================
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
-if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Reccomended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
+if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Recommended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
     cd "$SERVER_DIR"
     java -jar $JAR_NAME
 fi
@@ -135,6 +158,18 @@ fi # Not run if proxy
 #==================================== 7. Memory Config ====================================
 MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+
+# Helper for memory checking
+validate_mem(){ [[ "$1" =~ ^[0-9]+[MG]$ ]] }
+### Validate that memory doesnt have spaces or small M or G
+### If the user did not do a good job, replace with blank
+if ! validate_mem "$MC_XMS"; then
+    MC_XMS=""
+fi
+if ! validate_mem "$MC_XMX"; then
+    MC_XMX=""
+fi
+
 ## Make variables
 ### fixes bug, when if no memory amout was selected, only -Xms or -Xmx, it caused a failed start
     if [[ -n "$MC_XMS" ]]; then
@@ -142,17 +177,17 @@ MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "
     else
         RUN_MC_XMS=""
     fi
-
     if [[ -n "$MC_XMX" ]]; then
         RUN_MC_XMX="-Xmx$MC_XMX"
     else
         RUN_MC_XMX=""
     fi
 
+
 #==================================== 8. Create run.sh ====================================
 cat > "$SERVER_DIR/run.sh" <<EOF
 #!/usr/bin/env bash
-java $RUN_MC_XMS $RUN_MC_XMX -jar $JAR_NAME nogui
+java $RUN_MC_XMS $RUN_MC_XMX -jar "$JAR_NAME" nogui
 EOF
 
 chmod +x "$SERVER_DIR/run.sh"
@@ -204,7 +239,7 @@ fi
 
 
 #==================================== 11. Start Server ====================================
-if whiptail --title "Start Server?" --yesno "Do you with to run and connect your server?\nAfter you exit tmux, you will drop back into the main menu." "$HEIGHT" "$WIDTH"; then
+if whiptail --title "Start Server?" --yesno "Do you wish to run and connect your server?\nAfter you exit tmux, you will drop back into the main menu." "$HEIGHT" "$WIDTH"; then
 ## Ensure tmux exists
 if ! command -v tmux >/dev/null 2>&1; then
     whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
