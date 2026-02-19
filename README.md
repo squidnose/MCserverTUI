@@ -122,9 +122,18 @@ cd MCserverTUI
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
-- MCserverTUI settings config
-  - Enable/DIable Logging
-  - Change mcservers Location
+- New Folder Structure:
+- Make sure that $HOME is set (if not, selection TUI)
+  - MCserverTUI settings config ($HOME/.local/state/MCserverTUI)
+    - MCserverTUI.conf
+      - Enable/Disable Logging
+      - Change mcservers Location
+  - newt colors
+  - MCserverTUI dir in MCserver Root
+    - server-versions.conf
+    - manual-downloads.json
+    - autostart.sh
+- Fix colors dont apply in first set-colors.sh
 
 # Disclaimer
 - I used an LLM to help with the programming. 

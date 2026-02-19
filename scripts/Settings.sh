@@ -1,20 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
+#============================ 0.1 MCserverTUI Config File ============================
+MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
+if [ -f "$MCSERVERTUI_CONF" ]; then
+    source "$MCSERVERTUI_CONF"
+else
+    echo "No MCserverTUI config file, please run MC-server-TUI.sh first!"
+    exit 1
+fi
+#New parameters:
+MC_ROOT="$mcdir"
+## loggs (true or false)
+## backups
 
 #============================ Logging ============================
-mkdir -p "$HOME/.local/state/MCserverTUI"
-MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
-
 # For rsync backups
 mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
 LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
 LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
 
+#Logging what is pressed
+MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
 {
     local msg="$*"
     echo "$msg"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+    if [ $loggs == "true" ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+    fi
 }
 
 #============================ Debuging ============================
@@ -25,9 +38,6 @@ echlog "=========================================="
 
 #============================ Script location ============================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-
-#============================ newt colors ============================
-export NEWT_COLORS_FILE="$SCRIPT_DIR/Colors/colors.conf"
 
 #============================ Term Size ============================
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
@@ -57,7 +67,8 @@ while true; do
         logs            "📜 View Logs for TUI's and Backups" \
         watch_java      "👁  Watch All java processes" \
         crontab         "⏱  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
-        term_util       "📟 Open ~/mcservers with Terminal Tools(Eg: Disk Usage)" \
+        term_util       "📟 Open $MC_ROOT with Terminal Tools(Eg: Disk Usage)" \
+        config          "📂 Set: Logging, MCserver Directory, Backups Directory" \
         colors          "🎨 Change the Colors of the TUI" \
         go_back         "..  Go Back" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
@@ -102,8 +113,29 @@ while true; do
         "nnn"   "File Explorer" \
         3>&1 1>&2 2>&3)
         echlog "📟 using $TERMINAL_UTIL"
-        cd ~/mcservers/
+        cd $MC_ROOT
         $TERMINAL_UTIL
+    ;;
+    config)
+        if whiptail --title "$TITLE - Logging" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
+            loggs="true"
+        else
+            loggs="false"
+        fi
+
+        mcdir=$(whiptail --title "$TITLE - mcdir" --inputbox \
+            "Input the directory for your MCservers:" "$HEIGHT" "$WIDTH" "$mcdir" \
+            3>&1 1>&2 2>&3) || exit 0
+
+        backups=$(whiptail --title "$TITLE - backups" --inputbox \
+            "Input the directory for backups:" "$HEIGHT" "$WIDTH" "$backups" \
+            3>&1 1>&2 2>&3) || exit 0
+
+cat > "$MCSERVERTUI_CONF" <<EOF
+loggs="$loggs"
+mcdir="$mcdir"
+backups="$backups"
+EOF
     ;;
     colors)
         echlog "🎨 Running Color Changing Script"

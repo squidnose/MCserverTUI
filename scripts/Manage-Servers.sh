@@ -1,19 +1,33 @@
 #!/usr/bin/env bash
 #This script uses a modified version of my LSR
 #==================================== MC Server Management ====================================
-#============================ 00. Logging ============================
-mkdir -p "$HOME/.local/state/MCserverTUI"
-MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
+#============================ 00.1 MCserverTUI Config File ============================
+MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
+if [ -f "$MCSERVERTUI_CONF" ]; then
+    source "$MCSERVERTUI_CONF"
+else
+    echo "No MCserverTUI config file, please run MC-server-TUI.sh first!"
+    exit 1
+fi
+#New parameters:
+MC_ROOT="$mcdir"
+## loggs (true or false)
+## backups
 
+#============================ 00.2 Logging ============================
+#Logging what is pressed
+MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
 {
     local msg="$*"
     echo "$msg"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+    if [ $loggs == "true" ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+    fi
 }
+
 #==================================== 01. Parameters ====================================
 TITLE="MC server Management"
-MC_ROOT="$HOME/mcservers"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ## Detect terminal size
 ### in case tput is not found, sets to fixed value
@@ -34,7 +48,7 @@ for d in "$MC_ROOT"/*; do
 done
 ## Check if mcserver exist:
 if [[ ${#MENU_ITEMS[@]} -eq 0 ]]; then
-whiptail --msgbox "No Servers Found, please make a New one:)\nOr put your existing MCserver directory in ~/mcservers/" "$HEIGHT" "$WIDTH"
+whiptail --msgbox "No Servers Found, please make a New one:)\nOr put your existing MCserver directory in $MC_ROOT" "$HEIGHT" "$WIDTH"
 exit 0
 fi
 
@@ -58,10 +72,11 @@ fi
 startserver_tmux()
 {
 ## Ensure tmux exists
-        if ! command -v tmux >/dev/null 2>&1; then
-            whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
-            exit 0
-        fi
+    if ! command -v tmux >/dev/null 2>&1; then
+        whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
+        exit 0
+    fi
+
 #======================= startserver 1. Runs mcserver in Tmux =========================
 if whiptail --title "Start Server?" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
 echlog "▶ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
@@ -281,7 +296,7 @@ You will be now prompted to enter the name again or press cancel to exit " "$HEI
         break
     fi
 done
-OLD_AUTOSTART="$HOME/mcservers/$SERVER_NAME/autostart.sh"
+OLD_AUTOSTART="$MC_ROOT/$SERVER_NAME/autostart.sh"
 
 #===================== name 3. Remove cron entry for old name =====================
     if crontab -l >/dev/null 2>&1; then
@@ -299,11 +314,11 @@ echlog "✏ $SERVER_NAME MCserver: Removed run.sh and autostart.sh with old name
     mv "$JAR_NAME_OLD" "$JAR_NAME_NEW"
 echlog "✏ $SERVER_NAME MCserver: Renamed the jar file with new name"
 #===================== name 6. Rename server directory ============================
-    cd "$HOME/mcservers" || return 0
+    cd "$MC_ROOT" || return 0
     mv "$SERVER_NAME" "$SERVER_NAME_NEW"
     # Update internal variable
     SERVER_NAME="$SERVER_NAME_NEW"
-    SERVER_DIR="$HOME/mcservers/$SERVER_NAME"
+    SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 echlog "✏ $SERVER_NAME MCserver: Renamed the server direcotry"
 #===================== name 7. Regenerate autostart ==============================
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"

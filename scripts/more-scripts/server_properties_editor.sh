@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 #==================================== locations and parameters ====================================
+#============================ 0.1 MCserverTUI Config File ============================
+MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
+if [ -f "$MCSERVERTUI_CONF" ]; then
+    source "$MCSERVERTUI_CONF"
+else
+    echo "No MCserverTUI config file, please run MC-server-TUI.sh first!"
+    exit 1
+fi
+#New parameters:
+MC_ROOT="$mcdir"
+mkdir -p "$MC_ROOT"
+## loggs (true or false)
+## backups
+
 #For server Chooser
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-MC_ROOT="$HOME/mcservers"
 ## Detect terminal size
 ### in case tput is not found, sets to fixed value
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)

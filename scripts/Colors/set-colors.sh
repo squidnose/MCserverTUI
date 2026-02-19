@@ -11,7 +11,7 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 
-CONF_FILE="$(dirname "$(realpath "$0")")/colors.conf"
+CONF_FILE="$HOME/.local/state/MCserverTUI/colors.conf"
 
 while true; do
     CHOICE=$(whiptail --title "Theme Selector" --menu "Choose a color preset:" $HEIGHT $WIDTH $MENU_HEIGHT  \

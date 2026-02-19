@@ -1,22 +1,34 @@
 #!/usr/bin/env bash
+#==================================  New Server Setup Wizzard ====================================
+#============================ 0.1 MCserverTUI Config File ============================
+MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
+if [ -f "$MCSERVERTUI_CONF" ]; then
+    source "$MCSERVERTUI_CONF"
+else
+    echo "No MCserverTUI config file, please run MC-server-TUI.sh first!"
+    exit 1
+fi
+#New parameters:
+MC_ROOT="$mcdir"
+mkdir -p "$MC_ROOT"
+## loggs (true or false)
+## backups
 
-#============================ Logging ============================
-STATE_DIR="$HOME/.local/state/MCserverTUI"
-MC_TUI_LOGFILE="$STATE_DIR/mcservertui.log"
-mkdir -p "$STATE_DIR"
-
+#============================ 0.2 Logging ============================
+#Logging what is pressed
+MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
 {
     local msg="$*"
     echo "$msg"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+    if [ $loggs == "true" ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
+    fi
 }
 
-#==================================== MC Server Setup Wizard ====================================
+#============================== 0.3 variables ================================
 TITLE="New Server Setup"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-MC_ROOT="$HOME/mcservers"
-mkdir -p "$MC_ROOT"
 ## Detect terminal size
 ### in case tput is not found, sets to fixed value
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
@@ -25,6 +37,18 @@ TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT=$(( TERM_HEIGHT ))
 WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
+
+#=========================  0.4 Exit mid creation ====================================
+exited_mid_new()
+{
+if whiptail --title "$TITLE - Exited Mid MCserver creation!" --yesno \
+"Before you go...\nDo you wish to remove $MC_ROOT/$SERVER_NAME?" $HEIGHT $WIDTH; then
+    rm -rf "$MC_ROOT/$SERVER_NAME"
+    exit 0
+else
+    exit 0
+fi
+}
 
 #==================================== 1. Get Info ====================================
 # New server Name
@@ -44,7 +68,7 @@ while true; do
 Choose the following:\n
         A. Choose a different name
         B. Manage the existing server (You can regenerate all files in there)
-        C. Remove the folder in ~/mcservers/$SERVER_NAME to delete the server\n
+        C. Remove the folder in $MC_ROOT/$SERVER_NAME to delete the server\n
 You will be now prompted to enter the name again or press cancel to exit " "$HEIGHT" "$WIDTH"
         continue
     else
@@ -54,7 +78,7 @@ done
 
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 mkdir -p "$SERVER_DIR"
-MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.11):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+MC_VERSION=$(whiptail --title "$TITLE" --inputbox "Enter Minecraft version (e.g., 1.21.11):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || exited_mid_new
 MC_LOADER_CHOICE=$(whiptail --title "$TITLE" --menu "Choose a Loader/Server SW:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "Vanilla - From Mojang" \
     "2" "Fabric - More perfomance and Good mods" \
@@ -73,7 +97,8 @@ case $MC_LOADER_CHOICE in
     5) MC_LOADER="paper" ;;
     6) MC_LOADER="purpur" ;;
     7) MC_LOADER="velocity" ;;
-    *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) ;;
+    *) MC_LOADER=$(whiptail --title "$TITLE" --inputbox "Enter loader exampes:\nvanilla, fabric, forge, paper" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || exited_mid_new
+    ;;
 
 esac
 MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth Mods collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
