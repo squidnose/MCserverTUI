@@ -59,6 +59,7 @@ while true; do
         new_server      "➕ Setup a New MC server" \
         manage_servers  "🛠 Manage existing MC servers" \
         backup_servers  "🌐 Manage MC server Backups" \
+        tunneling       "🔃 Setup Tunneling services" \
         settings        "⚙️ TUI Settings and Logs" \
         exit            "X  Exit" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
@@ -93,6 +94,15 @@ case "$CHOICE" in
     backup_servers)
         echlog "🌐 Running Manage MC server Backup Script"
         "$SCRIPT_DIR/Backups-RSYNC-TUI/Backup-MC-Servers.sh"
+    ;;
+    tunneling)
+        TUNNELING=$(whiptail --title "🔃 Tunneling - $TITLE" --menu "Choose a Tunneling service:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+            "Localtonet.sh" "Localtonet.com - Linux (Glibc and Musl) and Macos" \
+            "Playit-gg.sh"  "playit.gg - Linux GlibC Only" \
+            "Telebit.sh"    "Telebit.cloud - Linux and MacOS(Autostart not ready yet)" \
+        3>&1 1>&2 2>&3)
+        echlog "🔃 Running $TUNNELING Tunneling manager"
+        "$SCRIPT_DIR/Tunneling-Services/$TUNNELING"
     ;;
     settings)
         echlog "⚙️ Opening Settings"

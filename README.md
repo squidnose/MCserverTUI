@@ -3,26 +3,26 @@
 ## Features:
 - Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
 - Setup Wizard with all important settings (Version, Loader, Mods, Ram, config and Autostart)
-- Server Manager to reconfigure settings
+- Server Manager to reconfigure settings and import your existing MCservers
 - Update server jar files and its mods/plugins
 - Setup periodic backups of your MCserver
-- Setup Reverse Proxies for home server
-- The TUI resizes to the size of you console (For Mobile)
+- Setup Reverse Proxies for Home server 
+- The TUI resizes to the size of you console (For Mobile ssh client)
 
 ## Use Case
 - Use on a VPS instead of "Minecraft Server Hosting" at a way lower cost (2.2x - 4.8x cheaper)
 - Turn a old PC into a Minecraft server
-- Use parts of the code to make something else:)
+- Use parts of the code to make something else (Free and Open Source Software)
 
 ## Knowledge
 - Not recommended for tech newbies!
 - Requires knowlage about
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
   - Keybinds of nano or vim or less (You can choose). 
-  - Keybinds of tmux
+  - Keybinds of tmux (server console)
 - The Goal of this TUI is Simplicity and robustness.
 - It should work on any Linux or BSD distro, if the dependencies are met. 
-- You dont need MCserverTUI to run your MC server. 
+- Your MCservers will still run even if your remove MCserverTUI from your system. 
   - MCserverTUI is only needed for Setting up and managing your MC server.
   
 # Details
@@ -113,16 +113,18 @@ cd MCserverTUI
 - [[Docs]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/Docs/)
 
 # Todo
-- Manage more Reverse proxy's (Playig.gg, ngrok, FRP)
-- Unsure if i want to implement (Because it seems like to much bloat):
-  - Duplicate MCserver
-  - Remove MCserver 
+- Custom FRP TUI for self hosted Tunneling
+- Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
+- Find Better Emojis/Symbols for TUI
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
+- MCserverTUI settings config
+  - Enable/DIable Logging
+  - Change mcservers Location
 
 # Disclaimer
 - I used an LLM to help with the programming. 

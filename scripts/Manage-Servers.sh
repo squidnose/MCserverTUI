@@ -249,7 +249,7 @@ fi
 
 } #manage_run_sh()
 
-change_server_name()
+change_name()
 {
 if whiptail --title "Change Name of $SERVER_NAME?" --yesno \
 "Do you want to change the name of your Server?
@@ -309,7 +309,43 @@ echlog "✏ $SERVER_NAME MCserver: Renamed the server direcotry"
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"
     manage_run_sh "$SERVER_NAME" "$SERVER_DIR"
 } fi
-} #change_server_name()
+} #change_name()
+
+#Remove server
+remove()
+{
+# First confirmation
+whiptail --title "⚠ Remove Server ⚠" --yesno \
+"You are about to PERMANENTLY DELETE:\n\n$SERVER_NAME\n\nThis cannot be undone!" \
+"$HEIGHT" "$WIDTH" || return 0
+
+echlog "🗑 $SERVER_NAME MCserver: Removal process started"
+# Second confirmation (strong warning)
+if whiptail --title "Final Warning" --yesno \
+"Are you REALLY sure you want to delete:\n\n$SERVER_DIR ?" "$HEIGHT" "$WIDTH"; then
+
+    # Stop running server if active
+    if tmux has-session -t "$SERVER_NAME" 2>/dev/null; then
+        tmux kill-session -t "$SERVER_NAME"
+        echlog "🗑 $SERVER_NAME MCserver: Killed tmux session before deletion"
+    fi
+
+    # Remove cron autostart if exists
+    AUTOSTART="$SERVER_DIR/autostart.sh"
+    if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
+        crontab -l 2>/dev/null | grep -v "$AUTOSTART" | crontab -
+        echlog "🗑 $SERVER_NAME MCserver: Removed cron autostart entry"
+    fi
+
+    # Delete directory
+    rm -rf "$SERVER_DIR"
+    echlog "🗑 $SERVER_NAME MCserver: Server directory deleted"
+    whiptail --msgbox "Server '$SERVER_NAME' has been permanently removed." "$HEIGHT" "$WIDTH"
+    exit 0
+    else
+        echlog "🗑 $SERVER_NAME MCserver: Deletion cancelled"
+    fi
+}
 
 #==================================== 05. Main Menu ====================================
 while true; do
@@ -322,7 +358,7 @@ while true; do
     "6" "📂 Edit Files (LSR)" \
     "7" "⏱  Add or Reconfigure Autostart Features" \
     "8" "🧠 Add or Reconfigure Memory Amount" \
-    "9" "✏  Change Server Name" \
+    "9" "⚠️ Change (Rename | Remove)" \
     "T" "📟 Terminal Utils" \
     "0" "X  Go Back .." \
         3>&1 1>&2 2>&3)
@@ -362,7 +398,15 @@ while true; do
     8)
         manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;; #internal
     9)
-        change_server_name ;; #internal
+        CHANGE=$(whiptail --title "$TITLE" --menu \
+        "Choose an Operation:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "change_name"   "Change the Name of this MCserver" \
+        "remove"        "⚠️Removes the server⚠️" \
+        3>&1 1>&2 2>&3)
+        [ -z "$CHANGE" ] && return 0
+        #Run the selected function
+        $CHANGE
+        ;;
     T)
         TERMINAL_UTIL=$(whiptail --title "$TITLE" --menu \
         "What terminal util for $SERVER_NAME woudld you like to run?\nQ to Quit" \
