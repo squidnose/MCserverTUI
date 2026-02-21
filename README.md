@@ -1,29 +1,29 @@
 # MC Server TUI:
-## A Simple TUI for Minecraft(Java) servers for Linux and BSD OS
+## A Simple TUI for Minecraft(Java) servers for Unix like OS
 ## Features:
+- Runs best on Linux and BSD (Or any other OS that meats the dependencies)
 - Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
-- Setup Wizard with all important settings (Version, Loader, Mods, Ram, config and Autostart)
+- Setup Wizard with all important settings (Version, Loader, Mods, Ram, Config and Autostart)
 - Server Manager to reconfigure settings and import your existing MCservers
 - Update server jar files and its mods/plugins
 - Setup periodic backups of your MCserver
 - Setup Reverse Proxies for Home server 
 - The TUI resizes to the size of you console (For Mobile ssh client)
-
+- Your MCservers will still run even if your remove MCserverTUI from your system. 
+- MCserverTUI is only needed for Setting up and managing your MC server.
+  
 ## Use Case
 - Use on a VPS instead of "Minecraft Server Hosting" at a way lower cost (2.2x - 4.8x cheaper)
 - Turn a old PC into a Minecraft server
-- Use parts of the code to make something else (Free and Open Source Software)
+- Use parts of the code to make something else (Modular Desighn)
 
 ## Knowledge
-- Not recommended for tech newbies!
-- Requires knowlage about
+**Not recommended for tech newbies!**
+- Requires knowlage about:
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
   - Keybinds of nano or vim or less (You can choose). 
   - Keybinds of tmux (server console)
-- The Goal of this TUI is Simplicity and robustness.
-- It should work on any Linux or BSD distro, if the dependencies are met. 
-- Your MCservers will still run even if your remove MCserverTUI from your system. 
-  - MCserverTUI is only needed for Setting up and managing your MC server.
+  - Firewalls and Ports
   
 # Details
 ## Dependencies
@@ -33,12 +33,12 @@
 - tmux - for MC server console
 - python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
 - curl and wget - to download minecraft server jar files 
-- jq - for Manual Downloader
-- Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files (Not mandatory)
-- nnn - File browser (Not mandatory)
-- ncdu - Disk Usage Analyzer (Not mandatory)
+- jq - for Manual Entry Downloader 
+- Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files (You can Choose)
+- nnn - File browser 
+- ncdu - Disk Usage Analyzer 
 
-## Java for Minecraft
+### Java for Minecraft
 - Different Minecraft versions uses different java versions:
 
 | Java V. |     Minecraft V.    |
@@ -64,15 +64,63 @@
 - Does not need a specific CPU architecture. (Limitations may be with some dependencies)
 
 (Limitations are mostly with Openjdk and Tunneling services)
-## File-Structure:
-- Fixed MCserver location.
 
-| ~/mcservers/(MCserver-name) |                       MCserver location                      |
-|:---------------------------:|:------------------------------------------------------------:|
-|            run.sh           |    Run shortcut with the Ram amount with the nogui option    |
-|         autostart.sh        |   Autostart script that runs run.sh in tmux window on boot.  |
-|     server-version.conf     | Info about: MC version, MC Loader and Modrinth collection ID |
-|    manual-downloads.json    |              List of all manual Download Entries             |
+## Color Themes
+- MCserverTUI offers a range of color themes for the TUI 
+- The default is "Matrix" black and green theme
+- You can later change presets in settings
+
+## File-Structure:
+- When you first run MC-server-TUI.sh you will be prompted with 3 questions:
+
+### Logging
+- Optional logs
+- Logs are time stamped 
+
+|              File location ($HOME is your home dir)             |             Usage            |
+|:---------------------------------------------------------------:|:----------------------------:|
+|          $HOME/.local/state/MCserverTUI/mcservertui.log         |     From the TUI menu's      |
+|  $HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log  | Only from Manual backup jobs |
+| $HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log | Only from periodic backups * |
+
+*Logs from periodic backups are not effected by your initial choice. Logs can be either logged or not on a per backup bassses. 
+
+### MCserver Dir
+- Location of your MCservers
+- Default location is:
+```
+$HOME/mcservers/(MCserver-name)
+```
+- can be changed in settings (Be carefull!)
+
+### Backups Dir
+- Location of MCserver Backups
+- Default location is:
+```
+$HOME/Backups/mcservers/(MCserver-name)
+```
+- can be changed (Be carefull!)
+
+### TUI Config file 
+- To store your choices, there is a config file
+- Stores variables for: loggs, mcdir, backups
+- Fixed Location:
+```
+$HOME/.local/state/MCserverTUI/MCserverTUI.conf 
+```
+- can not be changed
+
+### MC server config files
+- There are files per MCserver that this script adds
+
+| $HOME/mcservers/(MCserver-name)* |                       MCserver location                      |
+|:--------------------------------:|:------------------------------------------------------------:|
+|              run.sh              |    Run shortcut with the Ram amount with the nogui option    |
+|           autostart.sh           |   Autostart script that runs run.sh in tmux window on boot.  |
+|        server-version.conf       | Info about: MC version, MC Loader and Modrinth collection ID |
+|       manual-downloads.json      |              List of all manual Download Entries             |
+
+*The default path is shown as example
 
 # Setup 
 ## Recommended distros
@@ -122,18 +170,6 @@ cd MCserverTUI
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
-- New Folder Structure:
-- Make sure that $HOME is set (if not, selection TUI)
-  - MCserverTUI settings config ($HOME/.local/state/MCserverTUI)
-    - MCserverTUI.conf
-      - Enable/Disable Logging
-      - Change mcservers Location
-  - newt colors
-  - MCserverTUI dir in MCserver Root
-    - server-versions.conf
-    - manual-downloads.json
-    - autostart.sh
-- Fix colors dont apply in first set-colors.sh
 
 # Disclaimer
 - I used an LLM to help with the programming. 

@@ -16,9 +16,11 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 TITLE="MC server TUI"
+### Directory to store important config data
+mkdir -p "$HOME/.local/state/MCserverTUI"
 
 #============================ 1.2 newt colors ============================
-# Color of the TUI
+### Color of the TUI
 NEWT_COLORS_FILE="$HOME/.local/state/MCserverTUI/colors.conf"
 if [ -f "$NEWT_COLORS_FILE" ]; then
     export NEWT_COLORS_FILE
@@ -86,8 +88,6 @@ EOF
 }
 
 #============================ 1.6 Conf Files ============================
-#Directory to store important config data
-mkdir -p "$HOME/.local/state/MCserverTUI"
 
 # Confing file to read:
 ## Logging
