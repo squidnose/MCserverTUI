@@ -2,7 +2,12 @@
 ## Fixed menu system, i used to use LSR. This is more KISS:)
 
 set -euo pipefail
-#============================ Term Size ============================
+#============================ MCserverTUI ============================
+# Setup, Configure and Manage Minecraft server with mods/plugins support
+# Backup MCservers
+# Setup reverse proxy services
+#============================ 1 Setup ============================
+#============================ 1.1 Term Size ============================
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
 TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT="$TERM_HEIGHT"
@@ -12,25 +17,6 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 TITLE="MC server TUI"
 
-#============================ 1. Checking ============================
-## whiptail
-if ! command -v whiptail >/dev/null 2>&1; then
-    echo "Please install the Newt package for whiptail menu support!!!"
-    exit 1
-fi
-
-## Checking if $HOME parameter is set by OS
-if [ -z "$HOME" ]; then
-    echo "Your Operating system did not set the \$HOME parameter, please set it..."
-    exit 1
-fi
-
-#============================ 1.1 Script location ============================
-SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
-if [ -z "$SCRIPT_DIR" ]; then
-    echo "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
-    exit 1
-fi
 #============================ 1.2 newt colors ============================
 # Color of the TUI
 NEWT_COLORS_FILE="$HOME/.local/state/MCserverTUI/colors.conf"
@@ -55,7 +41,27 @@ export NEWT_COLORS_FILE
 whiptail --msgbox "Colors set to Matrix Green, you can later change this in settings" "$HEIGHT" "$WIDTH"
 fi
 
-#============================ 1.3 Save/Change Config file ============================
+#============================ 1.3 Checking ============================
+## whiptail
+if ! command -v whiptail >/dev/null 2>&1; then
+    echo "Please install the Newt package for whiptail menu support!!!"
+    exit 1
+fi
+
+## Checking if $HOME parameter is set by OS
+if [ -z "$HOME" ]; then
+    echo "Your Operating system did not set the \$HOME parameter, please set it..."
+    exit 1
+fi
+
+#============================ 1.4 Script location ============================
+SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
+if [ -z "$SCRIPT_DIR" ]; then
+    echo "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
+    exit 1
+fi
+
+#============================ 1.5 Save/Change Config file ============================
 change_conf_file()
 {
 if whiptail --title "$TITLE - Logging" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
@@ -79,7 +85,7 @@ backups="$backups"
 EOF
 }
 
-#============================ 1.4 Conf Files ============================
+#============================ 1.6 Conf Files ============================
 #Directory to store important config data
 mkdir -p "$HOME/.local/state/MCserverTUI"
 
@@ -95,7 +101,7 @@ else
     change_conf_file
 fi
 
-#============================ 1.5 Logging ============================
+#============================ 1.7 Logging ============================
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 
 # For rsync backups
@@ -112,11 +118,11 @@ echlog()
     fi
 }
 
-#============================ 1.6 Final Check ============================
+#============================ 1.8 Final Check ============================
 [ -z "$mcdir" ] && exit 1
 [ -z "$backups" ] && exit 1
 
-#============================ 1.7 Debuging ============================
+#============================ 1.9 Debuging ============================
 clear # Clear the screen before the first menu appears.
 echlog "=========================================="
 echlog " Debug Output, please check for any errors:"
@@ -141,7 +147,7 @@ while true; do
     CHOICE=$(whiptail --title "$TITLE" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         info            "ℹ️ Help - What to Do?" \
         new_server      "➕ Setup a New MC server" \
-        manage_servers  "🛠 Manage existing MC servers" \
+        manage_servers  "🛠️ Manage existing MC servers" \
         backup_servers  "🌐 Manage MC server Backups" \
         tunneling       "🔃 Setup Tunneling services" \
         settings        "⚙️ TUI Settings and Logs" \
@@ -156,8 +162,8 @@ case "$CHOICE" in
             "Manage-Servers.md" "How to manage MCservers" \
             "Tunneling.md"      "Manage reverse proxy Tunnels" \
             "README.md"         "Front page - Git Readme file" \
-        3>&1 1>&2 2>&3)
-        EDITOR=$(choose_editor) || continue
+        3>&1 1>&2 2>&3) || continue
+        EDITOR=$(choose_editor)
 
         if [[ "$INFO_FILE" == "README.md" ]]; then
             echlog "ℹ️ Opening $INFO_FILE Documentation using $EDITOR"
@@ -172,7 +178,7 @@ case "$CHOICE" in
         "$SCRIPT_DIR/New-Server.sh"
     ;;
     manage_servers)
-        echlog "🛠  Running Manage Servers Script"
+        echlog "🛠️  Running Manage Servers Script"
         "$SCRIPT_DIR/Manage-Servers.sh"
     ;;
     backup_servers)

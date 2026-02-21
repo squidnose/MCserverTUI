@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
+#================================
+# 0 - Backup Minecraft Servers TUI
+## Custom wrapper for Backups RsyncTUI
+## https://codeberg.org/squidnose-code/Backups-RSYNC-TUI
+## Set Periodic Backups of MCservers
+## Run a Manual Backups
+## Restore from Backup
+## Manually manage Backup retention and compression
 
-#============================ Term Size ============================
+#================================
+# 1 - Setup
+#================================
+## 1.1 Term Size
+#================================
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
 TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT="$TERM_HEIGHT"
@@ -10,11 +22,33 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 
-#============================ Locations ============================
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-MC_ROOT="$HOME/mcservers"
+### Menu Titel
+TITLE="MCserver Backup"
 
-#============================ Helpers ============================
+## 1.2 Script location
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+if [ -z "$SCRIPT_DIR" ]; then
+    echo "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
+    exit 1
+fi
+
+## 1.3 Config file
+MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
+if [ -f "$MCSERVERTUI_CONF" ]; then
+    source "$MCSERVERTUI_CONF"
+else
+    echo "No MCserverTUI config file, please run MC-server-TUI.sh first!"
+    exit 1
+fi
+#New parameters:
+MC_ROOT="$mcdir"
+## loggs (true or false)
+MC_BACKUPS="$backups"
+
+#================================
+# 2 - Helper Functions
+#================================
+## 2.1 Editor
 choose_editor()
 {
     whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
@@ -26,7 +60,32 @@ choose_editor()
         mousepad    "XFCEs graphical notepad" \
         3>&1 1>&2 2>&3
 }
-#====================== Select a server to Backup =============================
+
+## 2.2 Choose a backup snapshot, used by Restore and Manage backups
+choose_backup_snapshot()
+{
+    ### Build list of available backups
+    BACKUP_ITEMS=()
+    for d in "$BACKUP_DIR"/*; do
+        [ -e "$d" ] || continue
+        NAME=$(basename "$d")
+        BACKUP_ITEMS+=("$NAME" "Backup snapshot")
+    done
+
+    ### Make sure that there are backups
+    [ "${#BACKUP_ITEMS[@]}" -gt 0 ] || {
+        whiptail --msgbox "No backup snapshots found in:\n\n$BACKUP_DIR" "$HEIGHT" "$WIDTH"
+        continue
+    }
+    SNAPSHOT=$(whiptail --title "Select Backup Snapshot" \
+    --menu "Choose a backup snapshot to restore from:" \
+    "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" "${BACKUP_ITEMS[@]}" \
+    3>&1 1>&2 2>&3) || return 0
+    echo "$BACKUP_DIR/$SNAPSHOT"
+}
+#================================
+## 3 -  Select a server to Backup
+#================================
 # Build menu items from directories
 MENU_ITEMS=()
 for d in "$MC_ROOT"/*; do
@@ -39,15 +98,18 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to Config
     "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3) || exit 0
 
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
-BACKUP_DIR="$HOME/Backups/mcservers/$SERVER_NAME"
+BACKUP_DIR="$MC_BACKUPS/$SERVER_NAME"
 
-#============================ Main Menu ============================
+#================================
+## 4 - Main Menu
+#================================
 while true; do
     CHOICE=$(whiptail --title "Choose Backup Options" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         info        "ℹ️ Help - How does this work?" \
         new_backup  "➕ Create a new Periodic Backup" \
-        manual      "🛠 Run a manual backup" \
+        manual      "🛠️ Run a manual backup" \
         restore     "🔄 Restore from backup" \
+        manage      "⚙️ Backup rentension and compression" \
         go_back     "X Go back .." \
         3>&1 1>&2 2>&3) || exit 0
 
@@ -65,7 +127,7 @@ case "$CHOICE" in
     ;;
     manual)
         echo "=========================================="
-        echo "🛠 Running Manual Backup Script"
+        echo "🛠️ Running Manual Backup Script"
         "$SCRIPT_DIR/Manual-Rsync-Backup.sh" -i "$SERVER_DIR" -o "$BACKUP_DIR"
     ;;
     restore)
@@ -82,33 +144,17 @@ case "$CHOICE" in
         "You have now made a Manual backup of the existing contents of $SERVER_DIR
         You will now setup a Restoration from a backup snapshot" $HEIGHT $WIDTH
         fi
-
-        # Build list of available backups
-        BACKUP_ITEMS=()
-        for d in "$BACKUP_DIR"/*; do
-            [ -d "$d" ] || continue
-            NAME=$(basename "$d")
-            BACKUP_ITEMS+=("$NAME" "Backup snapshot")
-        done
-
-        # Make sure that there are backups
-        [ "${#BACKUP_ITEMS[@]}" -gt 0 ] || {
-            whiptail --msgbox "No backup snapshots found in:\n\n$BACKUP_DIR" "$HEIGHT" "$WIDTH"
-            continue
-        }
-
-        SNAPSHOT=$(whiptail --title "Select Backup Snapshot" --menu "Choose a backup snapshot to restore from:" \
-            "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-            "${BACKUP_ITEMS[@]}" \
-            3>&1 1>&2 2>&3) || continue
-            SRC="$BACKUP_DIR/$SNAPSHOT/"
-            DST="$SERVER_DIR/"
+        SRC=$(choose_backup_snapshot)
         echo "=========================================="
-        echo "🔄 Running Restore Backup Script using $SNAPSHOT backup"
-        "$SCRIPT_DIR/Restore-Rsync-Backup.sh" -i "$SRC" -o "$DST"
+        echo "🔄 Running Restore Backup Script using $SRC backup"
+        "$SCRIPT_DIR/Restore-Rsync-Backup.sh" -i "$SRC" -o "$SERVER_DIR"
     ;;
-
-    go_back) exit 0 ;;
+    manage)
+        echo "=========================================="
+        echo "⚙️ Running Manage Backup Script"
+        SRC=$(choose_backup_snapshot)
+        "$SCRIPT_DIR/Backup-Manager.sh" -i "$SRC"
+    ;;
     *) exit 0 ;;
 esac
 done

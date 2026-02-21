@@ -15,7 +15,7 @@ MC_ROOT="$mcdir"
 ## backups
 
 #============================ 00.2 Logging ============================
-#Logging what is pressed
+#Logging what is ran
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
 {

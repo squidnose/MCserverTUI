@@ -19,7 +19,7 @@ mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
 LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
 LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
 
-#Logging what is pressed
+#Logging what is run
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
 {
@@ -61,12 +61,12 @@ choose_editor()
         3>&1 1>&2 2>&3
 }
 
-#============================ Helpers ============================
+#============================ Main Menu ============================
 while true; do
     CHOICE=$(whiptail --title "$TITLE" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         logs            "📜 View Logs for TUI's and Backups" \
-        watch_java      "👁  Watch All java processes" \
-        crontab         "⏱  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
+        watch_java      "👁️  Watch All java processes" \
+        crontab         "⏱️  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
         term_util       "📟 Open $MC_ROOT with Terminal Tools(Eg: Disk Usage)" \
         config          "📂 Set: Logging, MCserver Directory, Backups Directory" \
         colors          "🎨 Change the Colors of the TUI" \
