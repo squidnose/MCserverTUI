@@ -21,7 +21,7 @@ echlog()
 {
     local msg="$*"
     echo "$msg"
-    if [ $loggs == "true" ]; then
+    if [ "$loggs" == "true" ]; then
         echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
     fi
 }
@@ -365,13 +365,13 @@ if whiptail --title "Final Warning" --yesno \
 #==================================== 05. Main Menu ====================================
 while true; do
     MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    "1" "🖥  Open Console (tmux attach)" \
-    "2" "▶  Start Server" \
-    "3" "⏹  Stop Server" \
-    "4" "⚙  Edit server.properties" \
-    "5" "⬆  Install/Update content (Server.jar, mods and plugins)" \
+    "1" "🖥️ Open Console (tmux attach)" \
+    "2" "▶️ Start Server" \
+    "3" "⏹️ Stop Server" \
+    "4" "⚙️ Edit server.properties" \
+    "5" "⬆️ Install/Update content (Server.jar, mods and plugins)" \
     "6" "📂 Edit Files (LSR)" \
-    "7" "⏱  Add or Reconfigure Autostart Features" \
+    "7" "⏱️ Add or Reconfigure Autostart Features" \
     "8" "🧠 Add or Reconfigure Memory Amount" \
     "9" "⚠️ Change (Rename | Remove)" \
     "T" "📟 Terminal Utils" \

@@ -66,7 +66,7 @@ fi
 #============================ 1.5 Save/Change Config file ============================
 change_conf_file()
 {
-if whiptail --title "$TITLE - Logging" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
+if whiptail --title "$TITLE - loggs" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
     loggs="true"
 else
     loggs="false"
@@ -85,6 +85,10 @@ loggs="$loggs"
 mcdir="$mcdir"
 backups="$backups"
 EOF
+
+### Make the direcotries
+mkdir -p "$mcdir"
+mkdir -p "$backups"
 }
 
 #============================ 1.6 Conf Files ============================
@@ -101,6 +105,17 @@ else
     change_conf_file
 fi
 
+### Check if MCservers direcotory exists
+if ! [ -d "$mcdir" ]; then
+    whiptail --msgbox "$mcdir not found!\nWill re-run directory selection.\nThis could be a sign of coruption or Malice!!!" "$HEIGHT" "$WIDTH"
+    change_conf_file
+fi
+### Check if Backups direcotory exists
+if ! [ -d "$backups" ]; then
+    whiptail --msgbox "$backups not found!\nWill re-run directory selection.\nThis could be a sign of coruption or Malice!!!" "$HEIGHT" "$WIDTH"
+    change_conf_file
+fi
+
 #============================ 1.7 Logging ============================
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 
@@ -113,7 +128,7 @@ echlog()
 {
     local msg="$*"
     echo "$msg"
-    if [ $loggs == "true" ]; then
+    if [ "$loggs" == "true" ]; then
         echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
     fi
 }
@@ -132,7 +147,7 @@ echlog "=========================================="
 #============================ 2 Helpers ============================
 choose_editor()
 {
-    whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
+    whiptail --title "$TITLE - ✏️ Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
         nano        "Simple terminal editor (CTR+X to quit)" \
         less        "Simple, read only (q to quit)" \
         mdr         "Simple Terminal Markdown Reader (q to quit)" \
@@ -144,7 +159,7 @@ choose_editor()
 
 #============================ 3. Main menu ============================
 while true; do
-    CHOICE=$(whiptail --title "$TITLE" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    CHOICE=$(whiptail --title "$TITLE - 🏠 Main Menu" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         info            "ℹ️ Help - What to Do?" \
         new_server      "➕ Setup a New MC server" \
         manage_servers  "🛠️ Manage existing MC servers" \
@@ -155,7 +170,7 @@ while true; do
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
 case "$CHOICE" in
     info)
-        INFO_FILE=$(whiptail --title "ℹ️ - $TITLE" --menu "What are you curious about?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        INFO_FILE=$(whiptail --title "$TITLE - ℹ️ Info" --menu "What are you curious about?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
             "Plan-MCserver.md"  "What do you want to achive?" \
             "Main-Menu.md"      "Basic usage and terminology" \
             "New-Server.md"     "How to setup a New MCserver" \
@@ -172,7 +187,7 @@ case "$CHOICE" in
             echlog "ℹ️ Opening $INFO_FILE Documentation using $EDITOR"
             "$EDITOR" "$SCRIPT_DIR/Docs/$INFO_FILE"
         fi
-    ;;
+        ;;
     new_server)
         echlog "➕ Running New Server Script"
         "$SCRIPT_DIR/New-Server.sh"
@@ -186,7 +201,7 @@ case "$CHOICE" in
         "$SCRIPT_DIR/Backups-RSYNC-TUI/Backup-MC-Servers.sh"
     ;;
     tunneling)
-        TUNNELING=$(whiptail --title "🔃 Tunneling - $TITLE" --menu "Choose a Tunneling service:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        TUNNELING=$(whiptail --title "$TITLE - 🔃 Tunneling" --menu "Choose a Tunneling service:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
             "Localtonet.sh" "Localtonet.com - Linux (Glibc and Musl) and Macos" \
             "Playit-gg.sh"  "playit.gg - Linux GlibC Only" \
             "Telebit.sh"    "Telebit.cloud - Linux and MacOS(Autostart not ready yet)" \

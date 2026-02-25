@@ -27,6 +27,7 @@
   
 # Details
 ## Dependencies
+- realpath (coreutils package) - to find out script location
 - [whiptail (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
 - ncurses - includes tput that finds the terminal size (Not mandatory)
 - Crontab support, Tested with cronie and crond - For automation and server startup
@@ -170,6 +171,7 @@ cd MCserverTUI
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
+- Consistent Title - Title=Script name
 
 # Disclaimer
 - I used an LLM to help with the programming. 

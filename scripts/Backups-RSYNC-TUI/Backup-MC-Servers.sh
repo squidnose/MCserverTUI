@@ -52,9 +52,9 @@ MC_BACKUPS="$backups"
 choose_editor()
 {
     whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        mdr         "Simple Terminal Markdown Reader (q to quit)" \
         nano        "Simple terminal editor (CTR+X to quit)" \
         less        "Simple, read only (q to quit)" \
+        mdr         "Simple Terminal Markdown Reader (q to quit)" \
         vim         "Advanced terminal editor (No one knows how to quit)" \
         kate        "KDEs graphical notepad" \
         mousepad    "XFCEs graphical notepad" \

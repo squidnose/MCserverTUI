@@ -21,7 +21,7 @@ echlog()
 {
     local msg="$*"
     echo "$msg"
-    if [ $loggs == "true" ]; then
+    if [ "$loggs" == "true" ]; then
         echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$MC_TUI_LOGFILE"
     fi
 }
