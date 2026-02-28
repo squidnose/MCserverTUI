@@ -56,7 +56,7 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage
     "${MENU_ITEMS[@]}" \
     3>&1 1>&2 2>&3) || exit 0
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
-echlog "🛠 $SERVER_NAME MCserver: Opening for managing"
+echlog "🛠️ $SERVER_NAME MCserver: Opening for managing"
 
 #==================================== 03. Load server config file ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
@@ -78,23 +78,23 @@ startserver_tmux()
     fi
 
 #======================= startserver 1. Runs mcserver in Tmux =========================
-if whiptail --title "Start Server?" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
-echlog "▶ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
+if whiptail --title "$SERVER_NAME - ▶️" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
 tmux new-session -d -s "$SERVER_NAME"
 tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
 tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
 tmux attach -t "$SERVER_NAME"
+echlog "▶️ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
 fi
 } #startserver_tmux()
 
 edit_server_properties()
 {
 #============================ server properties 1. Run server.properties editor ====================================
-if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
+if whiptail --title "$SERVER_NAME - ⚙️" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH" ; then
     cd "$SCRIPT_DIR/more-scripts/"
-    echlog "⚙ $SERVER_NAME MCserver: Loading server.properties file..."
+    echlog "⚙️ $SERVER_NAME MCserver: Loading server.properties file..."
     bash server_properties_editor.sh --name $SERVER_NAME
-    echlog "⚙ $SERVER_NAME MCserver: Ran server.properties line editor."
+    echlog "⚙️ $SERVER_NAME MCserver: Ran server.properties line editor."
 fi
 } #edit_server_properties()
 
@@ -116,7 +116,7 @@ MC_LOADER="$loader"
 
 #=========================  B. Main Menu ====================================
 while true; do
-MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
+MC_DOWNLOAD_CHOICE=$(whiptail --title "$SERVER_NAME - ⬆️" --menu \
 "Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
 "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
 "modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
@@ -129,7 +129,7 @@ MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
         modrinth)
             cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash modrinth-downloader.sh --name "$SERVER_NAME"
-            echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
+            echlog "⬆️ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
         ;;
         mcjarfiles)
         cd "$SERVER_DIR"
@@ -143,12 +143,12 @@ MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
         elif [[ "$MC_LOADER" == "velocity" ]]; then
             wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
         fi
-        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
+        echlog "⬆️ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
         ;;
         manual)
             cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash manual-downloader.sh --name "$SERVER_NAME"
-            echlog "⬆ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
+            echlog "⬆️ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
         ;;
         *)
         return 0
@@ -175,7 +175,7 @@ manage_autostart()
     local AUTOSTART="$SERVER_DIR/autostart.sh"
 #====================== Autostart 2. Regenerate autostart.sh ====================================
 ## Ask to regenerate autostart.sh
-if whiptail --title "Regenerate File?" --yesno "autostart.sh already exists.\nReplace it with a fresh one?" "$HEIGHT" "$WIDTH" ; then
+if whiptail --title "$SERVER_NAME - ⏱️" --yesno "Create or Regenerate autostart.sh?\n It may already exist, in which case it will be replaced with a new one?" "$HEIGHT" "$WIDTH" ; then
 cat > "$AUTOSTART" <<EOF
 #!/usr/bin/env bash
 SESSION="$SERVER_NAME"
@@ -187,31 +187,32 @@ if ! tmux has-session -t "\$SESSION" 2>/dev/null; then
 fi
 EOF
 chmod +x "$AUTOSTART"
-echlog "⏱ $SERVER_NAME MCserver: autostart.sh regenerated"
+echlog "⏱️ $SERVER_NAME MCserver: autostart.sh regenerated"
 fi
 
 #==================================== Autostart 3. Check on crontab  ====================================
 local CRONLINE="@reboot $AUTOSTART"
 ## Check for existing crontab entry. If it exists, offer to remove it
    if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
-        if whiptail --title "Crontab Entry" --yesno "A crontab @reboot entry for $SERVER_NAME exists\nDo you wish to disable automatic start on boot?" --defaultno "$HEIGHT" "$WIDTH"; then
+        if whiptail --title "$SERVER_NAME - ⏱️" --yesno "A crontab @reboot entry for $SERVER_NAME exists\nDo you wish to disable automatic start on boot?" --defaultno "$HEIGHT" "$WIDTH"; then
             crontab -l 2>/dev/null | grep -v "$CRONLINE" | crontab -
+            echlog "⏱️ $SERVER_NAME MCserver: Disabled autostart on reboot cron job."
         return 0
         fi
     else
-    ### If the crontab entry doesnt exist, make it
+    ### If the crontab entry doesnt exist, create it
     if whiptail --title "Crontab Entry" --yesno "Add crontab @reboot entry for $SERVER_NAME\nThis will make the server start on boot?" "$HEIGHT" "$WIDTH" ; then
         (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
-            echlog "⏱ $SERVER_NAME MCserver: Cron entry added."
+            echlog "⏱️ $SERVER_NAME MCserver: Cron entry added."
         else
-            echlog "⏱ $SERVER_NAME MCserver: Skipped adding cron entry."
+            echlog "⏱️ $SERVER_NAME MCserver: Skipped adding cron entry."
         fi
     fi
-    echlog "⏱ $SERVER_NAME MCserver: Autostart management complete."
     return 0
 } #manage_autostart()
 
 # Helper for manage_run_sh()
+## Checks for bad user input in memory amount
 validate_mem(){ [[ "$1" =~ ^[0-9]+[MG]$ ]] }
 
 manage_run_sh()
@@ -226,8 +227,8 @@ manage_run_sh()
 ## Ask to regenerate run.sh
 if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh one?" "$HEIGHT" "$WIDTH" ; then
     ### Ask for new memory amount
-    MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    MC_XMS=$(whiptail --title "$SERVER_NAME - 🧠" --inputbox "Minimum RAM (Xms)\nExample: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    MC_XMX=$(whiptail --title "$SERVER_NAME - 🧠" --inputbox "Maximum RAM (Xmx) Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 
     ### Validate that memory doesnt have spaces or small M or G
     ### If the user did not do a good job, replace with blank
@@ -259,27 +260,27 @@ cat > "$RUNSCRIPT" <<EOF
 java $RUN_MC_XMS $RUN_MC_XMX -jar "$JAR_NAME" nogui
 EOF
 chmod +x "$RUNSCRIPT"
-echlog "$SERVER_NAME MCserver: created run.sh for $SERVER_NAME"
+echlog "🧠 $SERVER_NAME MCserver: created run.sh for $SERVER_NAME"
 fi
 
 } #manage_run_sh()
 
 change_name()
 {
-if whiptail --title "Change Name of $SERVER_NAME?" --yesno \
+if whiptail --title "$SERVER_NAME - ✏️" --yesno \
 "Do you want to change the name of your Server?
 This will also force stop your server!\n
 STOP YOUR SERVER BEFORE CHANGING THE NAME!!!" "$HEIGHT" "$WIDTH" ; then
 {
-echlog "✏ $SERVER_NAME MCserver: Started renaming process"
+echlog "✏️ $SERVER_NAME MCserver: Started renaming process"
 #===================== name 1. Force Stop the old server=====================
 tmux kill-session -t "$SERVER_NAME"
-echlog "✏ $SERVER_NAME MCserver: Killed $SERVER_NAME tmux session"
+echlog "✏️ $SERVER_NAME MCserver: Killed $SERVER_NAME tmux session"
 
 #===================== name 2.Ask for the new name =====================
 # If the name exists, complain
 while true; do
-    SERVER_NAME_NEW=$(whiptail --title "$TITLE" --inputbox \
+    SERVER_NAME_NEW=$(whiptail --title "$SERVER_NAME - ✏️" --inputbox \
     "Enter a NEW name for your server:" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || return 0
 
     # If empty then return 0
@@ -287,7 +288,7 @@ while true; do
 
     ## Incase name exists, it will complain:)
     if [ -d "$MC_ROOT/$SERVER_NAME_NEW" ]; then
-        whiptail --title "Server Already Exists" --msgbox \
+        whiptail --title "$SERVER_NAME - ✏️" --msgbox \
 "A server named '$SERVER_NAME_NEW' already exists in:\n$MC_ROOT\n
     Choose A diferent name!\n
 You will be now prompted to enter the name again or press cancel to exit " "$HEIGHT" "$WIDTH"
@@ -302,24 +303,24 @@ OLD_AUTOSTART="$MC_ROOT/$SERVER_NAME/autostart.sh"
     if crontab -l >/dev/null 2>&1; then
         crontab -l | grep -v "@reboot $OLD_AUTOSTART" | crontab -
     fi
-echlog "✏ $SERVER_NAME MCserver: Removed cron entry for old name"
+echlog "✏️ $SERVER_NAME MCserver: Removed cron entry for old name"
 #===================== name 4. Remove run.sh and autostart.sh ============================
     cd "$SERVER_DIR"
     rm run.sh
     rm autostart.sh
-echlog "✏ $SERVER_NAME MCserver: Removed run.sh and autostart.sh with old names"
+echlog "✏️ $SERVER_NAME MCserver: Removed run.sh and autostart.sh with old names"
 #===================== name 5. Rename server jar ============================
     JAR_NAME_OLD="$SERVER_NAME.jar"
     JAR_NAME_NEW="$SERVER_NAME_NEW.jar"
     mv "$JAR_NAME_OLD" "$JAR_NAME_NEW"
-echlog "✏ $SERVER_NAME MCserver: Renamed the jar file with new name"
+echlog "✏️ $SERVER_NAME MCserver: Renamed the jar file with new name"
 #===================== name 6. Rename server directory ============================
     cd "$MC_ROOT" || return 0
     mv "$SERVER_NAME" "$SERVER_NAME_NEW"
     # Update internal variable
     SERVER_NAME="$SERVER_NAME_NEW"
     SERVER_DIR="$MC_ROOT/$SERVER_NAME"
-echlog "✏ $SERVER_NAME MCserver: Renamed the server direcotry"
+echlog "✏️ $SERVER_NAME MCserver: Renamed the server direcotry"
 #===================== name 7. Regenerate autostart ==============================
     manage_autostart "$SERVER_NAME" "$SERVER_DIR"
     manage_run_sh "$SERVER_NAME" "$SERVER_DIR"
@@ -330,11 +331,11 @@ echlog "✏ $SERVER_NAME MCserver: Renamed the server direcotry"
 remove()
 {
 # First confirmation
-whiptail --title "⚠ Remove Server ⚠" --yesno \
+whiptail --title "⚠️ Remove Server ⚠️" --yesno \
 "You are about to PERMANENTLY DELETE:\n\n$SERVER_NAME\n\nThis cannot be undone!" \
 "$HEIGHT" "$WIDTH" || return 0
 
-echlog "🗑 $SERVER_NAME MCserver: Removal process started"
+echlog "⚠️ $SERVER_NAME MCserver: Removal process started"
 # Second confirmation (strong warning)
 if whiptail --title "Final Warning" --yesno \
 "Are you REALLY sure you want to delete:\n\n$SERVER_DIR ?" "$HEIGHT" "$WIDTH"; then
@@ -342,26 +343,37 @@ if whiptail --title "Final Warning" --yesno \
     # Stop running server if active
     if tmux has-session -t "$SERVER_NAME" 2>/dev/null; then
         tmux kill-session -t "$SERVER_NAME"
-        echlog "🗑 $SERVER_NAME MCserver: Killed tmux session before deletion"
+        echlog "⚠️ $SERVER_NAME MCserver: Killed tmux session before deletion"
     fi
 
     # Remove cron autostart if exists
     AUTOSTART="$SERVER_DIR/autostart.sh"
     if crontab -l 2>/dev/null | grep -F "$AUTOSTART" >/dev/null; then
         crontab -l 2>/dev/null | grep -v "$AUTOSTART" | crontab -
-        echlog "🗑 $SERVER_NAME MCserver: Removed cron autostart entry"
+        echlog "⚠️ $SERVER_NAME MCserver: Removed cron autostart entry"
     fi
 
     # Delete directory
     rm -rf "$SERVER_DIR"
-    echlog "🗑 $SERVER_NAME MCserver: Server directory deleted"
+    echlog "⚠️ $SERVER_NAME MCserver: Server directory deleted"
     whiptail --msgbox "Server '$SERVER_NAME' has been permanently removed." "$HEIGHT" "$WIDTH"
     exit 0
     else
-        echlog "🗑 $SERVER_NAME MCserver: Deletion cancelled"
+        echlog "⚠️ $SERVER_NAME MCserver: Deletion cancelled"
     fi
 }
 
+change_rm_mv()
+{
+    CHANGE=$(whiptail --title "$TITLE - $SERVER_NAME" --menu \
+    "Choose an Operation:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    "change_name"   "✏️Change the Name of this MCserver✏️ " \
+    "remove"        "⚠️Removes the server⚠️" \
+    3>&1 1>&2 2>&3)
+    [ -z "$CHANGE" ] && return 0
+    #Run the selected function
+    $CHANGE
+}
 #==================================== 05. Main Menu ====================================
 while true; do
     MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
@@ -373,7 +385,7 @@ while true; do
     "6" "📂 Edit Files (LSR)" \
     "7" "⏱️ Add or Reconfigure Autostart Features" \
     "8" "🧠 Add or Reconfigure Memory Amount" \
-    "9" "⚠️ Change (Rename | Remove)" \
+    "9" "Change: ✏️Rename or ⚠️Remove" \
     "T" "📟 Terminal Utils" \
     "0" "X  Go Back .." \
         3>&1 1>&2 2>&3)
@@ -388,7 +400,7 @@ while true; do
             whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
             exit 0
         fi
-        echlog "🖥 $SERVER_NAME MCserver: Opening Server Console..."
+        echlog "🖥️ $SERVER_NAME MCserver: Opening Server Console..."
         tmux attach -t "$SERVER_NAME"
 
     ;;
@@ -396,7 +408,7 @@ while true; do
         startserver_tmux
     ;;
     3)
-        echlog "⏹ $SERVER_NAME MCserver: Stopped $SERVER_NAME server"
+        echlog "⏹️ $SERVER_NAME MCserver: Stopped $SERVER_NAME server"
         tmux send-keys -t "$SERVER_NAME" "stop" C-m
 
     ;;
@@ -413,17 +425,10 @@ while true; do
     8)
         manage_run_sh "$SERVER_NAME" "$SERVER_DIR" ;; #internal
     9)
-        CHANGE=$(whiptail --title "$TITLE" --menu \
-        "Choose an Operation:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        "change_name"   "Change the Name of this MCserver" \
-        "remove"        "⚠️Removes the server⚠️" \
-        3>&1 1>&2 2>&3)
-        [ -z "$CHANGE" ] && return 0
-        #Run the selected function
-        $CHANGE
+        change_rm_mv
         ;;
     T)
-        TERMINAL_UTIL=$(whiptail --title "$TITLE" --menu \
+        TERMINAL_UTIL=$(whiptail --title "$SERVER_NAME - 📟 " --menu \
         "What terminal util for $SERVER_NAME woudld you like to run?\nQ to Quit" \
         "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "ncdu"  "Disk Space Usage Analyzer" \

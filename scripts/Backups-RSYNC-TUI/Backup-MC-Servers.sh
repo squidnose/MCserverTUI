@@ -52,8 +52,8 @@ MC_BACKUPS="$backups"
 choose_editor()
 {
     whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        nano        "Simple terminal editor (CTR+X to quit)" \
         less        "Simple, read only (q to quit)" \
+        nano        "Simple terminal editor (CTR+X to quit)" \
         mdr         "Simple Terminal Markdown Reader (q to quit)" \
         vim         "Advanced terminal editor (No one knows how to quit)" \
         kate        "KDEs graphical notepad" \
@@ -67,16 +67,11 @@ choose_backup_snapshot()
     ### Build list of available backups
     BACKUP_ITEMS=()
     for d in "$BACKUP_DIR"/*; do
-        [ -e "$d" ] || continue
+        [ -e "$d" ] || return 0
         NAME=$(basename "$d")
         BACKUP_ITEMS+=("$NAME" "Backup snapshot")
     done
 
-    ### Make sure that there are backups
-    [ "${#BACKUP_ITEMS[@]}" -gt 0 ] || {
-        whiptail --msgbox "No backup snapshots found in:\n\n$BACKUP_DIR" "$HEIGHT" "$WIDTH"
-        continue
-    }
     SNAPSHOT=$(whiptail --title "Select Backup Snapshot" \
     --menu "Choose a backup snapshot to restore from:" \
     "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" "${BACKUP_ITEMS[@]}" \
@@ -144,7 +139,13 @@ case "$CHOICE" in
         "You have now made a Manual backup of the existing contents of $SERVER_DIR
         You will now setup a Restoration from a backup snapshot" $HEIGHT $WIDTH
         fi
-        SRC=$(choose_backup_snapshot)
+        SRC=$(choose_backup_snapshot) || continue
+        ## If the functions returns nothing, presume no bakcups found
+        if [ -z "$SRC" ]; then
+            whiptail --msgbox "You did not choose a Backup!\n(Or no backup snapshots found)" \
+            "$HEIGHT" "$WIDTH"
+            continue
+        fi
         echo "=========================================="
         echo "🔄 Running Restore Backup Script using $SRC backup"
         "$SCRIPT_DIR/Restore-Rsync-Backup.sh" -i "$SRC" -o "$SERVER_DIR"
@@ -152,7 +153,13 @@ case "$CHOICE" in
     manage)
         echo "=========================================="
         echo "⚙️ Running Manage Backup Script"
-        SRC=$(choose_backup_snapshot)
+        SRC=$(choose_backup_snapshot) || continue
+        ## If the functions returns nothing, presume no bakcups found
+        if [ -z "$SRC" ]; then
+            whiptail --msgbox "You did not choose a Backup!\n(Or no backup snapshots found)" \
+            "$HEIGHT" "$WIDTH"
+            continue
+        fi
         "$SCRIPT_DIR/Backup-Manager.sh" -i "$SRC"
     ;;
     *) exit 0 ;;

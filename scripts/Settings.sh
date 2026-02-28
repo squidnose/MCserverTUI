@@ -65,12 +65,12 @@ choose_editor()
 while true; do
     CHOICE=$(whiptail --title "$TITLE" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         logs            "📜 View Logs for TUI's and Backups" \
-        watch_java      "👁️  Watch All java processes" \
-        crontab         "⏱️  View or Manually Edit ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab" \
+        watch_java      "👁️ Watch All java processes" \
+        crontab         "⏱️ Edit or View ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab line by line" \
         term_util       "📟 Open $MC_ROOT with Terminal Tools(Eg: Disk Usage)" \
         config          "📂 Set: Logging, MCserver Directory, Backups Directory" \
         colors          "🎨 Change the Colors of the TUI" \
-        go_back         "..  Go Back" \
+        go_back         ".. Go Back" \
         3>&1 1>&2 2>&3) || CHOICE="exit" ##exit for cancel button
     case "$CHOICE" in
     logs)
@@ -94,16 +94,12 @@ while true; do
     fi
     ;;
     watch_java)
-        echlog "👁 wathing java processes "
+        echlog "👁️ wathing java processes "
         watch -n 1 "ps -ef | grep java"
     ;;
     crontab)
-        ##Choose editor
-        EDITOR=$(choose_editor) || continue
-        echlog "⏱ Opening Crontab using $EDITOR"
-        ##Open Crontab
-        export EDITOR
-        crontab -e
+        echlog "⏱️ Opening Crontab using Line By Line Editor"
+        "$SCRIPT_DIR/more-scripts/crontab-line-by-line-editor.sh"
     ;;
     term_util)
         TERMINAL_UTIL=$(whiptail --title "$TITLE" --menu \
@@ -111,23 +107,24 @@ while true; do
         "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         "ncdu"  "Disk Space Usage Analyzer" \
         "nnn"   "File Explorer" \
+        "crontab -e" "Manually edit crontab with systems default editor" \
         3>&1 1>&2 2>&3)
         echlog "📟 using $TERMINAL_UTIL"
         cd $MC_ROOT
         $TERMINAL_UTIL
     ;;
     config)
-        if whiptail --title "$TITLE - Logging" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
+        if whiptail --title "$TITLE - Logging📂" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
             loggs="true"
         else
             loggs="false"
         fi
 
-        mcdir=$(whiptail --title "$TITLE - mcdir" --inputbox \
+        mcdir=$(whiptail --title "$TITLE - mcdir📂" --inputbox \
             "Input the directory for your MCservers:" "$HEIGHT" "$WIDTH" "$mcdir" \
             3>&1 1>&2 2>&3) || exit 0
 
-        backups=$(whiptail --title "$TITLE - backups" --inputbox \
+        backups=$(whiptail --title "$TITLE - backups📂" --inputbox \
             "Input the directory for backups:" "$HEIGHT" "$WIDTH" "$backups" \
             3>&1 1>&2 2>&3) || exit 0
 

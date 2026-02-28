@@ -148,13 +148,32 @@ echlog "=========================================="
 choose_editor()
 {
     whiptail --title "$TITLE - ✏️ Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        nano        "Simple terminal editor (CTR+X to quit)" \
         less        "Simple, read only (q to quit)" \
+        nano        "Simple terminal editor (CTR+X to quit)" \
         mdr         "Simple Terminal Markdown Reader (q to quit)" \
         vim         "Advanced terminal editor (No one knows how to quit)" \
         kate        "KDEs graphical notepad" \
         mousepad    "XFCEs graphical notepad" \
         3>&1 1>&2 2>&3
+}
+
+show_markdown_file() {
+    local file="$1"
+    local tmpfile
+
+    tmpfile=$(mktemp)
+
+    # Convert markdown to plain text if pandoc exists
+    if command -v pandoc >/dev/null 2>&1; then
+        pandoc -t plain "$file" | fold -s -w $((WIDTH-4)) > "$tmpfile"
+    else
+        fold -s -w $((WIDTH-4)) "$file" > "$tmpfile"
+    fi
+
+    whiptail --title "$(basename "$file")" \
+             --textbox "$tmpfile" "$HEIGHT" "$WIDTH"
+
+    rm -f "$tmpfile"
 }
 
 #============================ 3. Main menu ============================
@@ -171,11 +190,12 @@ while true; do
 case "$CHOICE" in
     info)
         INFO_FILE=$(whiptail --title "$TITLE - ℹ️ Info" --menu "What are you curious about?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-            "Plan-MCserver.md"  "What do you want to achive?" \
-            "Main-Menu.md"      "Basic usage and terminology" \
-            "New-Server.md"     "How to setup a New MCserver" \
-            "Manage-Servers.md" "How to manage MCservers" \
-            "Tunneling.md"      "Manage reverse proxy Tunnels" \
+            "MC_Plan-server.md" "What do you want to achive?" \
+            "TUI_General.md"    "Basic usage of MCserverTUI" \
+            "TUI_New-Server.md" "Explanations for Setting up a New server" \
+            "TUI_Downloads.md"  "How Downloading Content Works(.jar files)" \
+            "TUI_Tunneling.md"  "How to reverse proxy using Tunnels?" \
+            "TUI_Settings.md"   "Explanations For Settings" \
             "README.md"         "Front page - Git Readme file" \
         3>&1 1>&2 2>&3) || continue
         EDITOR=$(choose_editor)

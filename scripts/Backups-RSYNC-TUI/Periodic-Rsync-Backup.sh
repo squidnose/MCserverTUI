@@ -246,7 +246,7 @@ $LOGFILE_CRON" $HEIGHT $WIDTH || exited
 #================================
 (
     crontab -l 2>/dev/null
-    echo "#Backup | source=$SRC | destination=$DST_DIR | $TIME_DISPLAY | Logs:$LOGFILE_CRON"
+    echo "#Backup | $TIME_DISPLAY | source=$SRC | destination=$DST_DIR | Logs:$LOGFILE_CRON"
     echo "$CRONLINE"
 ) | crontab -
 echo "Made this cronline: $CRONLINE"

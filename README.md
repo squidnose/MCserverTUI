@@ -172,6 +172,8 @@ cd MCserverTUI
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
 - Consistent Title - Title=Script name
+- A memory selection script or document
+- Be able to enter URL for colection ID and deduce the ID from the link
 
 # Disclaimer
 - I used an LLM to help with the programming. 
