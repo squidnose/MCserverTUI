@@ -190,12 +190,13 @@ while true; do
 case "$CHOICE" in
     info)
         INFO_FILE=$(whiptail --title "$TITLE - ℹ️ Info" --menu "What are you curious about?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-            "MC_Plan-server.md" "What do you want to achive?" \
-            "TUI_General.md"    "Basic usage of MCserverTUI" \
-            "TUI_New-Server.md" "Explanations for Setting up a New server" \
-            "TUI_Downloads.md"  "How Downloading Content Works(.jar files)" \
-            "TUI_Tunneling.md"  "How to reverse proxy using Tunnels?" \
-            "TUI_Settings.md"   "Explanations For Settings" \
+            "Dependencies.md"   "List of Dependencies for the TUI and MC" \
+            "Plan-MC-server.md" "What do you want to achive?" \
+            "General.md"        "Basic usage of MCserverTUI" \
+            "New-Server.md"     "Explanations for Setting up a New server" \
+            "Downloads-Mods.md" "How Downloading Content Works(.jar files)" \
+            "Tunneling.md"      "How to reverse proxy using Tunnels?" \
+            "TUI-Settings.md"   "Explanations For Settings" \
             "README.md"         "Front page - Git Readme file" \
         3>&1 1>&2 2>&3) || continue
         EDITOR=$(choose_editor)

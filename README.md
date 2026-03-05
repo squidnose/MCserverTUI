@@ -24,48 +24,42 @@
   - Keybinds of nano or vim or less (You can choose). 
   - Keybinds of tmux (server console)
   - Firewalls and Ports
+
+# Setup 
+## Recommended distros
+- The main deciding factor in recomending a good distro is the Java compatibility
+- Not all distros have Older and Newer java version
+- Minecraft uses Java: 8, 17, 21, 25
+- Distros that have all of them are:
+  - Ubuntu LTS (Tested)
+  - Voidlinux (Tested)
+  - Archlinux (Un-Tested)
+  - FreeBSD (Tested)
+- Hence they are recommended.
+- If you need a diferent version of Java then the one provided by your distro, then install java manually. 
+
+## setup.sh
+- I highly recommended to install all your dependencies manually: 
+- However you can also run **setup.sh**
+- It will setup Dependencies and services for some linux distros.
+
+```
+./setup.sh
+```
+
+## Download and run the latest Git version:
+```
+git clone https://github.com/squidnose/MCserverTUI.git
+cd MCserverTUI
+./MC-Server-TUI.sh
+```
+- MCserverTUI doesn’t require a specific directory.
+
+## MCserver scripts
+- MC-Server-TUI.sh is the main menu for all functions in the form of scripts.
+- Please read the: [[Docs]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/Docs/)
   
 # Details
-## Dependencies
-- realpath (coreutils package) - to find out script location
-- [whiptail (newt package)](https://man.archlinux.org/man/whiptail.1.en) - For the menu system
-- ncurses - includes tput that finds the terminal size (Not mandatory)
-- Crontab support, Tested with cronie and crond - For automation and server startup
-- tmux - for MC server console
-- python - for [Modrinth Colection Downloader](https://github.com/aayushdutt/modrinth-collection-downloader)
-- curl and wget - to download minecraft server jar files 
-- jq - for Manual Entry Downloader 
-- Text editor/viewer - mdr, nano, vim, less, kate, mousepad - for editing text files (You can Choose)
-- nnn - File browser 
-- ncdu - Disk Usage Analyzer 
-
-### Java for Minecraft
-- Different Minecraft versions uses different java versions:
-
-| Java V. |     Minecraft V.    |
-|:-------:|:-------------------:|
-|  Java 8 | MC 1.16.5 and older |
-| Java 17 |   MC 1.17 - 1.20.4  |
-| Java 21 | MC 1.20.5 - 1.21.11 |
-| Java 25 |  MC 26.1 and Newer  |
-
-- Some mods/plugins require an older version of Java to operate, despite the MCserver using a newer one!
-  - It is recommended to install all java versions for maximum compatibility. 
-- openjdk is usually used on Linux and BSD. Thus you will need to install:
-  - openjdk8-jdk, openjdk17-jdk, openjdk21-jdk, openjdk25-jdk
-  - You can also use JRE, but JDK is more compatible with mods/plugins.
-- If you can not find the desired Java version in your distros repo, id recommend this:
-  - https://sdkman.io/install/
-  - It manually installs Java 
-  - May not be as secure as distro package
-
-## Not required
-- Does not require SystemD
-- Can work on Glibc, Musl and BSD etc. (Not dependent on a specific libc) 
-- Does not need a specific CPU architecture. (Limitations may be with some dependencies)
-
-(Limitations are mostly with Openjdk and Tunneling services)
-
 ## Color Themes
 - MCserverTUI offers a range of color themes for the TUI 
 - The default is "Matrix" black and green theme
@@ -123,48 +117,9 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 
 *The default path is shown as example
 
-# Setup 
-## Recommended distros
-- The main deciding factor in recomending a good distro is the Java compatibility
-- Not all distros have Older and Newer java version
-- Minecraft uses Java: 8, 17, 21, 25
-- Distros that have all of them are:
-  - Ubuntu LTS (Tested)
-  - Voidlinux (Tested)
-  - Archlinux (Un-Tested)
-  - FreeBSD (Tested)
-- Hence they are recommended.
-- If you need a diferent version of Java then the one provided by your distro, then install java manually. 
-
-## Download and run the latest Git version:
-```
-git clone https://github.com/squidnose/MCserverTUI.git
-cd MCserverTUI
-./MC-Server-TUI.sh
-```
-- MCserverTUI doesn’t require a specific directory, but do NOT place it in ~/mcservers!
-
-## setup.sh
-- I highly recommended to install all your dependencies manually.
-- However you can also run **setup.sh**
-- It will setup Dependencies and services for some linux distros.
-
-```
-./setup.sh
-```
-- Works well with Ubuntu and Voidlinux 
-- Other distros may lack Older or Newer openjdk versions.
-  - Either manually install a .deb, .rpm package
-  - Or use https://sdkman.io/install/
-
-## MCserver scripts
-- MC-Server-TUI.sh is the main menu for all functions in the form of scripts.
-- [[Docs]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/Docs/)
-
 # Todo
 - Custom FRP TUI for self hosted Tunneling
 - Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
-- Find Better Emojis/Symbols for TUI
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
@@ -174,8 +129,10 @@ cd MCserverTUI
 - Consistent Title - Title=Script name
 - A memory selection script or document
 - Be able to enter URL for colection ID and deduce the ID from the link
+- Term utils for either mcdir or backups
+- FIX rsyincTUI bug: Make the config file aswell for code maintanece.
 
 # Disclaimer
 - I used an LLM to help with the programming. 
-- I understand the generated code.
+- I understand the generated parts of the code.
 - It is not a "Copy and Paste" slop script. 

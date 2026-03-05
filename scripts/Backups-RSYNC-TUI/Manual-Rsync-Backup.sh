@@ -38,7 +38,7 @@ fi
 
 ## 1.3 Config file
 ### Conf file
-RSYNC_TUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
+RSYNC_TUI_CONF="$LOGDIR/rsync-tui.conf"
 ### Load config file exit 1
 if [ -f "$RSYNC_TUI_CONF" ]; then
     source "$RSYNC_TUI_CONF"

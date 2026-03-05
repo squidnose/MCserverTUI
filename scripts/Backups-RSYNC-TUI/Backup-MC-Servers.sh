@@ -25,14 +25,17 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### Menu Titel
 TITLE="MCserver Backup"
 
+#================================
 ## 1.2 Script location
+#================================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 if [ -z "$SCRIPT_DIR" ]; then
     echo "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
     exit 1
 fi
-
+#================================
 ## 1.3 Config file
+#================================
 MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
 if [ -f "$MCSERVERTUI_CONF" ]; then
     source "$MCSERVERTUI_CONF"
@@ -42,8 +45,17 @@ else
 fi
 #New parameters:
 MC_ROOT="$mcdir"
-## loggs (true or false)
+## Bakcups
 MC_BACKUPS="$backups"
+## $loggs for logs
+#================================
+## 1.4 Coppy user preference into backups rsyncTUI conf
+#================================
+RSYNC_TUI_CONF="$HOME/.local/state/Backups-RSYNC-TUI/rsync-tui.conf"
+cat > "$RSYNC_TUI_CONF" <<EOF
+loggs="$loggs"
+EOF
+echo "set loggs to $loggs Backups-RsyncTUI"
 
 #================================
 # 2 - Helper Functions

@@ -219,9 +219,8 @@ compress_backup()
     ;;
     esac
 
-    ### Confirmation
+    ### Confirmantion
     whiptail --msgbox "Compression completed:\n$ARCHIVE" "$HEIGHT" "$WIDTH"
-
     ### Keep the original backup?
     if whiptail --title "$TITLE - Keep Original?" --yesno \
     "Compression finished.
@@ -297,8 +296,9 @@ de_compress_backup()
             ;;
         esac
 
-        ### Confirmation
+        ### Confirmantion
         whiptail --msgbox "Decompression completed:\n$DEST_DIR" "$HEIGHT" "$WIDTH"
+
         ### Keep the original backup?
         if whiptail --title "Keep Archive?" --yesno \
         "Decompression finished.
