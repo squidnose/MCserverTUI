@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+set -euo pipefail
+# Setup Dependencies for MCserverTUI
 clear
-echo "Wellcome to my MCserverTUI script"
+echo "Welcome to my MCserverTUI script"
 echo "Before you run my script, we are going to need some Dependencies"
-echo "Select You linux distro:"
-echo "1. Ubuntu (24.04 Tested)"
+echo "Select Your Linux distro:"
+echo "1. Ubuntu 24.04+(Tested), Linux Mint"
 echo "2. Debian (Lacks All Java versions)"
 echo "3. Voidlinux (Tested - Developed on)"
 echo "4. Freebsd (15.0 tested)"
@@ -71,11 +73,11 @@ sudo pacman -S  jdk8-openjdk jre8-openjdk-headless jdk17-openjdk jre17-openjdk-h
 *)
 clear
 echo "If you distro is not listed or it did not work."
-echo "Manually install theese Dependencies:"
+echo "Manually install these Dependencies:"
 echo " newt - Whiptale - for TUI menu system"
 echo " ncurses - For detecting the terminal size"
 echo " tmux - for server console"
-echo " python3 - For modrinth colection downloader"
+echo " python3 - For modrinth collection downloader"
 echo " curl and wget - for downloading files"
 echo " crontab support - check by running crontab -e"
 echo "   Search crontab support for your distro"

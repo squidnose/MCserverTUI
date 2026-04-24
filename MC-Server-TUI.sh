@@ -1,27 +1,37 @@
 #!/usr/bin/env bash
-## Fixed menu system, i used to use LSR. This is more KISS:)
+# Fixed menu system, i used to use my general purpouse Linux Script Runner.
+# This is more KISS:)
 
 set -euo pipefail
 #============================ MCserverTUI ============================
 # Setup, Configure and Manage Minecraft server with mods/plugins support
 # Backup MCservers
 # Setup reverse proxy services
-#============================ 1 Setup ============================
-#============================ 1.1 Term Size ============================
-TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
-TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
-HEIGHT="$TERM_HEIGHT"
-WIDTH="$TERM_WIDTH"
-MENU_HEIGHT=$((HEIGHT - 10))
-### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
-### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
-TITLE="MC server TUI"
-### Directory to store important config data
-mkdir -p "$HOME/.local/state/MCserverTUI"
+# https://github.com/squidnose/MCserverTUI
+# This script is under the MIT license
+# Commet separation uses 28x "="
 
-#============================ 1.2 newt colors ============================
+#============================ 1 - Setup ============================
+#============================ 1.1 - Initial Parameters  ============================
+# Term Size
+## Set TUI size based on terminal size
+## If tput is not found, use default values of 24 and 80 for TUI size
+HEIGHT=$(tput lines 2>/dev/null || echo 24)
+WIDTH=$(tput cols 2>/dev/null || echo 80)
+MENU_HEIGHT=$((HEIGHT - 10))
+### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno --infobox --passwordbox
+### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu --checklist --radiolist --gauge
+
+# Title
+TITLE="MC server TUI"
+
+# Directory to store important config files and logs
+HOME_LOCAL_STATE_MCSERVERTUI="$HOME/.local/state/MCserverTUI"
+mkdir -p "$HOME_LOCAL_STATE_MCSERVERTUI"
+
+#============================ 1.2 - newt colors ============================
 ### Color of the TUI
-NEWT_COLORS_FILE="$HOME/.local/state/MCserverTUI/colors.conf"
+NEWT_COLORS_FILE="$HOME_LOCAL_STATE_MCSERVERTUI/colors.conf"
 if [ -f "$NEWT_COLORS_FILE" ]; then
     export NEWT_COLORS_FILE
 else
@@ -43,27 +53,34 @@ export NEWT_COLORS_FILE
 whiptail --msgbox "Colors set to Matrix Green, you can later change this in settings" "$HEIGHT" "$WIDTH"
 fi
 
-#============================ 1.3 Checking ============================
+#============================ 1.3 - Checking ============================
+# $HOME_LOCAL_STATE_MCSERVERTUI folder
+if ! [ -d "$HOME_LOCAL_STATE_MCSERVERTUI" ]; then
+    echo "ERROR: Could not find MCserverTUI config folder!"
+    echo "This could be a permissions or OS issue!"
+    exit 1
+fi
+
 ## whiptail
 if ! command -v whiptail >/dev/null 2>&1; then
-    echo "Please install the Newt package for whiptail menu support!!!"
+    echo "ERROR: Please install the Newt package for whiptail menu support!!!"
     exit 1
 fi
 
 ## Checking if $HOME parameter is set by OS
 if [ -z "$HOME" ]; then
-    echo "Your Operating system did not set the \$HOME parameter, please set it..."
+    echo "ERROR: Your Operating system did not set the \$HOME parameter, please set it..."
     exit 1
 fi
 
-#============================ 1.4 Script location ============================
+#============================ 1.4 - Script location ============================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")/scripts"
 if [ -z "$SCRIPT_DIR" ]; then
     echo "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
     exit 1
 fi
 
-#============================ 1.5 Save/Change Config file ============================
+#============================ 1.5 - Save/Change Config file ============================
 change_conf_file()
 {
 if whiptail --title "$TITLE - loggs" --yesno "Do you wish to have loggs enabled?" $HEIGHT $WIDTH; then
@@ -91,13 +108,12 @@ mkdir -p "$mcdir"
 mkdir -p "$backups"
 }
 
-#============================ 1.6 Conf Files ============================
-
-# Confing file to read:
+#============================ 1.6 - Conf Files ============================
+# Config file to read:
 ## Logging
 ## mcservers Location
 ## Backups Location
-#If not existing, make a new one
+## If not existing, make a new one
 MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
 if [ -f "$MCSERVERTUI_CONF" ]; then
     source "$MCSERVERTUI_CONF"
@@ -105,18 +121,19 @@ else
     change_conf_file
 fi
 
-### Check if MCservers direcotory exists
+### Check if MCservers directory  exists
 if ! [ -d "$mcdir" ]; then
     whiptail --msgbox "$mcdir not found!\nWill re-run directory selection.\nThis could be a sign of coruption or Malice!!!" "$HEIGHT" "$WIDTH"
     change_conf_file
 fi
-### Check if Backups direcotory exists
+### Check if Backups directory exists
 if ! [ -d "$backups" ]; then
     whiptail --msgbox "$backups not found!\nWill re-run directory selection.\nThis could be a sign of coruption or Malice!!!" "$HEIGHT" "$WIDTH"
     change_conf_file
 fi
 
-#============================ 1.7 Logging ============================
+#============================ 1.7 - Logging ============================
+# TUI log
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 
 # For rsync backups
@@ -124,6 +141,7 @@ mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
 LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
 LOGFILE_MANUAL="$HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log"
 
+# Log into terminal, log into file if the user so wants
 echlog()
 {
     local msg="$*"
@@ -133,51 +151,56 @@ echlog()
     fi
 }
 
-#============================ 1.8 Final Check ============================
-[ -z "$mcdir" ] && exit 1
-[ -z "$backups" ] && exit 1
-
-#============================ 1.9 Debuging ============================
+#============================ 1.8 - Debuging ============================
 clear # Clear the screen before the first menu appears.
 echlog "=========================================="
 echlog " Debug Output, please check for any errors:"
 echlog "=========================================="
 
 
-#============================ 2 Helpers ============================
+#============================ 2 - Text Editors/Readers ============================
 choose_editor()
 {
     whiptail --title "$TITLE - ✏️ Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        less        "Simple, read only (q to quit)" \
-        nano        "Simple terminal editor (CTR+X to quit)" \
-        mdr         "Simple Terminal Markdown Reader (q to quit)" \
-        vim         "Advanced terminal editor (No one knows how to quit)" \
-        kate        "KDEs graphical notepad" \
-        mousepad    "XFCEs graphical notepad" \
+        fold_tui    "Simple reader (Whiptail)" \
+        pandoc_tui  "Simple MD renderer (Whiptail)" \
+        less        "Simple, read only (q to quit) (CLI)" \
+        nano        "Simple terminal editor (CTR+X to quit) (CLI)" \
+        mdr         "Simple Terminal Markdown Reader (q to quit) (CLI)" \
+        vim         "Advanced terminal editor (No one knows how to quit) (CLI)" \
+        kate        "KDEs graphical notepad (GUI)" \
+        mousepad    "XFCEs graphical notepad (GUI)" \
         3>&1 1>&2 2>&3
 }
 
-show_markdown_file() {
+fold_tui()
+{
     local file="$1"
     local tmpfile
-
     tmpfile=$(mktemp)
-
-    # Convert markdown to plain text if pandoc exists
-    if command -v pandoc >/dev/null 2>&1; then
-        pandoc -t plain "$file" | fold -s -w $((WIDTH-4)) > "$tmpfile"
-    else
-        fold -s -w $((WIDTH-4)) "$file" > "$tmpfile"
-    fi
-
-    whiptail --title "$(basename "$file")" \
-             --textbox "$tmpfile" "$HEIGHT" "$WIDTH"
-
+    fold -s -w $((WIDTH-4)) "$file" > "$tmpfile"
+    whiptail --title "$(basename "$file")" --textbox \
+    "$tmpfile" "$HEIGHT" "$WIDTH" --scrolltext
     rm -f "$tmpfile"
 }
 
-#============================ 3. Main menu ============================
+pandoc_tui()
+{
+    local file="$1"
+    local tmpfile
+    tmpfile=$(mktemp)
+    pandoc -t plain "$file" | fold -s -w $((WIDTH-4)) > "$tmpfile"
+    whiptail --title "$(basename "$file")" --textbox \
+    "$tmpfile" "$HEIGHT" "$WIDTH" --scrolltext
+    rm -f "$tmpfile"
+}
+
+#============================ 3 - Main menu ============================
 while true; do
+    # 3.1 Check if the user had not removed mcdir or backups
+    [ -z "$mcdir" ] && change_conf_file
+    [ -z "$backups" ] && change_conf_file
+
     CHOICE=$(whiptail --title "$TITLE - 🏠 Main Menu" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         info            "ℹ️ Help - What to Do?" \
         new_server      "➕ Setup a New MC server" \

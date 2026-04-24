@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+set -euo pipefail
 #==================================  New Server Setup Wizzard ====================================
-#============================ 0.1 MCserverTUI Config File ============================
+#============================ 1 - MCserverTUI Config File ============================
 MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
 if [ -f "$MCSERVERTUI_CONF" ]; then
     source "$MCSERVERTUI_CONF"
@@ -14,7 +15,7 @@ mkdir -p "$MC_ROOT"
 ## loggs (true or false)
 ## backups
 
-#============================ 0.2 Logging ============================
+#============================ 2 - Logging ============================
 #Logging what is run
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
@@ -26,19 +27,21 @@ echlog()
     fi
 }
 
-#============================== 0.3 variables ================================
+#============================== 3 -TUI size & title ================================
+# Term Size
+## Set TUI size based on terminal size
+## If tput is not found, use default values of 24 and 80 for TUI size
+HEIGHT=$(tput lines 2>/dev/null || echo 24)
+WIDTH=$(tput cols 2>/dev/null || echo 80)
+MENU_HEIGHT=$((HEIGHT - 10))
+### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno --infobox --passwordbox
+### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu --checklist --radiolist --gauge
+
+# Title and script directory
 TITLE="New Server Setup"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-## Detect terminal size
-### in case tput is not found, sets to fixed value
-TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
-TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
-## Set TUI size based on terminal size
-HEIGHT=$(( TERM_HEIGHT ))
-WIDTH=$(( TERM_WIDTH ))
-MENU_HEIGHT=$(( HEIGHT - 10 ))
 
-#=========================  0.4 Exit mid creation ====================================
+#=========================  4 - Exit mid creation ====================================
 exited_mid_new()
 {
 if whiptail --title "$TITLE - Exited Mid MCserver creation!" --yesno \
@@ -50,7 +53,7 @@ else
 fi
 }
 
-#==================================== 1. Get Info ====================================
+#==================================== 5 - Get Info ====================================
 # New server Name
 while true; do
     SERVER_NAME=$(whiptail --title "$TITLE" --inputbox \
@@ -104,7 +107,7 @@ esac
 MOD_COLLECTION=$(whiptail --title "$TITLE" --inputbox "Enter Modrinth Mods collection ID (or leave blank):" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 echlog "New $MC_LOADER server named $SERVER_NAME on version $MC_VERSION with this modrinth ID: $MOD_COLLECTION"
 
-#==================================== 2. Save Info ====================================
+#==================================== 6 - Save Info ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 cat > "$CONF_FILE" <<EOF
 version=$MC_VERSION
@@ -114,11 +117,11 @@ EOF
 echlog "Saved config to $CONF_FILE"
 #Jarfile Name
 JAR_NAME="$SERVER_NAME.jar"
-#============================ 03. Content Downloader ====================================
+
+#============================ 7 - Content Downloader ====================================
 #Download Content for MCserver Operations
 content_downloader()
 {
-#=========================  A. Main Menu ====================================
 while true; do
 MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
 "Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
@@ -126,7 +129,7 @@ MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
 "modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
 "mcjarfiles" "Download Server.jar files using MCjarfiles API" \
 "manual"     "Manual File Downloader Manager (Mods and Server.jar)" \
-"X"          "Continue" \
+"→"          "Continue" \
 3>&1 1>&2 2>&3) || return 0
 
     case "$MC_DOWNLOAD_CHOICE" in
@@ -162,17 +165,17 @@ done
 } #content_downloader()
 content_downloader
 
-#==================================== 4 Run Only of not proxy ====================================
+#==================================== 8 - Run Only of not proxy ====================================
 if [[ $MC_LOADER != "velocity" ]] then
 
-#==================================== 5 Initialize Server Jarfile ====================================
+#==================================== 9 - Initialize Server Jarfile ====================================
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
 if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Recommended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
     cd "$SERVER_DIR"
     java -jar $JAR_NAME
 fi
 
-#==================================== 6. Server.properties editor====================================
+#==================================== 10 - Server.properties editor====================================
 if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH"; then
     cd "$SCRIPT_DIR/more-scripts/"
     bash server_properties_editor.sh --name $SERVER_NAME
@@ -180,7 +183,7 @@ if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSe
 fi
 fi # Not run if proxy
 
-#==================================== 7. Memory Config ====================================
+#==================================== 12 - Memory Config ====================================
 MC_XMS=$(whiptail --title "Minimum RAM (Xms)" --inputbox "Example: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 MC_XMX=$(whiptail --title "Maximum RAM (Xmx)" --inputbox "Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
 
@@ -209,7 +212,7 @@ fi
     fi
 
 
-#==================================== 8. Create run.sh ====================================
+#==================================== 13 - Create run.sh ====================================
 cat > "$SERVER_DIR/run.sh" <<EOF
 #!/usr/bin/env bash
 java $RUN_MC_XMS $RUN_MC_XMX -jar "$JAR_NAME" nogui
@@ -220,16 +223,16 @@ chmod +x "$SERVER_DIR/run.sh"
 # Only run if not Velocity proxy
 if [[ $MC_LOADER != "velocity" ]] then
 
-#==================================== 9. EULA ====================================
-if whiptail --title "EULA" --yesno "Do you agree to the Minecraft EULA?" "$HEIGHT" "$WIDTH"; then
+#==================================== 14 - EULA ====================================
+if whiptail --title "EULA" --yesno "Do you agree to the Minecraft EULA?\n\nhttps://www.minecraft.net/eula" "$HEIGHT" "$WIDTH"; then
     echo "eula=true" > "$SERVER_DIR/eula.txt"
 else
-    echo "eula=false" > "$SERVER_DIR/eula.txt"
+    whiptail --msgbox "You have not agreed to the EULA for $SERVER_NAME MCserver.\n\nTo change this later, edit eula.txt in the MCserver folder using LSR file editor in manage servers:)" "$HEIGHT" "$WIDTH"
 fi
 
 fi
 
-#==================================== 10. Cron Autostart ====================================
+#==================================== 15 - Cron Autostart ====================================
 if whiptail --title "Enable automatic startup?" --yesno "Add cronjob for autostart?" "$HEIGHT" "$WIDTH"; then
 
     AUTOSTART="$SERVER_DIR/autostart.sh"
@@ -263,7 +266,7 @@ EOF
 fi
 
 
-#==================================== 11. Start Server ====================================
+#==================================== 16 - Start Server ====================================
 if whiptail --title "Start Server?" --yesno "Do you wish to run and connect your server?\nAfter you exit tmux, you will drop back into the main menu." "$HEIGHT" "$WIDTH"; then
 ## Ensure tmux exists
 if ! command -v tmux >/dev/null 2>&1; then

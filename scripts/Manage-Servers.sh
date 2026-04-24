@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-#This script uses a modified version of my LSR
+set -euo pipefail
 #==================================== MC Server Management ====================================
-#============================ 00.1 MCserverTUI Config File ============================
+#============================ 1 - MCserverTUI Config File ============================
 MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
 if [ -f "$MCSERVERTUI_CONF" ]; then
     source "$MCSERVERTUI_CONF"
@@ -14,7 +14,7 @@ MC_ROOT="$mcdir"
 ## loggs (true or false)
 ## backups
 
-#============================ 00.2 Logging ============================
+#============================ 2 - Logging ============================
 #Logging what is ran
 MC_TUI_LOGFILE="$HOME/.local/state/MCserverTUI/mcservertui.log"
 echlog()
@@ -26,7 +26,7 @@ echlog()
     fi
 }
 
-#==================================== 01. Parameters ====================================
+#==================================== 3 - TUI size & title ====================================
 TITLE="MC server Management"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ## Detect terminal size
@@ -38,7 +38,7 @@ HEIGHT=$(( TERM_HEIGHT ))
 WIDTH=$(( TERM_WIDTH ))
 MENU_HEIGHT=$(( HEIGHT - 10 ))
 
-#==================================== 02. Select a server ====================================
+#==================================== 4 - Select a server ====================================
 # Build menu items from directories
 MENU_ITEMS=()
 for d in "$MC_ROOT"/*; do
@@ -58,7 +58,7 @@ SERVER_NAME=$(whiptail --title "Choose Server" --menu "Select a server to manage
 SERVER_DIR="$MC_ROOT/$SERVER_NAME"
 echlog "🛠️ $SERVER_NAME MCserver: Opening for managing"
 
-#==================================== 03. Load server config file ====================================
+#==================================== 5 - Load server config file ====================================
 CONF_FILE="$SERVER_DIR/server-version.conf"
 if [ -f "$CONF_FILE" ]; then
     source "$CONF_FILE"
@@ -68,22 +68,31 @@ else
     collection=""
 fi
 
-#==================================== 04. Functions ====================================
+#==================================== 6 - Functions ====================================
+
 startserver_tmux()
 {
-## Ensure tmux exists
+#======================= startserver 1. Ensure tmux exists =========================
     if ! command -v tmux >/dev/null 2>&1; then
         whiptail --msgbox "tmux is required but not installed.\nPlease install tmux first." "$HEIGHT" "$WIDTH"
         exit 0
     fi
 
-#======================= startserver 1. Runs mcserver in Tmux =========================
-if whiptail --title "$SERVER_NAME - ▶️" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
-tmux new-session -d -s "$SERVER_NAME"
-tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
-tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
-tmux attach -t "$SERVER_NAME"
-echlog "▶️ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
+#======================= startserver 2. Ensure run.sh exists =========================
+if [ -f "$SERVER_DIR/run.sh" ]; then
+source "$MCSERVERTUI_CONF"
+
+#======================= startserver 3. Runs mcserver in Tmux =========================
+    if whiptail --title "$SERVER_NAME - ▶️" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
+    tmux new-session -d -s "$SERVER_NAME"
+    tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
+    tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
+    tmux attach -t "$SERVER_NAME"
+    echlog "▶️ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
+    fi
+else
+     whiptail --msgbox "!Failed to run $SERVER_NAME MCserver!\n!run.sh is missing!\n\nTo regenerate run.sh, run the Reconfigure Memory Amount menu option:)" "$HEIGHT" "$WIDTH"
+
 fi
 } #startserver_tmux()
 
@@ -122,7 +131,7 @@ MC_DOWNLOAD_CHOICE=$(whiptail --title "$SERVER_NAME - ⬆️" --menu \
 "modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
 "mcjarfiles" "Download Server.jar files using MCjarfiles API" \
 "manual"     "Manual File Downloader Manager (Mods and Server.jar)" \
-"X"          "Go Back" \
+"→"          "Go Back" \
 3>&1 1>&2 2>&3) || return 0
 
     case "$MC_DOWNLOAD_CHOICE" in
@@ -175,7 +184,7 @@ manage_autostart()
     local AUTOSTART="$SERVER_DIR/autostart.sh"
 #====================== Autostart 2. Regenerate autostart.sh ====================================
 ## Ask to regenerate autostart.sh
-if whiptail --title "$SERVER_NAME - ⏱️" --yesno "Create or Regenerate autostart.sh?\n It may already exist, in which case it will be replaced with a new one?" "$HEIGHT" "$WIDTH" ; then
+if whiptail --title "$SERVER_NAME - ⏱️" --yesno "autostart.sh\n\n - Create or Regenerate autostart.sh?\n\n - It may already exist, in which case it will be replaced with a new one?" "$HEIGHT" "$WIDTH" ; then
 cat > "$AUTOSTART" <<EOF
 #!/usr/bin/env bash
 SESSION="$SERVER_NAME"
@@ -201,7 +210,7 @@ local CRONLINE="@reboot $AUTOSTART"
         fi
     else
     ### If the crontab entry doesnt exist, create it
-    if whiptail --title "Crontab Entry" --yesno "Add crontab @reboot entry for $SERVER_NAME\nThis will make the server start on boot?" "$HEIGHT" "$WIDTH" ; then
+    if whiptail --title "$SERVER_NAME - ⏱️" --yesno "crontab entry\n\n - Add crontab @reboot entry for $SERVER_NAME?\n\n - This will make the server start on boot.\n\n - Requires autostart.sh" "$HEIGHT" "$WIDTH" ; then
         (crontab -l 2>/dev/null; echo "$CRONLINE") | crontab -
             echlog "⏱️ $SERVER_NAME MCserver: Cron entry added."
         else
@@ -225,10 +234,10 @@ manage_run_sh()
 
 #======================= run.sh 2. Ask to regenerate run.sh even if it exists =========================
 ## Ask to regenerate run.sh
-if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh one?" "$HEIGHT" "$WIDTH" ; then
+if whiptail --title "$SERVER_NAME 🧠 run.sh?" --yesno "Replace run.sh with a fresh one?" "$HEIGHT" "$WIDTH" ; then
     ### Ask for new memory amount
-    MC_XMS=$(whiptail --title "$SERVER_NAME - 🧠" --inputbox "Minimum RAM (Xms)\nExample: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
-    MC_XMX=$(whiptail --title "$SERVER_NAME - 🧠" --inputbox "Maximum RAM (Xmx) Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3)
+    MC_XMS=$(whiptail --title "$SERVER_NAME 🧠 Xms" --inputbox "Minimum RAM (Xms)\nExample: 1G, 2G, 3G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || return 0
+    MC_XMX=$(whiptail --title "$SERVER_NAME 🧠 Xmx" --inputbox "Maximum RAM (Xmx) Example: 4G, 6G, 8G" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3) || return 0
 
     ### Validate that memory doesnt have spaces or small M or G
     ### If the user did not do a good job, replace with blank
@@ -254,13 +263,18 @@ if whiptail --title "Regenerate run.sh?" --yesno "Replace run.sh with a fresh on
     else
         RUN_MC_XMX=""
     fi
-#======================= run.sh 4. Creates run.sh =========================
+#======================= run.sh 4. Confirmation =========================
+    ### Last Check
+    if whiptail --title "$SERVER_NAME 🧠 Check" --yesno "This will be the contents of run.sh:\n\n#!/usr/bin/env bash\njava $RUN_MC_XMS $RUN_MC_XMX -jar "$JAR_NAME" nogui\n\nDo you wish to continue?" "$HEIGHT" "$WIDTH" ; then
+
+#======================= run.sh 5. Create run.sh =========================
 cat > "$RUNSCRIPT" <<EOF
 #!/usr/bin/env bash
 java $RUN_MC_XMS $RUN_MC_XMX -jar "$JAR_NAME" nogui
 EOF
 chmod +x "$RUNSCRIPT"
 echlog "🧠 $SERVER_NAME MCserver: created run.sh for $SERVER_NAME"
+fi
 fi
 
 } #manage_run_sh()
@@ -365,7 +379,7 @@ if whiptail --title "Final Warning" --yesno \
 
 change_rm_mv()
 {
-    CHANGE=$(whiptail --title "$TITLE - $SERVER_NAME" --menu \
+    CHANGE=$(whiptail --title "$SERVER_NAME - Change" --menu \
     "Choose an Operation:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "change_name"   "✏️Change the Name of this MCserver✏️ " \
     "remove"        "⚠️Removes the server⚠️" \
@@ -384,7 +398,7 @@ while true; do
     "5" "⬆️ Install/Update content (Server.jar, mods and plugins)" \
     "6" "📂 Edit Files (LSR)" \
     "7" "⏱️ Add or Reconfigure Autostart Features" \
-    "8" "🧠 Add or Reconfigure Memory Amount" \
+    "8" "🧠 Add or Reconfigure Memory Amount (run.sh)" \
     "9" "Change: ✏️Rename or ⚠️Remove" \
     "T" "📟 Terminal Utils" \
     "0" "X  Go Back .." \
@@ -401,7 +415,7 @@ while true; do
             exit 0
         fi
         echlog "🖥️ $SERVER_NAME MCserver: Opening Server Console..."
-        tmux attach -t "$SERVER_NAME"
+        tmux attach -t "$SERVER_NAME" || whiptail --msgbox "Failed to open $SERVER_NAME MCserver console\n\nIt is probably curently not running..." "$HEIGHT" "$WIDTH"
 
     ;;
     2)
@@ -409,7 +423,7 @@ while true; do
     ;;
     3)
         echlog "⏹️ $SERVER_NAME MCserver: Stopped $SERVER_NAME server"
-        tmux send-keys -t "$SERVER_NAME" "stop" C-m
+        tmux send-keys -t "$SERVER_NAME" "stop" C-m || whiptail --msgbox "Failed to stop $SERVER_NAME MCserver\n\nIt is probably curently not running..." "$HEIGHT" "$WIDTH"
 
     ;;
     4)

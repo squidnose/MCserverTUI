@@ -19,7 +19,7 @@
 
 ## Knowledge
 **Not recommended for tech newbies!**
-- Requires knowlage about:
+- Requires knowledge about:
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
   - Keybinds of nano or vim or less (You can choose). 
   - Keybinds of tmux (server console)
@@ -27,7 +27,7 @@
 
 # Setup 
 ## Recommended distros
-- The main deciding factor in recomending a good distro is the Java compatibility
+- The main deciding factor in recommending a good distro is the Java compatibility
 - Not all distros have Older and Newer java version
 - Minecraft uses Java: 8, 17, 21, 25
 - Distros that have all of them are:
@@ -36,12 +36,12 @@
   - Archlinux (Un-Tested)
   - FreeBSD (Tested)
 - Hence they are recommended.
-- If you need a diferent version of Java then the one provided by your distro, then install java manually. 
+- If you need a different version of Java then the one provided by your distro, then install java manually. 
 
 ## setup.sh
 - I highly recommended to install all your dependencies manually: 
 - However you can also run **setup.sh**
-- It will setup Dependencies and services for some linux distros.
+- It will setup Dependencies and services for some Linux distros.
 
 ```
 ./setup.sh
@@ -78,7 +78,7 @@ cd MCserverTUI
 |  $HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log  | Only from Manual backup jobs |
 | $HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log | Only from periodic backups * |
 
-*Logs from periodic backups are not effected by your initial choice. Logs can be either logged or not on a per backup bassses. 
+*Logs from periodic backups are not effected by your initial choice. Logs can be either logged or not on a per backup basses. 
 
 ### MCserver Dir
 - Location of your MCservers
@@ -86,7 +86,7 @@ cd MCserverTUI
 ```
 $HOME/mcservers/(MCserver-name)
 ```
-- can be changed in settings (Be carefull!)
+- can be changed in settings (Be careful!)
 
 ### Backups Dir
 - Location of MCserver Backups
@@ -94,7 +94,7 @@ $HOME/mcservers/(MCserver-name)
 ```
 $HOME/Backups/mcservers/(MCserver-name)
 ```
-- can be changed (Be carefull!)
+- can be changed (Be careful!)
 
 ### TUI Config file 
 - To store your choices, there is a config file
@@ -123,14 +123,13 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
-  - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Flodgate)
+  - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Floodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
 - Consistent Title - Title=Script name
 - A memory selection script or document
-- Be able to enter URL for colection ID and deduce the ID from the link
+- Be able to enter URL for collection ID and deduce the ID from the link
 - Term utils for either mcdir or backups
-- FIX rsyincTUI bug: Make the config file aswell for code maintanece.
 
 # Disclaimer
 - I used an LLM to help with the programming. 

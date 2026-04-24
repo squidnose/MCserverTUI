@@ -18,16 +18,16 @@ mkdir -p "$MC_ROOT"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ## Detect terminal size
 ### in case tput is not found, sets to fixed value
-TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
-TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
-## Set TUI size based on terminal size
-HEIGHT=$(( TERM_HEIGHT ))
-WIDTH=$(( TERM_WIDTH ))
+HEIGHT=$(tput lines 2>/dev/null || echo 24)
+WIDTH=$(tput cols 2>/dev/null || echo 80)
 MENU_HEIGHT=$(( HEIGHT - 10 ))
+## Set TUI size based on terminal size
+
 #for funcions
 declare -a PARAM_KEYS
 declare -a PARAM_VALUES
 declare -a RAW_LINES
+
 #==================================== 0. Parse CLI flags ====================================
 PASSED_NAME=""
 while [[ "$#" -gt 0 ]]; do
@@ -160,7 +160,7 @@ edit_parameter() {
             MENU_ITEMS+=("${PARAM_KEYS[$i]}" "${PARAM_VALUES[$i]}")
         done
 
-        choice=$(whiptail --title "server.properties Editor" --menu "Select a parameter to edit:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        choice=$(whiptail --title "$PASSED_NAME ⚙️ server.properties" --menu "Select a parameter to edit:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
             "${MENU_ITEMS[@]}" 3>&1 1>&2 2>&3)
         # Exit on cancel
         [[ $? -ne 0 ]] && exit 0

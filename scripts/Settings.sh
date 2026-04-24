@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-#============================ 0.1 MCserverTUI Config File ============================
+
+#============================ Settings.sh ============================
+# Settings for MCserverTUI.sh
+
+#============================ 1 - MCserverTUI Config File ============================
 MCSERVERTUI_CONF="$HOME/.local/state/MCserverTUI/MCserverTUI.conf"
 if [ -f "$MCSERVERTUI_CONF" ]; then
     source "$MCSERVERTUI_CONF"
@@ -13,7 +17,7 @@ MC_ROOT="$mcdir"
 ## loggs (true or false)
 ## backups
 
-#============================ Logging ============================
+#============================ 2 - Logging ============================
 # For rsync backups
 mkdir -p "$HOME/.local/state/Backups-RSYNC-TUI"
 LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
@@ -30,16 +34,10 @@ echlog()
     fi
 }
 
-#============================ Debuging ============================
-clear # Clear the screen before the first menu appears.
-echlog "=========================================="
-echlog " Debug Output, please check for any errors:"
-echlog "=========================================="
-
-#============================ Script location ============================
+#============================ 3 - Script location ============================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-#============================ Term Size ============================
+#============================ 4 - Term Size & Title ============================
 TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
 TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
 HEIGHT="$TERM_HEIGHT"
@@ -49,22 +47,23 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 TITLE="MC server TUI - Settings"
 
-#============================ Helpers ============================
+
+#============================  5 - Text Editors/Readers ============================
 choose_editor()
 {
-    whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
-        less        "Simple, read only (q to quit)" \
-        nano        "Simple terminal editor (CTR+X to quit)" \
-        vim         "Advanced terminal editor (No one knows how to quit)" \
-        kate        "KDEs graphical notepad" \
-        mousepad    "XFCEs graphical notepad" \
+    whiptail --title "$TITLE - ✏️ Choose editor" --menu "Select editor:" $HEIGHT $WIDTH $MENU_HEIGHT \
+        less        "Simple, read only (q to quit) (CLI)" \
+        nano        "Simple terminal editor (CTR+X to quit) (CLI)" \
+        vim         "Advanced terminal editor (No one knows how to quit) (CLI)" \
+        kate        "KDEs graphical notepad (GUI)" \
+        mousepad    "XFCEs graphical notepad (GUI)" \
         3>&1 1>&2 2>&3
 }
 
-#============================ Main Menu ============================
+#============================ 6 - Main Menu ============================
 while true; do
     CHOICE=$(whiptail --title "$TITLE" --menu "Select an action:" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        logs            "📜 View Logs for TUI's and Backups" \
+        logs            "📜 View Logs from TUI's and Backups" \
         watch_java      "👁️ Watch All java processes" \
         crontab         "⏱️ Edit or View ${USER:-$(id -un 2>/dev/null || echo User)}"s" crontab line by line" \
         term_util       "📟 Open $MC_ROOT with Terminal Tools(Eg: Disk Usage)" \

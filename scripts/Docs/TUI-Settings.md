@@ -1,5 +1,14 @@
 # Settings
 - Settings and Logs 
+- Allows to set:
+  - Logging (true/false)
+  - Directory of your minecraft servers
+  - Directory of your minecraft server backups
+  - TUI color pallet (Presets)
+  - Open logs from TUI and Backups
+  - Manually edit crontab (remove line by line)
+  - Watch All processes labeled Java (Including the query...)
+  - Use terminal utils to analyze your MCservers directory (ncdu. nnn)
 
 ## Logs
 - Offers these log files to open:
@@ -18,15 +27,15 @@
     - But will also list it self as it also references java:)
 
 ## crontab
-- Crontab is used to start MCservers and Tunneling serivices.
+- Crontab is used to start MCservers and Tunneling services.
 - It runs a custom crontab editor that allows you to remove selected lines. 
 - If you wish to edit crontab using a text editor, use the command: crontab -e
 
 ## term_utils
-- External terminal utilities that may be usefull
+- External terminal utilities that may be useful
 - Currently:
 
-| ncdu |   Disk usage analisys  |
+| ncdu |   Disk usage analysis  |
 |:----:|:----------------------:|
 |  nnn | Terminal file explorer |
 

@@ -72,7 +72,7 @@ EDITOR=$(whiptail --title "Choose editor" --menu "Select editor:" $HEIGHT $WIDTH
         vim         "Advanced terminal editor (Standard terminal editor)" \
         kate        "KDEs graphical notepad" \
         mousepad    "XFCEs graphical notepad" \
-        3>&1 1>&2 2>&3)
+        3>&1 1>&2 2>&3) || exit 0
 
 #==================================== 7. Linux Scrit Runner - Jar editor edition ====================================
 #Linux Script Runner Terminal User Interface - Modified
