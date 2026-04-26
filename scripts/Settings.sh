@@ -47,7 +47,6 @@ MENU_HEIGHT=$((HEIGHT - 10))
 ### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
 TITLE="MC server TUI - Settings"
 
-
 #============================  5 - Text Editors/Readers ============================
 choose_editor()
 {

@@ -29,14 +29,14 @@ echlog()
 #==================================== 3 - TUI size & title ====================================
 TITLE="MC server Management"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-## Detect terminal size
-### in case tput is not found, sets to fixed value
-TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
-TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
+# Term Size
 ## Set TUI size based on terminal size
-HEIGHT=$(( TERM_HEIGHT ))
-WIDTH=$(( TERM_WIDTH ))
-MENU_HEIGHT=$(( HEIGHT - 10 ))
+## If tput is not found, use default values of 24 and 80 for TUI size
+HEIGHT=$(tput lines 2>/dev/null || echo 24)
+WIDTH=$(tput cols 2>/dev/null || echo 80)
+MENU_HEIGHT=$((HEIGHT - 10))
+### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno --infobox --passwordbox
+### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu --checklist --radiolist --gauge
 
 #==================================== 4 - Select a server ====================================
 # Build menu items from directories
@@ -80,15 +80,17 @@ startserver_tmux()
 
 #======================= startserver 2. Ensure run.sh exists =========================
 if [ -f "$SERVER_DIR/run.sh" ]; then
-source "$MCSERVERTUI_CONF"
 
 #======================= startserver 3. Runs mcserver in Tmux =========================
-    if whiptail --title "$SERVER_NAME - ▶️" --yesno "Do you wish to run and connect your server" "$HEIGHT" "$WIDTH" ; then
-    tmux new-session -d -s "$SERVER_NAME"
-    tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
-    tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
-    tmux attach -t "$SERVER_NAME"
-    echlog "▶️ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
+    if whiptail --title "$SERVER_NAME - ▶️" --yesno "Do you wish to run and connect your server?\n\n(If the server console is running, you will simply be connected)" "$HEIGHT" "$WIDTH" ; then
+        # Check if Tmux session does not exist
+        if ! tmux has-session -t "$SERVER_NAME" 2>/dev/null; then
+            tmux new-session -d -s "$SERVER_NAME"
+            tmux send-keys -t "$SERVER_NAME" "cd '$SERVER_DIR'" C-m
+            tmux send-keys -t "$SERVER_NAME" "./run.sh" C-m
+        fi
+        tmux attach -t "$SERVER_NAME"
+        echlog "▶️ $SERVER_NAME MCserver: Started MCserver in tmux window labled $SERVER_NAME"
     fi
 else
      whiptail --msgbox "!Failed to run $SERVER_NAME MCserver!\n!run.sh is missing!\n\nTo regenerate run.sh, run the Reconfigure Memory Amount menu option:)" "$HEIGHT" "$WIDTH"
@@ -126,11 +128,12 @@ MC_LOADER="$loader"
 #=========================  B. Main Menu ====================================
 while true; do
 MC_DOWNLOAD_CHOICE=$(whiptail --title "$SERVER_NAME - ⬆️" --menu \
-"Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
+"Install Content for $SERVER_NAME MCserver\nVersion:$version Loader:$loader" \
 "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-"modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
-"mcjarfiles" "Download Server.jar files using MCjarfiles API" \
-"manual"     "Manual File Downloader Manager (Mods and Server.jar)" \
+"change"     "Change MC version - Loader and Modrinth Collection ID" \
+"mcjarfiles" "Download Server.jar - Using MCjarfiles API" \
+"modrinth"   "Download Mods and Plugins - Using Modrinth Collection ID" \
+"manual"     "Manual File Downloader Manager - Mods, Server.jar and any files" \
 "→"          "Go Back" \
 3>&1 1>&2 2>&3) || return 0
 
@@ -141,23 +144,42 @@ MC_DOWNLOAD_CHOICE=$(whiptail --title "$SERVER_NAME - ⬆️" --menu \
             echlog "⬆️ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
         ;;
         mcjarfiles)
-        cd "$SERVER_DIR"
-        JAR_NAME="$SERVER_NAME.jar"
-        if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
-        elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
-        elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
-        elif [[ "$MC_LOADER" == "velocity" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
-        fi
-        echlog "⬆️ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
+            cd "$SERVER_DIR"
+            JAR_NAME="$SERVER_NAME.jar"
+            if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+            elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+            elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+            elif [[ "$MC_LOADER" == "velocity" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
+            fi
+            echlog "⬆️ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
         ;;
         manual)
             cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash manual-downloader.sh --name "$SERVER_NAME"
             echlog "⬆️ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
+        ;;
+        change)
+            MC_VERSION=$(whiptail --title "Minecraft Version" --inputbox \
+            "Enter version:" "$HEIGHT" "$WIDTH" "$version" \
+                3>&1 1>&2 2>&3) || exit 0
+
+            MC_LOADER=$(whiptail --title "Loader" --inputbox \
+                "Enter loader, supported:\nforge, fabric, quilt, neoforge" "$HEIGHT" "$WIDTH" "$loader" \
+                3>&1 1>&2 2>&3) || exit 0
+
+            MC_COLLECTION=$(whiptail --title "Collection" --inputbox \
+                "Modrinth collection ID (optional):" "$HEIGHT" "$WIDTH" "$collection" \
+                3>&1 1>&2 2>&3) || exit 0
+# Safe config
+cat > "$CONF_FILE" <<EOF
+version=$MC_VERSION
+loader=$MC_LOADER
+collection=$MC_COLLECTION
+EOF
         ;;
         *)
         return 0
@@ -390,7 +412,7 @@ change_rm_mv()
 }
 #==================================== 05. Main Menu ====================================
 while true; do
-    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME\nVersion:$version Loader:$loader" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "🖥️ Open Console (tmux attach)" \
     "2" "▶️ Start Server" \
     "3" "⏹️ Stop Server" \
@@ -422,8 +444,19 @@ while true; do
         startserver_tmux
     ;;
     3)
-        echlog "⏹️ $SERVER_NAME MCserver: Stopped $SERVER_NAME server"
-        tmux send-keys -t "$SERVER_NAME" "stop" C-m || whiptail --msgbox "Failed to stop $SERVER_NAME MCserver\n\nIt is probably curently not running..." "$HEIGHT" "$WIDTH"
+        # stop MCserver
+        if tmux send-keys -t "$SERVER_NAME" "stop" C-m; then
+            whiptail --msgbox "Stoped ⏹️ $SERVER_NAME MCserver" "$HEIGHT" "$WIDTH"
+            echlog "⏹️ Stoped $SERVER_NAME MCserver"
+            # send exit to console
+            if  whiptail --title "$SERVER_NAME - ⏹️" --yesno "Do you wish send an exit command to close the tmux session?\n\n!I suggest to wait for the server to save before doing this!" --defaultno "$HEIGHT" "$WIDTH" ; then
+                tmux send-keys -t "$SERVER_NAME" "exit" C-m || whiptail --msgbox \
+                "Failed to exit tmux session...\n HOW DID YOU GET HERE???" "$HEIGHT" "$WIDTH"
+            fi
+
+        else
+            whiptail --msgbox "Failed to stop ⏹️ $SERVER_NAME MCserver\n\nIt is probably curently not running..." "$HEIGHT" "$WIDTH"
+        fi
 
     ;;
     4)

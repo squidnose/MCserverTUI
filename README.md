@@ -1,7 +1,7 @@
 # MC Server TUI:
 ## A Simple TUI for Minecraft(Java) servers for Unix like OS
 ## Features:
-- Runs best on Linux and BSD (Or any other OS that meats the dependencies)
+- Runs best on Linux or BSD (Or any other OS that meats the dependencies)
 - Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
 - Setup Wizard with all important settings (Version, Loader, Mods, Ram, Config and Autostart)
 - Server Manager to reconfigure settings and import your existing MCservers
@@ -9,21 +9,20 @@
 - Setup periodic backups of your MCserver
 - Setup Reverse Proxies for Home server 
 - The TUI resizes to the size of you console (For Mobile ssh client)
-- Your MCservers will still run even if your remove MCserverTUI from your system. 
-- MCserverTUI is only needed for Setting up and managing your MC server.
+- Your MCservers will still run even if your remove MCserverTUI from your system
+- MCserverTUI is only needed for Setting up and managing your MC server
   
 ## Use Case
 - Use on a VPS instead of "Minecraft Server Hosting" at a way lower cost (2.2x - 4.8x cheaper)
 - Turn a old PC into a Minecraft server
-- Use parts of the code to make something else (Modular Desighn)
+- Use parts of the code to make something else (Modular Design)
 
 ## Knowledge
 **Not recommended for tech newbies!**
 - Requires knowledge about:
   - The architecture of [MCservers](https://minecraft.fandom.com/wiki/Tutorials/Setting_up_a_server).
-  - Keybinds of nano or vim or less (You can choose). 
-  - Keybinds of tmux (server console)
-  - Firewalls and Ports
+  - Keybinds of [tmux server console](https://tmuxcheatsheet.com/)
+  - Firewalls and Ports (Not managed by this script)
 
 # Setup 
 ## Recommended distros
@@ -35,13 +34,13 @@
   - Voidlinux (Tested)
   - Archlinux (Un-Tested)
   - FreeBSD (Tested)
-- Hence they are recommended.
-- If you need a different version of Java then the one provided by your distro, then install java manually. 
+- Hence they are recommended
+- If you need a different version of Java then the one provided by your distro, then install java manually
 
 ## setup.sh
-- I highly recommended to install all your dependencies manually: 
+- I highly recommended to install all your dependencies manually 
 - However you can also run **setup.sh**
-- It will setup Dependencies and services for some Linux distros.
+- It will setup Dependencies and services for some Linux distros
 
 ```
 ./setup.sh
@@ -53,7 +52,7 @@ git clone https://github.com/squidnose/MCserverTUI.git
 cd MCserverTUI
 ./MC-Server-TUI.sh
 ```
-- MCserverTUI doesn’t require a specific directory.
+- MCserverTUI can be placed anywhere
 
 ## MCserver scripts
 - MC-Server-TUI.sh is the main menu for all functions in the form of scripts.
@@ -78,7 +77,7 @@ cd MCserverTUI
 |  $HOME/.local/state/Backups-RSYNC-TUI/rsync-manual-backups.log  | Only from Manual backup jobs |
 | $HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log | Only from periodic backups * |
 
-*Logs from periodic backups are not effected by your initial choice. Logs can be either logged or not on a per backup basses. 
+****Logs from periodic backups are not effected by your initial choice. Logs can be either logged or not on a per backup basses****
 
 ### MCserver Dir
 - Location of your MCservers
@@ -94,9 +93,9 @@ $HOME/mcservers/(MCserver-name)
 ```
 $HOME/Backups/mcservers/(MCserver-name)
 ```
-- can be changed (Be careful!)
+- can be changed in settings (Be careful!)
 
-### TUI Config file 
+## TUI Config file 
 - To store your choices, there is a config file
 - Stores variables for: loggs, mcdir, backups
 - Fixed Location:
@@ -126,10 +125,12 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Floodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
-- Consistent Title - Title=Script name
 - A memory selection script or document
 - Be able to enter URL for collection ID and deduce the ID from the link
 - Term utils for either mcdir or backups
+- Add .desktop file creator - Unsure if i want to implement (It would only be good for linux/BSD desktop users)
+- unify manual-downloader and modrinth-downloader
+  - separate verion choosing
 
 # Disclaimer
 - I used an LLM to help with the programming. 
