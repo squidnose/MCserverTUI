@@ -122,39 +122,75 @@ JAR_NAME="$SERVER_NAME.jar"
 #Download Content for MCserver Operations
 content_downloader()
 {
+#Download Content for MCserver Operations
+#============================ 03. Content Downloader ====================================
+#========================  A. Load config file ==================================
+# I load it a seccond time, because the info could change after runnig this part again
+if [ -f "$CONF_FILE" ]; then
+    source "$CONF_FILE"
+else
+    version=""
+    loader=""
+    collection=""
+fi
+MC_VERSION="$version"
+MC_LOADER="$loader"
+
+#=========================  B. Main Menu ====================================
 while true; do
-MC_DOWNLOAD_CHOICE=$(whiptail --title "$TITLE" --menu \
-"Install Content for:\n$SERVER_NAME MCserver with $MC_LOADER loader" \
+MC_DOWNLOAD_CHOICE=$(whiptail --title "$SERVER_NAME - ⬆️" --menu \
+"Install Content for $SERVER_NAME MCserver\nVersion:$version Loader:$loader" \
 "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-"modrinth"   "Download Mods and Plugins using Modrinth Collection ID" \
-"mcjarfiles" "Download Server.jar files using MCjarfiles API" \
-"manual"     "Manual File Downloader Manager (Mods and Server.jar)" \
-"→"          "Continue" \
+"change"     "Change MC version - Loader and Modrinth Collection ID" \
+"mcjarfiles" "Download Server.jar - Using MCjarfiles API" \
+"modrinth"   "Download Mods and Plugins - Using Modrinth Collection ID" \
+"manual"     "Manual File Downloader Manager - Mods, Server.jar and any files" \
+"→"          "Go Back" \
 3>&1 1>&2 2>&3) || return 0
 
     case "$MC_DOWNLOAD_CHOICE" in
         modrinth)
             cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash modrinth-downloader.sh --name "$SERVER_NAME"
-            echlog "⬆ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
+            echlog "⬆️ $SERVER_NAME MCserver: Ran Modrinth Collection Downloader with $MC_LOADER"
         ;;
         mcjarfiles)
-        cd "$SERVER_DIR"
-        if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
-        elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
-        elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
-        elif [[ "$MC_LOADER" == "velocity" ]]; then
-            wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
-        fi
-        echlog "⬆ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
+            cd "$SERVER_DIR"
+            JAR_NAME="$SERVER_NAME.jar"
+            if [[ "$MC_LOADER" == "vanila" || "$MC_LOADER" == "vanilla" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/$MC_LOADER/release/$MC_VERSION
+            elif [[ "$MC_LOADER" == "paper" || "$MC_LOADER" == "purpur" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/servers/$MC_LOADER/$MC_VERSION
+            elif [[ "$MC_LOADER" == "fabric" || "$MC_LOADER" == "forge" || "$MC_LOADER" == "neoforge" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-jar/modded/$MC_LOADER/$MC_VERSION
+            elif [[ "$MC_LOADER" == "velocity" ]]; then
+                wget -O "$JAR_NAME" https://mcjarfiles.com/api/get-latest-jar/proxies/$MC_LOADER
+            fi
+            echlog "⬆️ $SERVER_NAME MCserver: MCjarfiles API called using: $MC_LOADER loader, version $MC_VERSION, Saved as $JAR_NAME"
         ;;
         manual)
             cd "$SCRIPT_DIR/more-scripts/" || return 0
             bash manual-downloader.sh --name "$SERVER_NAME"
-            echlog "⬆ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
+            echlog "⬆️ $SERVER_NAME MCserver: Ran Manual Downloader for $MC_LOADER"
+        ;;
+        change)
+            MC_VERSION=$(whiptail --title "Minecraft Version" --inputbox \
+            "Enter version:" "$HEIGHT" "$WIDTH" "$version" \
+                3>&1 1>&2 2>&3) || exit 0
+
+            MC_LOADER=$(whiptail --title "Loader" --inputbox \
+                "Enter loader, supported:\nforge, fabric, quilt, neoforge" "$HEIGHT" "$WIDTH" "$loader" \
+                3>&1 1>&2 2>&3) || exit 0
+
+            MC_COLLECTION=$(whiptail --title "Collection" --inputbox \
+                "Modrinth collection ID (optional):" "$HEIGHT" "$WIDTH" "$collection" \
+                3>&1 1>&2 2>&3) || exit 0
+# Safe config
+cat > "$CONF_FILE" <<EOF
+version=$MC_VERSION
+loader=$MC_LOADER
+collection=$MC_COLLECTION
+EOF
         ;;
         *)
         return 0
@@ -172,7 +208,13 @@ if [[ $MC_LOADER != "velocity" ]] then
 #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
 if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Recommended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
     cd "$SERVER_DIR"
-    java -jar $JAR_NAME
+    # Check exit status, then respond
+    if java -jar $JAR_NAME; then
+        continue
+    else
+        whiptail --title "$TITLE" --msgbox "Failed to initialize server!\nPossible Problems:\n- Bad version or mods combination\n- Incompatible Mods\n- Lacking Java version\n- Not enough HW resources\n- Corrupt download\n\nYou can try to fix this later in: Manage Servers section" "$HEIGHT" "$WIDTH"
+    fi
+
 fi
 
 #==================================== 10 - Server.properties editor====================================

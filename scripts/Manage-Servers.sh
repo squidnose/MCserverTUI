@@ -412,7 +412,7 @@ change_rm_mv()
 }
 #==================================== 05. Main Menu ====================================
 while true; do
-    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME\nVersion:$version Loader:$loader" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    MENU_CHOICES=$(whiptail --title "$TITLE" --menu "What would you like to do with $SERVER_NAME\nVersion:$version Loader:$loader Mods:$collection" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
     "1" "🖥️ Open Console (tmux attach)" \
     "2" "▶️ Start Server" \
     "3" "⏹️ Stop Server" \

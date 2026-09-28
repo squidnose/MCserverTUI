@@ -28,6 +28,7 @@ case "$LOCALTONET_CHOICE" in
 1) curl -fsSL https://localtonet.com/install.sh | sh ;;
 
 2)
+mkdir -p "$HOME/Tunneling-Services/"
 #Token is used to identify the user with localtonet servers
 rm "$AUTOSTART"
 LOCALTONET_TOKEN=$(whiptail --title "localtonet" --inputbox "Enter your token" "$HEIGHT" "$WIDTH" \

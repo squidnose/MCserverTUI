@@ -1,7 +1,7 @@
 # MC Server TUI:
 ## A Simple TUI for Minecraft(Java) servers for Unix like OS
 ## Features:
-- Runs best on Linux or BSD (Or any other OS that meats the dependencies)
+- Runs best on Linux and or BSD (Or any other OS that meats the dependencies)
 - Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
 - Setup Wizard with all important settings (Version, Loader, Mods, Ram, Config and Autostart)
 - Server Manager to reconfigure settings and import your existing MCservers
@@ -30,7 +30,7 @@
 - Not all distros have Older and Newer java version
 - Minecraft uses Java: 8, 17, 21, 25
 - Distros that have all of them are:
-  - Ubuntu LTS (Tested)
+  - Ubuntu 22.04 and 24.04 LTS (Tested)
   - Voidlinux (Tested)
   - Archlinux (Un-Tested)
   - FreeBSD (Tested)
@@ -119,6 +119,7 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 # Todo
 - Custom FRP TUI for self hosted Tunneling
 - Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
+- Add log interpreter (View all info on a selected player)
 - Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
@@ -131,6 +132,15 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 - Add .desktop file creator - Unsure if i want to implement (It would only be good for linux/BSD desktop users)
 - unify manual-downloader and modrinth-downloader
   - separate verion choosing
+  - More modularity
+- separate tmux management from Manage-Servers.sh
+  - start/stop mcserver
+  - Close session: A) exit, B) crtl+c, C) kill session(Ask user)
+
+# Bugs
+- [X] when mods/plugins incorecly setup, initialize minecraft server, mcserverTUI crashes together with java -> Detect and inform the user.
+- [ ] stop command does not work when the server is fabric and eula=false
+
 
 # Disclaimer
 - I used an LLM to help with the programming. 
