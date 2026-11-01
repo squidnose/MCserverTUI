@@ -117,23 +117,23 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 *The default path is shown as example
 
 # Todo
-- Custom FRP TUI for self hosted Tunneling
-- Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
-- Add log interpreter (View all info on a selected player)
-- Showcase Videos:
+- [ ] Custom FRP TUI for self hosted Tunneling
+- [ ]  Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
+- [ ] Add log interpreter (View all info on a selected player)
+- [ ] Showcase Videos:
   - 1. Motivation ("Selling it")
   - 2. Turn Old PC into MCserver (Vanilla and Tunneling)
   - 3. Java + Bedrock Crossplay MCserver (Fabric, Geyser, Floodgate)
   - 4. Modded MCserver (Forge+Create+Terrain Mods)
   - 5. MCserver Hub (Velocity+ Geyser+Floodgate+Via Version)
-- A memory selection script or document
-- Be able to enter URL for collection ID and deduce the ID from the link
-- Term utils for either mcdir or backups
-- Add .desktop file creator - Unsure if i want to implement (It would only be good for linux/BSD desktop users)
-- unify manual-downloader and modrinth-downloader
+- [ ] A memory selection script or document
+- [ ]  Be able to enter URL for collection ID and deduce the ID from the link
+- [ ]  Term utils for either mcdir or backups
+- [ ] Add .desktop file creator - Unsure if i want to implement (It would only be good for linux/BSD desktop users)
+- [ ]  unify manual-downloader and modrinth-downloader
   - separate verion choosing
   - More modularity
-- separate tmux management from Manage-Servers.sh
+- [ ] separate tmux management from Manage-Servers.sh
   - start/stop mcserver
   - Close session: A) exit, B) crtl+c, C) kill session(Ask user)
 

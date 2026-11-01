@@ -1,188 +1,129 @@
 #!/usr/bin/env bash
+# Backups-Rsync-TUI
+# https://codeberg.org/squidnose-code/Backups-RSYNC-TUI
+## Backup-Manager.sh
 set -euo pipefail
 
-## The new comment implementaion, use 32x = fron and bottom
-
-#================================
-# 0 - Backup Manager
-#================================
-## Size usage analysis (folder only)
+#============================ Info ============================
+# Features:
+## Analyze size of backup using ncdu or du
 ## Rename backup
 ## Move backup
 ## Copy backup
 ## Remove backup
-## Compress Backup
-## De-compress backup (Archives only: .zip, .tar.xz, 7z)
-## TBD Periodic Compression
-## TBD Periodic Backup pruning
+## Compress Backup (Archives only: .zip, .tar.xz, 7z)
+## De-compress backups
 
-#================================
-# 1 - Config and Logs
-#================================
-## 1.1 - Size of terminal
-### Automaticly detects terminal size
-### incase tput is not found, sets to fixed value
-TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
-TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
-HEIGHT="$TERM_HEIGHT"
-WIDTH="$TERM_WIDTH"
-MENU_HEIGHT=$((HEIGHT - 10))
-### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
-### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
-### call term_resize to resize terminal
+#============================ Initialization ============================
+SCRIPT_DIR="$(dirname "$(realpath "$0")")" # Find script location
+source "$SCRIPT_DIR"/tui-lib.sh # Load Library of functions
+load_vars # Load variables: Title, Config files and Log files
+term_size # set TUI size to console size
+color_tui # Set color schemes for newt/whiptail
+conf_file # Load config file or make new one. For enableing/diableing logs.
+checks_deps # Check for dependencies: whiptail, rsync and crontab
+checks_dirs # Check if the OS has folder parameters set
+TITLE="Main Menu - $SCRIPT_TITLE"
 
-## 1.2 Back Title
-TITLE="Backup Manager"
 
-## 1.3 - Script location
-### Finds out where the script is located
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-if [ -z "$SCRIPT_DIR" ]; then
-    echo "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
-    exit 1
+#============================ Parse flags ============================
+CHOSEN_BACKUP="" # The chosen backup (Directory)
+while getopts ":i:" opt; do
+    case "$opt" in
+        i) CHOSEN_BACKUP="$OPTARG" ;;
+        *) error "Invalid option" && exit 1 ;;
+    esac
+done
+
+# If no input is found, ask for an input
+if [ -z "$CHOSEN_BACKUP" ]; then
+    # Source directory
+    CHOSEN_BACKUP=$(whiptail --title "$TITLE" --inputbox "Backup/Folder to manage:" $HEIGHT $WIDTH 3>&1 1>&2 2>&3) || exit 0
+    [[ "$CHOSEN_BACKUP" != */ ]] && CHOSEN_BACKUP="${CHOSEN_BACKUP}/" # Normalize dir, but outside funciton
 fi
+# debug
+echlog "=========================================="
+echlog "Running - Backup-Manger.sh"
+echlog "Chosen Backup: $CHOSEN_BACKUP"
 
-## 1.4 Config file
-### Confing file of the TUI
-### For Checking if user want logs from the TUI
-
-### Directory for Logs and Config files:
-LOGDIR="$HOME/.local/state/Backups-RSYNC-TUI" #
-mkdir -p "$LOGDIR"
-### Log File for the TUI:
-RSYNC_TUI_CONF="$LOGDIR/rsync-tui.conf"
-### Load config file
-### If none found, exit 1 (no config generation logic here)
-if [ -f "$RSYNC_TUI_CONF" ]; then
-    source "$RSYNC_TUI_CONF"
-else
-    echo "No config file found! Please run rsyncTUI.sh!!!"
-    exit 1
-fi
-
-## 1.5 Logging
-### Log file, for the TUI
-LOGFILE_TUI="$LOGDIR/rsync-tui.log"
-### Echo into terminal and Log into file(if logs are enabled)
-echlog()
-{
-    local msg="$*"
-    echo "$msg"
-    if [ "$loggs" == "true" ]; then
-        echo "$(date '+%Y-%m-%d %H:%M:%S') $msg" >> "$LOGFILE_TUI"
-    fi
-}
-
-#================================
-# 2. Helper Functions
-#================================
-## 2.1 Select Direcotry for NNN file manager integration
-select_directory()
-{
-    ### Start at the users Home directory
-    local START_DIR="$HOME"
-    ### Info on usage
-    whiptail --title "$TITLE - Select Directory" --msgbox \
-    "Directory selection controls:
-
-    Enter       : open directory
-    left arrow  : go back a directory
-    right arrow : go forward a directory
-    Space       : select directory
-    q           : confirm selection
-
-    You will now enter the directory browser." \
-    "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3 || exit 0
-    echlog "started NNN directory selection"
-    ### Create a temporary file to store the selected path
-    local TMPFILE
-    TMPFILE=$(mktemp)
-    ### d - open directories only (no file selection)
-    ### Q - quit automatically after selection
-    ### -p "$TMPFILE" - tells nnn to write the selected path into this file when exiting
-    NNN_OPTS="dQ" nnn -p "$TMPFILE" "$START_DIR"
-    echlog "NNN choice: $TMPFILE"
-    ### If content exists then output it:
-    [ -s "$TMPFILE" ] && cat "$TMPFILE"
-    ### Remove the tmp file
-    rm -f "$TMPFILE"
-}
-
-## 2.2 Move or Copy backup
+#============================ Menu Functions ============================
+# Move or Copy backup
 mv_cp()
 {
-    ### Either mv or cp -r (theoretically any command is possible)
+    # Either mv or cp -r
     local OPERATION="${1}"
     local LABEL="${2}"
     CHOSEN_BACKUP_PLACE="$CHOSEN_BACKUP"
     echlog "$LABEL operation selected"
-    ### First select using NNN file manager
-    if whiptail --title "$TITLE - $LABEL" --yesno \
-    "Would you like to choose the direcotry using NNN?\nThe curent backups dir is: $CHOSEN_BACKUP" \
-    "$HEIGHT" "$WIDTH"; then
-        CHOSEN_BACKUP_PLACE=$(select_directory)
+
+    # First select using NNN file manager
+    if whiptail --title "$LABEL - $TITLE" --yesno "Would you like to choose the direcotry using NNN?\nThe Current backups dir is: $CHOSEN_BACKUP" "$HEIGHT" "$WIDTH"; then
+        CHOSEN_BACKUP_PLACE=$(select_directory "$HOME")
     fi
 
-    ### Then either manuall enter or check that you choose corectly
-    ### The preloaded default is the curent backup dir
-    CHOSEN_BACKUP_PLACE=$(whiptail --title "$TITLE - $LABEL" --inputbox \
-    "Is this a good Direcotry?" "$HEIGHT" "$WIDTH" "$CHOSEN_BACKUP_PLACE" \
-    3>&1 1>&2 2>&3) || return 0
-    ### If the chosen dir is the same as the source, then cancel operation
+    # Then either manually enter or check that you choose correctly
+    # The preloaded default is the Current backup dir
+    CHOSEN_BACKUP_PLACE=$(whiptail --title "$LABEL - $TITLE" --inputbox "Is this a good Direcotry?" "$HEIGHT" "$WIDTH" "$CHOSEN_BACKUP_PLACE" 3>&1 1>&2 2>&3) || return 0
+    echlog "Chosen backup dir to $LABEL to: $CHOSEN_BACKUP_PLACE"
+    # Checks if it is the same dir
+    if [ -z "$CHOSEN_BACKUP_PLACE" ]; then
+        error "$LABEL - Directory cannot be empty!"
+        return 0
+    fi
+
+    # Checks if it is the same dir
     if ! [ "$CHOSEN_BACKUP" == "$CHOSEN_BACKUP_PLACE" ]; then
-        ### The actual operation itself
-        $OPERATION "$CHOSEN_BACKUP" "$CHOSEN_BACKUP_PLACE"
-        ### Successe mesage box
-        whiptail --title "$TITLE - $LABEL - Done!" --msgbox \
-        "$LABEL operation is done: $CHOSEN_BACKUP_PLACE" "$HEIGHT" "$WIDTH"
+        ## The actual operation itself
+        $OPERATION "$CHOSEN_BACKUP" "$CHOSEN_BACKUP_PLACE" || { error "$LABEL operation failed!"; return 0; }
+        ## Successe mesage box
+        whiptail --title "$LABEL - $TITLE" --msgbox "$LABEL operation is done: $CHOSEN_BACKUP_PLACE" "$HEIGHT" "$WIDTH"
         echlog "Made new: $CHOSEN_BACKUP_PLACE"
-        ### Ask if the user wants to manage the new backup or the old one
-        if whiptail --title "$TITLE - Switch to New?" --yesno \
-        "Switch to new backup: $CHOSEN_BACKUP_PLACE\n(no to stay)" "$HEIGHT" "$WIDTH"; then
+        ## Ask if the user wants to manage the new backup or the old one (CP only)
+        if [ "$OPERATION" == "cp -r" ]; then
+           if whiptail --title "$LABEL - $TITLE" --yesno "Switch to new backup: $CHOSEN_BACKUP_PLACE\n(no to stay)" "$HEIGHT" "$WIDTH"; then
+                CHOSEN_BACKUP="$CHOSEN_BACKUP_PLACE"
+                echlog "Switched to the new backup"
+            fi
+        else ## or if mv, then automatically move to new backup
+            whiptail --title "$TITLE" --msgbox "You will now be moved to manageing the new backup:\n $CHOSEN_BACKUP_PLACE" "$HEIGHT" "$WIDTH"
             CHOSEN_BACKUP="$CHOSEN_BACKUP_PLACE"
-            echlog "Switched to the new backup"
         fi
     else
-        echlog "Selected the same directory..."
-        whiptail --title "$TITLE - Same Directory!" --msgbox \
-        "You chose the same directory, no changes made!" "$HEIGHT" "$WIDTH"
+        error "$LABEL - You chose the same directory, no changes made!"
     fi
-}
+} #mv_cp()
 
-## 2.3 Compression of backup
+# Compression of backup
 compress_backup()
 {
-    ### Only theese archive formats:
-    FORMAT=$(whiptail --title "$TITLE" --menu \
-    "Choose archive format for: $CHOSEN_BACKUP" \
-    "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    # Format selection
+    FORMAT=$(whiptail --title "Backup Compression - $TITLE" --menu "Choose archive format for: $CHOSEN_BACKUP" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
         tar     ".tar.xz (high compression, Linux standard)" \
         zip     ".zip (widely compatible)" \
         7zip    ".7z (best compression, needs 7zip)" \
         3>&1 1>&2 2>&3) || return 0
+    echlog "Compression format chosen: $FORMAT "
 
-    ### Normalize path and derive proper archive name
+    ## Normalize path
     SRC="${CHOSEN_BACKUP%/}"
     BASENAME="$(basename "$SRC")"
     PARENT="$(dirname "$SRC")"
 
-    ### Set file suffix
+    # Set file suffix
     case "$FORMAT" in
         zip) ARCHIVE="$PARENT/$BASENAME.zip" ;;
         tar) ARCHIVE="$PARENT/$BASENAME.tar.xz" ;;
         7zip) ARCHIVE="$PARENT/$BASENAME.7z" ;;
     esac
 
-    ### Double Check output
-    ARCHIVE=$(whiptail --title "$TITLE - Archive output" --inputbox \
-        "Does this look good?" "$HEIGHT" "$WIDTH" "$ARCHIVE" \
-    3>&1 1>&2 2>&3) || return 0
+    # Double Check output
+    ARCHIVE=$(whiptail --title "Backup Compression - $TITLE" --inputbox "Confirm, does this look good?" "$HEIGHT" "$WIDTH" "$ARCHIVE" 3>&1 1>&2 2>&3) || return 0
+    echlog "Will save as: $ARCHIVE"
 
-    ### Run either in the curent terminal or in a tmux window
-    RUN_MODE=$(whiptail --title "$TITLE - Run Mode" --menu \
-    "How do you want to run the compression?" $HEIGHT $WIDTH $MENU_HEIGHT \
-        normal "Run normally (block terminal)" \
-        tmux   "Run in tmux (background session)" \
+    # Run either in the curent terminal or in a tmux window
+    RUN_MODE=$(whiptail --title "Backup Compression - $TITLE" --menu "How do you want to run the compression?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        normal "Run normally (this terminal)" \
+        tmux   "Run in tmux (background terminal session)" \
     3>&1 1>&2 2>&3) || return 0
     case "$RUN_MODE" in
     normal)
@@ -196,7 +137,6 @@ compress_backup()
     ;;
     tmux)
         echlog "TMUX compression run mode selected"
-        command -v tmux >/dev/null || error "tmux is not installed"
         SESSION="compress-$(date +%Y%m%d%H%M%S)"
         case "$FORMAT" in
             tar) CMD="tar -cJf \"$ARCHIVE\" -C \"$SRC\" ." ;;
@@ -204,73 +144,66 @@ compress_backup()
             7zip) CMD="cd \"$SRC\" && 7z a \"$ARCHIVE\" ." ;;
         esac
         tmux new-session -d -s "$SESSION" "$CMD; echo; echo 'Compression finished. Press Enter to exit.'; read"
-        if whiptail --title "$TITLE - tmux Session Started" --yesno \
+        if whiptail --title "Backup Compression - $TITLE" --yesno \
         "Compression is running in tmux session: $SESSION
 
-        Attach now?" $HEIGHT $WIDTH; then
+        Attach now?" "$HEIGHT" "$WIDTH"; then
             tmux attach -t "$SESSION"
         else
-            whiptail --msgbox \
+            whiptail --title "Backup Compression - $TITLE" --msgbox \
             "Compression is running in tmux.
             Attach later with:
-            tmux attach -t $SESSION" $HEIGHT $WIDTH
+            tmux attach -t $SESSION" "$HEIGHT" "$WIDTH"
             return 0
         fi
     ;;
     esac
 
-    ### Confirmantion
-    whiptail --msgbox "Compression completed:\n$ARCHIVE" "$HEIGHT" "$WIDTH"
-    ### Keep the original backup?
-    if whiptail --title "$TITLE - Keep Original?" --yesno \
-    "Compression finished.
-
-    Keep the original uncompressed backup?" "$HEIGHT" "$WIDTH"; then
+    # Confirmantion
+    whiptail --title "Backup Compression - $TITLE" --msgbox "Compression completed:\n$ARCHIVE" "$HEIGHT" "$WIDTH"
+    ## Keep the original backup?
+    if whiptail --title "Backup Compression - $TITLE" --yesno "Compression finished.\n\nKeep the original uncompressed backup?" "$HEIGHT" "$WIDTH"; then
         echlog "Kept original backup: $CHOSEN_BACKUP"
-        ### Switch to new backup?
-        if whiptail --title "$TITLE - Switch to New?" --yesno \
-        "Switch to new backup?" "$HEIGHT" "$WIDTH"; then
+        ## Switch to new backup?
+        if whiptail --title "Backup Compression - $TITLE" --yesno "Switch to new backup?\n(for managing)" "$HEIGHT" "$WIDTH"; then
             CHOSEN_BACKUP="$ARCHIVE"
         fi
     else
         rm -rf "$CHOSEN_BACKUP"
         echlog "Original backup removed: $CHOSEN_BACKUP"
-        ### Switch to new backup?
-        if whiptail --title "$TITLE - Switch to New?" --yesno \
-        "Switch to new backup?(no to exit)" "$HEIGHT" "$WIDTH"; then
+        ## Switch to new backup?
+        if whiptail --title "Backup Compression - $TITLE" --yesno "Switch to new backup?\n(no exits to main menu)" "$HEIGHT" "$WIDTH"; then
             CHOSEN_BACKUP="$ARCHIVE"
         else
-            exit 0
+            exit 0 # Yes, keep this here, you cant manage a backup you just removed...
         fi
     fi
 }
 
-## 2.4 De-compress Archive
+# De-compress Archive
 de_compress_backup()
 {
-    ### Only for archives
-    DEST_DIR="${CHOSEN_BACKUP%.*}"
+    # Check extension
     case "$CHOSEN_BACKUP" in
         *.tar.xz) DEST_DIR="${CHOSEN_BACKUP%.tar.xz}" ;;
         *.zip)    DEST_DIR="${CHOSEN_BACKUP%.zip}" ;;
         *.7z)     DEST_DIR="${CHOSEN_BACKUP%.7z}" ;;
-        *)  whiptail --msgbox "Unsupported archive format!" "$HEIGHT" "$WIDTH"
-            return 0
+        *)  error "Unsupported archive format!" "$HEIGHT" "$WIDTH"
+            return 1
         ;;
     esac
 
-    ### Double Check output
-    DEST_DIR=$(whiptail --title "$TITLE - De-compress Archive" --inputbox \
-        "Is this a good output Directory?" "$HEIGHT" "$WIDTH" "$DEST_DIR" \
-    3>&1 1>&2 2>&3) || return 0
+    # Double Check output
+    DEST_DIR=$(whiptail --title "Backup Archive De-Compression - $TITLE" --inputbox "Is this a good output Directory?" "$HEIGHT" "$WIDTH" "$DEST_DIR" 3>&1 1>&2 2>&3) || return 0
+    echlog "To decompress: $CHOSEN_BACKUP"
 
-    ### Check if destination allready exists
+    # Check if destination allready exists
     if [ -e "$DEST_DIR" ]; then
-        whiptail --msgbox "Destination already exists:\n$DEST_DIR" "$HEIGHT" "$WIDTH"
+        error "Destination already exists!\n$DEST_DIR"
         return 0
     fi
 
-    ### De-compressing the Archive
+    # De-compressing the Archive
     echlog "Decompressing archive: $CHOSEN_BACKUP → $DEST_DIR"
     mkdir -p "$DEST_DIR"
     case "$CHOSEN_BACKUP" in
@@ -278,107 +211,89 @@ de_compress_backup()
             tar -xJf "$CHOSEN_BACKUP" -C "$DEST_DIR"
             ;;
         *.zip)
-            ### Unzip may not be on the system
+            ## Unzip may not be on the system
             command -v unzip >/dev/null || {
-                whiptail --msgbox "unzip not installed!" "$HEIGHT" "$WIDTH"
+                error "unzip not installed!"
                 return 0
             }
             unzip "$CHOSEN_BACKUP" -d "$DEST_DIR"
             ;;
         *.7z)
-            ### 7zip may not be on the system
+            ## 7zip may not be on the system
             command -v 7z >/dev/null || {
-                whiptail --msgbox "7z not installed!" "$HEIGHT" "$WIDTH"
+                error "7z not installed!"
                 return 0
             }
-            7zip x "$CHOSEN_BACKUP" -o"$DEST_DIR"
-
+            7z x "$CHOSEN_BACKUP" -o"$DEST_DIR"
             ;;
-        esac
+    esac
 
-        ### Confirmantion
-        whiptail --msgbox "Decompression completed:\n$DEST_DIR" "$HEIGHT" "$WIDTH"
+    # Check if direcotry was made and created
+    if [ -d "$DEST_DIR" ]; then
+        whiptail --title "Backup Archive De-Compression - $TITLE" --msgbox "Decompression completed:\n$DEST_DIR" "$HEIGHT" "$WIDTH"
+    else
+        error "De-compression failed, no output directory created! This may be due to permissions..."
+        return 0
+    fi
 
-        ### Keep the original backup?
-        if whiptail --title "Keep Archive?" --yesno \
-        "Decompression finished.
-
-        Keep the compressed archive?" "$HEIGHT" "$WIDTH"; then
-            echlog "User kept archive: $CHOSEN_BACKUP"
-            ### Switch to new backup?
-            if whiptail --title "Switch to New?" --yesno \
-            "Switch to new backup?" "$HEIGHT" "$WIDTH"; then
-                CHOSEN_BACKUP="$DEST_DIR"
-            fi
-        else
-            rm -f "$CHOSEN_BACKUP"
-            echlog "Archive removed: $CHOSEN_BACKUP"
-            ### Switch to new backup?
-            if whiptail --title "Switch to New?" --yesno \
-            "Switch to new backup?(no to exit)" "$HEIGHT" "$WIDTH"; then
-                CHOSEN_BACKUP="$DEST_DIR"
-            else
-                exit 0
-            fi
+    # Keep the original backup?
+    if whiptail --title "Backup Archive De-Compression - $TITLE" --yesno "Decompression finished.\n\nKeep the compressed archive?" "$HEIGHT" "$WIDTH"; then
+        echlog "User kept archive: $CHOSEN_BACKUP"
+        ## Switch to new backup?
+        if whiptail --title "Backup Archive De-Compression - $TITLE" --yesno "Switch to new backup?" "$HEIGHT" "$WIDTH"; then
+            CHOSEN_BACKUP="$DEST_DIR"
         fi
+    else
+        rm -f "$CHOSEN_BACKUP"
+        echlog "Archive removed: $CHOSEN_BACKUP"
+        ## Switch to new backup?
+        if whiptail --title "Backup Archive De-Compression - $TITLE" --yesno "Switch to new backup?(no exists to Main Menu)" "$HEIGHT" "$WIDTH"; then
+            CHOSEN_BACKUP="$DEST_DIR"
+        else
+            exit 0 # Yes, keep this here, you cant manage a backup you just removed...
+        fi
+    fi
 }
 
-#================================
-# 3 - Parse flags
-#================================
-## 3.1 Getting the -i (input) parsed dir for backup management
-### Chosen Backup to manage
-CHOSEN_BACKUP=""
-while getopts ":i:" opt; do
-    case "$opt" in
-        i) CHOSEN_BACKUP="$OPTARG" ;;
-        *) error "Invalid option" ;;
-    esac
-done
-
-### If no input is found, exit (No selection logic here)
-if [ -z "$CHOSEN_BACKUP" ]; then
-    whiptail --msgbox "You did not provide a backup dir!" "$HEIGHT" "$WIDTH"
-    echlog "Use the -i flag to input a backup to manage"
-    exit 0
-fi
-#================================
-# 4 - Main Menu
-#================================
+#============================ Main Menu ============================
 while true; do
     CHOICE=$(whiptail --title "$TITLE" --menu \
     "Select an action for: $CHOSEN_BACKUP" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        ncdu        "💽 Space Usage Analylis(Folders only)" \
+        size        "💽 Space Usage Analysis" \
         move        "🚛 Move or rename Backup" \
         copy        "🗃️ Copy backup" \
         remove      "🔃 Remove Backup" \
         compress    "🗜️ Compress Backup" \
         de_compress "📂 Decompress Backup(Archives Only)" \
-        tim_compres "⏱️ (TBD) Periodic Compression" \
-        prune       "🗄️ (TBD) Periodic Backup Pruning" \
         exit        "X  Exit" \
-        3>&1 1>&2 2>&3) || exit 0
+        3>&1 1>&2 2>&3) || break
 
 case "$CHOICE" in
-    ncdu) ncdu "$CHOSEN_BACKUP" ;;
-    move) mv_cp "mv" "Move" ;;
-    copy) mv_cp "cp -r" "Copy" ;;
+    size)
+        case "$CHOSEN_BACKUP" in
+            *.tar.xz | *.zip | *.7z) size=$(du -sh "$CHOSEN_BACKUP") && whiptail --title "Size - $TITLE" --msgbox "$size" "$HEIGHT" "$WIDTH"
+            ;;
+            *)  ncdu "$CHOSEN_BACKUP" || error "ncdu not installed!"
+            ;;
+        esac
+     ;;
+    move) mv_cp "mv" "Move";;
+    copy) mv_cp "cp -r" "Copy";;
     remove)
-        if whiptail --title "$CHOSEN_BACKUP" --yesno \
-        "Are you sure you want to REMOVE this backup???" "$HEIGHT" "$WIDTH"; then
-            if whiptail --title "$CHOSEN_BACKUP" --yesno \
-            "⚠️Are you REALLY sure you want to REMOVE this backup???" "$HEIGHT" "$WIDTH"; then
+        if whiptail --title "$CHOSEN_BACKUP - $TITLE" --yesno "Are you sure you want to REMOVE this backup:\n$CHOSEN_BACKUP" "$HEIGHT" "$WIDTH"; then
+            if whiptail --title "$CHOSEN_BACKUP - $TITLE" --yesno "⚠️Are you REALLY sure you want to REMOVE this backup???\n$CHOSEN_BACKUP" "$HEIGHT" "$WIDTH"; then
                 rm -rf "$CHOSEN_BACKUP"
-                exit 0
+                echlog "removed backup: $CHOSEN_BACKUP"
+                break
             fi
         fi
     ;;
-    compress) compress_backup ;;
-    de_compress) de_compress_backup ;;
-    tim_compres) whiptail --msgbox "Periodic Compression not yet implemented!" "$HEIGHT" "$WIDTH"
-    ;;
-    prune) whiptail --msgbox "Backup Pruning not yet implemented!" "$HEIGHT" "$WIDTH"
-    ;;
-    *) exit 0 ;;
+    compress) compress_backup || continue ;;
+    de_compress) de_compress_backup || continue ;;
+    *) break ;;
     esac
 done
+
+echlog "Exiting Backup-Manager.sh"
+echlog "=========================================="
+exit 0

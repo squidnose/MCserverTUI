@@ -1,254 +1,596 @@
 #!/usr/bin/env bash
+# Backups-Rsync-TUI
+# https://codeberg.org/squidnose-code/Backups-RSYNC-TUI
+## Periodic-Rsync-Backup.sh
 set -euo pipefail
+#============================ Info ============================
+# Features:
+## Change Settings of a Peridic Cron backup
+### Input/Output folder, Time Period, Pruning, Files to exclude and wheter to Log(Reccomended)
+## Enable/Disable backup in cron
+## Test if created backup script works (Dry run or Manual run outside period)
 
-#================================
-# 0 - Periodic Rsync Backups
-#================================
-# This script generates rsync-based cron backup jobs.
-# Assumptions:
-# - Jobs may run in parallel
-# - Backup destinations must not overlap
-# - Source directories may be read concurrently
+#============================ Initialization ============================
+SCRIPT_DIR="$(dirname "$(realpath "$0")")" # Find script location
+source "$SCRIPT_DIR"/tui-lib.sh # Load Library of functions
+load_vars # Load variables: Title, Config files and Log files
+term_size # set TUI size to console size
+color_tui # Set color schemes for newt/whiptail
+conf_file # Load config file or make new one. For enableing/diableing logs.
+checks_deps # Check for dependencies: whiptail, rsync and crontab
+checks_dirs # Check if the OS has folder parameters set
+TITLE="Main Menu - $SCRIPT_TITLE"
 
-#================================
-# 1 - Setup
-#================================
-## 1.1 Detect terminal size
-### Automaticly detects terminal size
-### incase tput is not found, sets to fixed value
-TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
-TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
-HEIGHT=$(( TERM_HEIGHT  ))
-WIDTH=$(( TERM_WIDTH  ))
-MENU_HEIGHT=$(( HEIGHT - 10 ))
-### use $HEIGHT $WIDTH for --inputbox --msgbox --yesno
-### or $HEIGHT $WIDTH $MENU_HEIGHT for --menu
+#============================ Config ============================
+## Backup variables
+name="" # Name of backup script file located in $BACKUP_SCRIPTS_DIR
+input="" # Input file or direcotry parsed from -i flag
+output_dir="" # Output directory parsed from -o flag
+mode="" # Operation mode (mirror, timestamp_link, timestamp)
+period="" # Period of operation (hourly, daily, weekly, monthly)
+minutes="" # Minutes of the Hour to backup (0-60 integers)
+hour="" # Hour of backup (00-23 integers)
+week_day="" # Day of the Week (0-6 integers)
+week_day_name="" # Day of the week (English)
+month_day="" # Day of the month (1-28 integers)
+logs="" # Make logs (true or false)
+time_display="" # Time displayed in plain english (String)
+prune="0" # Backup pruning - How many backups to keep - 0 means no pruning (Integers)
 
-### Logs whenever backup is made (Opt-Out)
-LOGFILE_CRON="$HOME/.local/state/Backups-RSYNC-TUI/rsync-periodic-backups.log"
-### Menu Title
-TITLE="New Rsync Backup Entry"
-
-#================================
-# 2 - Helper Functions
-#================================
-## 2.1 Legacy Error handlerer (Will be removed)
-error()
-{
-    whiptail --title "Error" --msgbox "$1" 8 60
-    exit 0
-}
-
-## 2.2 Ensure directory path ends with a trailing slash for rsync
-normalize_dir()
-{
-    local dir="$1"
-    [[ "$dir" != */ ]] && dir="${dir}/"
-    echo "$dir"
-}
-
-## 2.3 If exited mid script
-exited() #Exit 0 with a echo debug notice
-{
-    echo "exited out of Periodic-Rsync-Backup mid script"
-    exit 0
-}
-
-## 2.4 Hour selection
-hour_select24()
-{
-HOUR=$(whiptail --title "Hour Selection - $TITLE" \
-    --menu "Hour of backup (24h format):" \
-    "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    00 ":00" \
-    01 ":00" \
-    02 ":00" \
-    03 ":00" \
-    04 ":00" \
-    05 ":00" \
-    06 ":00" \
-    07 ":00" \
-    08 ":00" \
-    09 ":00" \
-    10 ":00" \
-    11 ":00" \
-    12 ":00" \
-    13 ":00" \
-    14 ":00" \
-    15 ":00" \
-    16 ":00" \
-    17 ":00" \
-    18 ":00" \
-    19 ":00" \
-    20 ":00" \
-    21 ":00" \
-    22 ":00" \
-    23 ":00" \
-    3>&1 1>&2 2>&3) || exited
-}
-
-### 2.5 Day selection
-day_select7() {
-    DOW=$(whiptail --title "Day Selection - $TITLE" \
-        --menu "Select day of week:" \
-        "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-        0 "Sunday" \
-        1 "Monday" \
-        2 "Tuesday" \
-        3 "Wednesday" \
-        4 "Thursday" \
-        5 "Friday" \
-        6 "Saturday" \
-        3>&1 1>&2 2>&3) || exited
-
-    case "$DOW" in
-        0) DOW_NAME="Sunday" ;;
-        1) DOW_NAME="Monday" ;;
-        2) DOW_NAME="Tuesday" ;;
-        3) DOW_NAME="Wednesday" ;;
-        4) DOW_NAME="Thursday" ;;
-        5) DOW_NAME="Friday" ;;
-        6) DOW_NAME="Saturday" ;;
-        *) DOW_NAME="Unknown" ;;
-    esac
-}
-
-
-#================================
-# 3 - Parse flags
-#================================
-SRC_PRE="" #Source direcotry from parsed -i flag
-DST_PRE="" #Destination direcotry from parsed -o flag
-
-while getopts ":i:o:" opt; do
+#============================ Parsed CLI flags ================================
+while getopts ":n:i:o:t:s:h:m:w:p:r:l:" opt; do
     case "$opt" in
-        i) SRC_PRE="$OPTARG" ;;
-        o) DST_PRE="$OPTARG" ;;
-        *) error "Invalid option" ;;
+        n) name="$OPTARG" ;;
+        i) input="$OPTARG" ;;
+        o) output_dir="$OPTARG" ;;
+        t) mode="$OPTARG" ;;
+        s) minutes="$OPTARG" ;;
+        h) hour="$OPTARG" ;;
+        w) week_day="$OPTARG" ;;
+        m) month_day="$OPTARG" ;;
+        p) period="$OPTARG" ;;
+        r) prune="$OPTARG" ;;
+        l) logs="$OPTARG" ;;
+        *) echo "Invalid option" ;;
     esac
 done
 
-#================================
-# 4 - Wizzard Menu
-#================================
-## 4.1 Confirmation
-(whiptail --title "$TITLE" --yesno "Hi ${USER:-$(id -un 2>/dev/null || echo User)}, do you wish setup a NEW backup option?" 10 60;) || exited
+#============================ Excludes Files ================================
+excludes=()
+exclude_file="${BACKUP_SCRIPTS_DIR}/$name.exclude"
+read_exclude_file()
+{
+# Read lines from file into the array
+while IFS= read -r line; do
+    excludes+=("$line")
+done < "$exclude_file"
+} #read_exclude_file()
+# initial read
+if [ -f "$exclude_file" ]; then
+   read_exclude_file
+fi
 
-## 4.2 Source directory
-SRC=$(whiptail --title "Source - $TITLE" \
-    --inputbox "Folder to back up:" $HEIGHT $WIDTH "$SRC_PRE" \
-    3>&1 1>&2 2>&3) || exited
+#============================ Helper Functions ============================
+# Create cronline
+create_cronline()
+{
+    # Default cron parameters
+    cron_min="${minutes:-0}"
+    cron_hour="${hour:-0}"
+    cron_dom="*"
+    cron_mon="*"
+    cron_dow="*"
 
-[ -d "$SRC" ] || error "Source directory does not exist"
-SRC=$(normalize_dir "$SRC")
+    case "$period" in
+        hourly) cron_min="$minutes"; cron_hour="*" ;;
+        daily)  cron_min="$minutes"; cron_hour="$hour" ;;
+        weekly) cron_min="$minutes"; cron_hour="$hour"; cron_dow="$week_day" ;;
+        monthly) cron_min="$minutes"; cron_hour="$hour"; cron_dom="$month_day" ;;
+    esac
 
-## 4.3 Destination directory
-DST_DIR=$(whiptail --title "Destination - $TITLE" \
-    --inputbox "Backup destination:" $HEIGHT $WIDTH "$DST_PRE" \
-    3>&1 1>&2 2>&3) || exited
+    script_target_path="$BACKUP_SCRIPTS_DIR/$name"
+    mkdir -p "$BACKUP_SCRIPTS_DIR"
+    mkdir -p "$(dirname "$LOGFILE_CRON")"
 
-mkdir -p "$DST_DIR" || error "Cannot create destination directory"
-DST_DIR=$(normalize_dir "$DST_DIR")
+    CRONLINE="$cron_min $cron_hour $cron_dom $cron_mon $cron_dow /bin/bash $script_target_path"
 
-## 4.4 Backup period
-PERIOD=$(whiptail --title "Schedule - $TITLE" --menu "Backup period:" $HEIGHT $WIDTH $MENU_HEIGHT \
+} #create_cronline()
+
+# Check if crontab entry is installed
+crontab_possible_action()
+{
+    # Check if the crontab currently contains this script's path
+    if crontab -l 2>/dev/null | grep -q "$script_target_path"; then
+        echo "DISABLE"
+    else
+        echo "ENABLE"
+    fi
+} #crontab_possible_action()
+
+#============================ Menu Functions ============================
+# Input or Output directory Selection menu
+input_output_select()
+{
+    # Select input method
+    input_selection_mode=$(whiptail --title "$1 Selection - $TITLE" --menu "Select an $1 file/directory using:" $HEIGHT $WIDTH $MENU_HEIGHT \
+        nnn     "NNN File manager" \
+        manual  "Manualy type $1 path" \
+        3>&1 1>&2 2>&3)
+    # If cancel, return previous value
+    if [ ! $input_selection_mode ]; then
+        echo "$2"
+        return 0
+    fi
+    # NNN select
+    text="Enter" # For the user to know if it is an enter or a confirmation
+    local input_output="$2"
+    if [ $input_selection_mode == nnn ]; then
+        input_output=$(select_directory "$HOME")
+        text="Confirm"
+    fi
+    # Manual select, runs even after nnn select (Confirmation logic)
+    input_output=$(whiptail --title "$1 Selection - $TITLE" --inputbox "$text $1 Folder:" $HEIGHT $WIDTH "$input_output" \
+        3>&1 1>&2 2>&3) || { echo "$2"; return 0; } # If cancel, return previos value
+    input_output=$(normalize_dir "$input_output")
+    echo "$input_output" # Return value from function
+} #input_output_select()
+
+# Backup mode Selection menu
+mode_select()
+{
+whiptail --title "Backup Mode - $TITLE" --menu "Backup style:" $HEIGHT $WIDTH $MENU_HEIGHT \
+    mirror          "Overwrite previos backup" \
+    timestamp_link  "Keep timestamped backups with Hardlinks (saves space)" \
+    timestamp       "Keep timestamped backups (For FAT32 and exFAT partitions)" \
+    3>&1 1>&2 2>&3
+} #mode_select()
+
+# Backup period Selection menu
+period_select()
+{
+whiptail --title "Schedule - $TITLE" --menu "Backup period:" $HEIGHT $WIDTH $MENU_HEIGHT \
+    hourly  "Every hour" \
     daily   "Every day" \
     weekly  "Once a week" \
     monthly "Once a month" \
+    3>&1 1>&2 2>&3
+} #period_select()
+
+# Universal Number Selector
+## call: number_select min max "Text description"
+number_select() {
+    local min="$1"
+    local max="$2"
+    local text="$3"
+    local menu_options=()
+    local i formatted
+    for ((i=min; i<=max; i++)); do
+        # Automatically pad numbers with a leading zero if max >= 10 and the number is a single digit
+        if (( max >= 10 && i < 10 )); then
+            formatted=$(printf "%02d" "$i")
+        else
+            formatted="$i"
+        fi
+        menu_options+=("$formatted" "")
+    done
+    whiptail --title "Selection - $TITLE" --menu "$text" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    "${menu_options[@]}" 3>&1 1>&2 2>&3
+}
+
+# Day selection menu
+day_select()
+{
+whiptail --title "Day Selection - $TITLE" --menu "Select day of week:" \
+    "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    0 "Sunday" \
+    1 "Monday" \
+    2 "Tuesday" \
+    3 "Wednesday" \
+    4 "Thursday" \
+    5 "Friday" \
+    6 "Saturday" \
+    3>&1 1>&2 2>&3
+} #day_select()
+
+# View files that will be excluded
+view_file_exceptions()
+{
+    local current_display="No exclusions added yet."
+    if [ "${#excludes[@]}" -gt 0 ]; then
+        current_display="Current exclusions:"
+        for item in "${excludes[@]}"; do
+            current_display+=$'\n'" - $item"
+        done
+    fi
+    whiptail --title "List of Backup Exclusions - $TITLE" --msgbox "$current_display" "$HEIGHT" "$WIDTH"
+} #view_file_exceptions()
+
+# Exclude Selection Menu
+exclude_select() {
+    while true; do
+        action=$(whiptail --title "Exclusions - $TITLE" --menu "Current exclusions: ${#excludes[@]} added\n\nChoose an action:" \
+        "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        "add_nnn"       "➕ Add directory/file(s) using NNN" \
+        "add_manual"    "⌨️ Type path manually" \
+        "view"          "👁️ View what has been selected so far" \
+        "clear"         "🔄 Clear all exclusions" \
+        "save"          "💾 Save Exclusions to File" \
+        "discard"       "❌ Discard changes to Exclusions" \
+        3>&1 1>&2 2>&3) || break
+        case "$action" in
+            add_nnn)
+                selected=$(select_directory "$input")
+                # Save the select in a format for rsync
+                if [ -n "$selected" ]; then
+                    while IFS= read -r path; do
+                        if [ -n "$path" ]; then
+                            # Removes the $/home/... path for rsync
+                            relative_path="${path#$input}"
+                            relative_path="${relative_path#/}"
+                            excludes+=("$relative_path")
+                        fi
+                    done <<< "$selected"
+                fi
+            ;;
+            add_manual)
+                manual_path=$(whiptail --title "Manual Exclusion - $TITLE" --inputbox "Enter a relative path to exclude:\n\neg: logs/" \
+                "$HEIGHT" "$WIDTH" "" 3>&1 1>&2 2>&3)
+                if [ -n "$manual_path" ]; then
+                    excludes+=("$manual_path")
+                fi
+            ;;
+            view)
+                view_file_exceptions
+            ;;
+            clear)
+                excludes=()
+                whiptail --title "Exclusions - $TITLE" --msgbox "All exclusions cleared." "$HEIGHT" "$WIDTH"
+            ;;
+            save)
+                # Save the Exclude File
+                > "$exclude_file" # Clear/Initialize file
+                for item in "${excludes[@]}"; do
+                    echo "$item" >> "$exclude_file"
+                done
+                break
+            ;;
+            *)
+                # Treat any other input as discard changes and reload exlusions from file
+                if [ -f "exclude_file" ]; then
+                    read_exclude_file
+                fi
+                break
+            ;;
+        esac
+    done
+} #exclude_select
+
+#============================ Checks ================================
+if [ -z "$name" ]; then
+    # Name
+    name=$(whiptail --title "$TITLE" --inputbox "Backup Script to make:\n\n!If you wish to change the settings, run rsyncTUI.sh instead!" $HEIGHT $WIDTH \
     3>&1 1>&2 2>&3) || exit 0
-
-## 4.5 Backup type
-MODE=$(whiptail --title "Backup Mode - $TITLE" --menu "Backup style:" $HEIGHT $WIDTH $MENU_HEIGHT \
-    mirror     "Overwrite (rsync --delete)" \
-    timestamp  "Keep timestamped backups" \
-    3>&1 1>&2 2>&3) || exit 0
-### Adding the name for the folder based on backup type
-if [ "$MODE" = "mirror" ]; then
-    DST="${DST_DIR}${PERIOD}"
-fi
-if [ "$MODE" = "timestamp" ]; then
-    DST="${DST_DIR}${PERIOD}-\$(date +\\%Y-\\%m-\\%d_\\%H-\\%M)/"
 fi
 
-## 4.6 Cron schedule
-#Setting default time, in case it is not set
-MIN="00" #Minutes - Permanently set to 00, could be optoin to set in the future
-DOM="*"  #Day Of the Month - default set to any *
-MON="*"  #Month - Permanently set to any *, could be optoin to set in the future
-DOW="*"  #Day Of the Week - default set to any *
-# IMPORTANT:
-# If both DOM and DOW are restricted, cron runs when EITHER matches.
-# Therefore:
-# - Weekly jobs must leave DOM='*'
-# - Monthly jobs must leave DOW='*'
+script_target_path="$BACKUP_SCRIPTS_DIR/$name" # For crontab cheking
 
-case "$PERIOD" in
-    daily)
-        hour_select24
-        TIME_DISPLAY="Daily backups, done at $HOUR"
+#============================ Main Menu ================================
+while true; do
+    # Human readable time
+    case $period in
+        monthly) time_display="$period on the $month_day day at $hour:$minutes" ;;
+        weekly) time_display="$period on $week_day_name's at $hour:$minutes" ;;
+        daily) time_display="$period at $hour:$minutes" ;;
+        hourly) time_display="Hourly every $minutes minutes" ;;
+    esac
+    # Detect possible action with crontab
+    current_crontab_possible_action=$(crontab_possible_action)
+    # Actual main menu
+    menu=$(whiptail --title "$name - $TITLE" --menu "Backup settings" $HEIGHT $WIDTH $MENU_HEIGHT \
+    1       "📁 Item to Backup - $input" \
+    2       "🎯 Folder to Backup to - $output_dir" \
+    3       "🔄 Type of Backup - $mode with $prune pruning" \
+    4       "⏰ Period of Backup - $time_display" \
+    5       "🚫 Exclude files from Backup (${#excludes[@]})" \
+    6       "📜 Logs of Backup - $logs" \
+    7       "✅ Save and Install Backup" \
+    8       "🚗 Test run - Try out Backup" \
+    9       "⏱️ $current_crontab_possible_action Backup execution" \
+    back    "↩️ .. go back" \
+    3>&1 1>&2 2>&3) || break
+    case "$menu" in
+    1) input=$(input_output_select Input "$input") ;;
+    2) output_dir=$(input_output_select Output "$output_dir") ;;
+    3)
+        mode=$(mode_select) || continue
+        # Pruning
+        if [ $mode == "timestamp" ] || [ $mode == "timestamp_link" ]; then
+            prune=$(whiptail --title "Pruning - $TITLE" --inputbox "How many backups do you want to keep?\n0 Means dont prune, ie keep all backups." "$HEIGHT" "$WIDTH" "$prune" \
+            3>&1 1>&2 2>&3) || (prune="0" && continue)
+        else
+            prune=0
+        fi
+    ;;
+    4)
+        period=$(period_select) || continue
+        case $period in
+        monthly)
+            while true; do
+                month_day=$(number_select 1 31 "At what day of the month?") || continue
+                if [ "$month_day" -gt "28" ]; then
+                    # Ask if you really want a number higher than 28
+                    if whiptail --title "Day of Month - $TITLE" --yesno --defaultno \
+                        "Days higher than 28 may wont work every month\n\nContinue despite warning?" "$HEIGHT" "$WIDTH"; then
+                        break
+                    fi
+                else
+                    break
+                fi
+            done
+            week_day="" # Reset value
+            week_day_name=""
+            hour=$(number_select 00 23 "Hour of backup (24h format)") || continue
+            minutes=$(number_select 00 59 "Run at which minute of the hour?") || continue
         ;;
-    weekly)
-        hour_select24
-        day_select7
-        TIME_DISPLAY="Weekly backups, done at $HOUR hours on $DOW_NAME"s""
+        weekly)
+            week_day=$(day_select) || continue
+            month_day="" # Reset value
+            hour=$(number_select 00 23 "Hour of backup (24h format)") || continue
+            minutes=$(number_select 00 59 "Run at which minute of the hour?") || continue
+            case "$week_day" in
+                0) week_day_name="Sunday" ;;
+                1) week_day_name="Monday" ;;
+                2) week_day_name="Tuesday" ;;
+                3) week_day_name="Wednesday" ;;
+                4) week_day_name="Thursday" ;;
+                5) week_day_name="Friday" ;;
+                6) week_day_name="Saturday" ;;
+                *) week_day_name="" ;;
+            esac
         ;;
-    monthly)
-        hour_select24
-        DOM=$(whiptail --title "Day of Month" --inputbox "Run on which day of month? (1–28 recommended)" "$HEIGHT" "$WIDTH" "1" \
-        3>&1 1>&2 2>&3)
-        TIME_DISPLAY="Monthly backups, done at $HOUR hours on the $DOM. day of the month"
+        daily)
+            week_day="" # Reset value
+            week_day_name=""
+            month_day="" # Reset value
+            hour=$(number_select 00 23 "Hour of backup (24h format)") || continue
+            minutes=$(number_select 00 59 "Run at which minute of the hour?") || continue
         ;;
-esac
+        hourly)
+            week_day="" # Reset value
+            week_day_name=""
+            month_day="" # Reset value
+            hour=""
+            minutes=$(number_select 00 59 "Run at which minute of the hour?") || continue
+        ;;
+        *) continue ;;
+        esac
+    ;;
+    5)
+        # Check for input dir, because the directory needs to be relative
+        [ -z "$input" ] && error "Input directory is not set!" && continue
+        exclude_select
+    ;;
+    6)
+    logs_choice=$(whiptail --title "Logging - $TITLE" --menu "Enable logging?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+        true    "Log backup output (recommended)" \
+        false   "No logging" \
+        3>&1 1>&2 2>&3) || continue
+    # Only apply if user did not hit cancel
+    if [ "$logs_choice" == "true" ] || [ "$logs_choice" == "false" ]; then
+        logs="$logs_choice"
+    fi
+    ;;
+    7)
+        # Safety messures
+        [ -z "$input" ] && error "Input directory is not set!" && continue
+        [ -z "$output_dir" ] && error "Output directory is not set!" && continue
+        [ -z "$mode" ] && error "Backup mode is not set!" && continue
+        [ -z "$period" ] && error "Backup period is not set!" && continue
+        [ -z "$prune" ] && error "Pruning is not set! (0 for no pruning)" && continue
+        [ -z "$logs" ] && error "You have not enabled or diabled logs!" && continue
 
+        # Create cronline
+        create_cronline
 
-## 4.7 rsync command
-RSYNC_OPTS="-aAX"
-[ "$MODE" = "mirror" ] && RSYNC_OPTS="$RSYNC_OPTS --delete"
+        # View files that will be excluded, only if there are any:
+        if [ "${#excludes[@]}" -gt 0 ]; then
+            view_file_exceptions
+        fi
 
-## 4.8 Log Mode - set the cronline backup
-LOG_MODE=$(whiptail --title "Logging - $TITLE" --menu "Enable logging?" "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
-    yes "Log backup output (recommended)" \
-    no  "No logging (lower disk usage)" \
-    3>&1 1>&2 2>&3) || exited
+         # Pruneing Text
+        prune_text="$prune pruning"
+        if [ "$prune" -gt 0 ]; then
+            prune_text="Will keep $prune older backup(s)"
+        else
+            prune_text="Will Keep All backup(s)"
+        fi
 
-case "$LOG_MODE" in
-    yes)
-        CMD="sh -c 'echo \"[\$(date)] Backup start | period=$PERIOD | source=$SRC | destination=$DST_DIR\" >> \"$LOGFILE_CRON\"; \
-        rsync $RSYNC_OPTS \"$SRC\" \"$DST\" >> \"$LOGFILE_CRON\" 2>&1'"
-        ;;
-    no)
-        CMD="sh -c 'rsync $RSYNC_OPTS \"$SRC\" \"$DST\"'"
-        LOGFILE_CRON="None - Logging disabled" ### Log file now no longer represents a file or location.
-        ;;
-    *)
-        error "Invalid logging option"
-        ;;
-esac
-
-CRONLINE="$MIN $HOUR $DOM $MON $DOW $CMD"
-#================================
-# 5 - Final confirmation
-#================================
-whiptail --title "Confirm Job  - $TITLE" --yesno \
+        # Confirmation
+        if (whiptail --title "Confirmation - $TITLE" --backtitle "Install this Backup?" --yesno \
 "=== Install the following cron job? ===
-source=$SRC
-destination=$DST_DIR
-$TIME_DISPLAY
+Backing up: $input
 
-=== Cronline: ===
-$CRONLINE
+Backing up to: $output_dir
 
-=== Log file: ===
-$LOGFILE_CRON" $HEIGHT $WIDTH || exited
+Backup Mode: $mode
 
-#================================
-# 6 - Install cron job
-#================================
-(
-    crontab -l 2>/dev/null
-    echo "#Backup | $TIME_DISPLAY | source=$SRC | destination=$DST_DIR | Logs:$LOGFILE_CRON"
-    echo "$CRONLINE"
-) | crontab -
-echo "Made this cronline: $CRONLINE"
-whiptail --msgbox "Backup job installed successfully." $HEIGHT $WIDTH
+Backup Period: $time_display
+
+$prune_text
+
+Excluding ${#excludes[@]} files
+
+Logs are set to $logs
+
+=== Debug ===
+Crontab line:
+$CRONLINE" "$HEIGHT" "$WIDTH" 3>&1 1>&2 2>&3); then
+#  Save the Runner Script:
+        cat << EOF > "$script_target_path"
+#!/usr/bin/env bash
+#DO NOT MODIFY -> Use Periodic-Rsync-Backup.sh to modify.
+#Dry-run
+dry_run=""
+rsync_opt="-aAX"
+logdir="$LOGDIR"
+logfile="$LOGFILE_CRON"
+while getopts "d" opt; do
+    case "\$opt" in
+        d)
+            dry_run="--dry-run"
+            rsync_opt="-aAv"
+            logdir="/tmp/Backups-RSYNC-TUI"
+            logfile="\$logdir/rsync-periodic-backups.log"
+        ;;
+        *) ;;
+    esac
+done
+mkdir -p "\$logdir"
+#Parameters
+input="$input"
+output_dir="$output_dir"
+mode="$mode"
+period="$period"
+prune="$prune"
+logs="$logs"
+cronline="$CRONLINE"
+# Exclusions
+excludes_file="$BACKUP_SCRIPTS_DIR/$name.exclude"
+excludes=""
+[ -f "\$excludes_file" ] && excludes="--exclude-from=\$excludes_file"
+# Helpers
+if [ "\$mode" = "mirror" ]; then
+    output="\${output_dir}\${period}"
+elif [ "\$mode" = "timestamp" ]; then
+    timestamp=\$(date +%Y-%m-%d_%H-%M)
+    output="\${output_dir}\${period}-\${timestamp}/"
+elif [ "\$mode" = "timestamp_link" ]; then
+    timestamp=\$(date +%Y-%m-%d_%H-%M)
+    output="\${output_dir}\${period}-\${timestamp}/"
+fi
+mkdir -p "\$output_dir"
+# Backup Execution
+if [ "\$logs" = "true" ]; then
+    rsync_exit="0" #Set default exit code or rsync to 0
+    echo "[\$(date)] Backup start | period=\$period | mode=\$mode | source=\$input | destination=\$output" >> "\$logfile"
+    case \$mode in
+        mirror)
+            rsync \$rsync_opt \$dry_run \$excludes --delete "\$input" "\$output" >> "\$logfile" 2>&1 || rsync_exit=\$?
+        ;;
+        timestamp)
+            rsync \$rsync_opt \$dry_run \$excludes "\$input" "\$output" >> "\$logfile" 2>&1 || rsync_exit=\$?
+        ;;
+        timestamp_link)
+            output_previous=\$(find "\$output_dir" -maxdepth 1 -type d -name "\$period-*" | sort | tail -n 1)
+            rsync \$rsync_opt \$dry_run \$excludes --link-dest "\$output_previous" "\$input" "\$output" >> "\$logfile" 2>&1 || rsync_exit=\$?
+        ;;
+    esac
+    # Log explicit success or failure based on exit code
+    if [ \$rsync_exit -eq 0 ]; then
+        echo "[\$(date)] Backup SUCCESS | destination=\$output" >> "\$logfile"
+    else
+        echo "[\$(date)] Backup FAILED | Exit code: \$rsync_exit" >> "\$logfile"
+    fi
+else
+    case \$mode in
+        mirror)
+            rsync \$rsync_opt \$dry_run \$excludes --delete "\$input" "\$output"
+        ;;
+        timestamp)
+            rsync \$rsync_opt \$dry_run \$excludes "\$input" "\$output"
+        ;;
+        timestamp_link)
+            output_previous=\$(find "\$output_dir" -maxdepth 1 -type d -name "\$period-*" | sort | tail -n 1)
+            rsync \$rsync_opt \$dry_run \$excludes --link-dest "\$output_previous" "\$input" "\$output"
+        ;;
+    esac
+fi
+# Pruning
+if [ -z "\$dry_run" ] && [ "\$mode" != "mirror" ] && [ "\$prune" -gt 0 ]; then
+    backups=(\$(find "\$output_dir" -maxdepth 1 -type d -name "\$period-*" | sort))
+    if [ "\${#backups[@]}" -gt "\$prune" ]; then
+        oldest_backup="\${backups[0]}"
+        if [ -n "\$oldest_backup" ] && [ "\$oldest_backup" != "\$output_dir" ] && [ -d "\$oldest_backup" ]; then
+            if [ "\$logs" = "true" ]; then
+                echo "[\$(date)] Automatic pruning removed: \$oldest_backup" >> "\$logfile"
+            fi
+            rm -rf "\$oldest_backup"
+        fi
+    fi
+fi
+EOF
+
+        chmod +x "$script_target_path"
+
+        ## Remove any existing cron entry for this specific script name to avoid duplicates
+        (
+            crontab -l 2>/dev/null | grep -v "$name" || true
+            echo "$CRONLINE"
+        ) | crontab -
+
+        whiptail --title "Debug - $TITLE" --msgbox "Backup script saved and cron job installed\n\nBackup Script: $script_target_path\
+        \n\nCronline: $CRONLINE" $HEIGHT $WIDTH
+        fi
+    ;;
+    8)
+    # Safety messures - Only run if the script exists
+    if [ ! -f "$BACKUP_SCRIPTS_DIR/$name" ]; then
+        error "Backup Script Does not Exist! You need to first Save and Intall it before you can test it!"
+        continue
+    fi
+
+    test_run=$(whiptail --title "Test Run - $TITLE" --menu "How would you like to test the backup?" \
+    "$HEIGHT" "$WIDTH" "$MENU_HEIGHT" \
+    "dry_run"       "Get a overview of what files could be coppied" \
+    "manual"        "Run the backup out side the period" \
+    3>&1 1>&2 2>&3) || break
+    case $test_run in
+        dry_run)
+            LOGFILE_TMP="/tmp/Backups-RSYNC-TUI/rsync-periodic-backups.log"
+            if [ -f "$LOGFILE_TMP" ]; then # Reset temporary logfile
+                rm "$LOGFILE_TMP"
+            fi
+            # Run in drymode
+            "$BACKUP_SCRIPTS_DIR/$name" -d
+            cat "$LOGFILE_TMP" | less
+            ;;
+        manual) "$BACKUP_SCRIPTS_DIR/$name";;
+    esac
+
+    ;;
+    9)
+    # Safety messures - Only run if the script exists
+    if [ ! -f "$BACKUP_SCRIPTS_DIR/$name" ]; then
+        error "Backup Script Does not Exist! You need to first Save and Intall it before you can enable/disable it."
+        continue
+    fi
+
+    create_cronline
+    if [ "$current_crontab_possible_action" == "DISABLE" ]; then
+        (
+            crontab -l 2>/dev/null | grep -v "$script_target_path" || true
+        ) | crontab -
+    elif [ "$current_crontab_possible_action" == "ENABLE" ]; then
+        (
+            crontab -l 2>/dev/null || true
+            echo "$CRONLINE"
+        ) | grep -v '^$'| crontab - # | grep -v '^$' removes empty lines
+    else
+        error "Unknow Crontab Status"
+    fi
+    ;;
+    *)
+        break
+    ;;
+esac
+done
+
+# Exit handleing - If the user made a .exclude file, but no script, offer to remove it
+if [ ! -f "$BACKUP_SCRIPTS_DIR/$name" ] && [ -f "$exclude_file" ]; then
+    if whiptail --title "Remove .exclude file? - $TITLE" --yesno "You made a .exclude file, but no script file\n\nDo you wish to remove $exclude_file?" \
+    "$HEIGHT" "$WIDTH"; then
+        rm "$exclude_file"
+    fi
+fi
+
 exit 0
