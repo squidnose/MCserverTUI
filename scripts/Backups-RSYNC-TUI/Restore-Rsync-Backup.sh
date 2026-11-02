@@ -11,7 +11,7 @@ set -euo pipefail
 
 #============================ Initialization ============================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")" # Find script location
-source "$SCRIPT_DIR"/tui-lib.sh # Load Library of functions
+source "$SCRIPT_DIR"/lib-rsync-tui.sh # Load Library of functions
 load_vars # Load variables: Title, Config files and Log files
 term_size # set TUI size to console size
 color_tui # Set color schemes for newt/whiptail

@@ -202,27 +202,25 @@ done
 content_downloader
 
 #==================================== 8 - Run Only of not proxy ====================================
-if [[ $MC_LOADER != "velocity" ]] then
+if [ "$MC_LOADER" != "velocity" ]; then
 
-#==================================== 9 - Initialize Server Jarfile ====================================
-#This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
-if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Recommended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
-    cd "$SERVER_DIR"
-    # Check exit status, then respond
-    if java -jar $JAR_NAME; then
-        continue
-    else
-        whiptail --title "$TITLE" --msgbox "Failed to initialize server!\nPossible Problems:\n- Bad version or mods combination\n- Incompatible Mods\n- Lacking Java version\n- Not enough HW resources\n- Corrupt download\n\nYou can try to fix this later in: Manage Servers section" "$HEIGHT" "$WIDTH"
+    #==================================== 9 - Initialize Server Jarfile ====================================
+    #This will run the server.jar in order for it to settle itsef in. It Creats files that we need to edit
+    if whiptail --title "$TITLE" --yesno "Would you like to Initialize your server.jar?\nHighly Recommended\nYou may need to press crtl+c if you hang at eula.txt" "$HEIGHT" "$WIDTH"; then
+        cd "$SERVER_DIR"
+        # Check exit status, then respond
+        if ! java -jar $JAR_NAME; then
+            whiptail --title "$TITLE" --msgbox "Failed to initialize server!\nPossible Problems:\n- Bad version or mods combination\n- Incompatible Mods\n- Lacking Java version\n- Not enough HW resources\n- Corrupt download\n\nYou can try to fix this later in: Manage Servers section" "$HEIGHT" "$WIDTH"
+        fi
+
     fi
 
-fi
-
-#==================================== 10 - Server.properties editor====================================
-if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH"; then
-    cd "$SCRIPT_DIR/more-scripts/"
-    bash server_properties_editor.sh --name $SERVER_NAME
-    echlog "Ran server.properties editor with $SERVER_NAME flag."
-fi
+    #==================================== 10 - Server.properties editor====================================
+    if whiptail --title "$TITLE" --yesno "Would you like edit server.properties?\nSeed, Gamemode, Port, Online Mode, MOTD" "$HEIGHT" "$WIDTH"; then
+        cd "$SCRIPT_DIR/more-scripts/"
+        bash server_properties_editor.sh --name $SERVER_NAME
+        echlog "Ran server.properties editor with $SERVER_NAME flag."
+    fi
 fi # Not run if proxy
 
 #==================================== 12 - Memory Config ====================================

@@ -17,7 +17,7 @@ set -euo pipefail
 
 #============================ Initialization ============================
 SCRIPT_DIR="$(dirname "$(realpath "$0")")" #neccery
-source "$SCRIPT_DIR"/tui-lib.sh # Load Library of functions
+source "$SCRIPT_DIR"/lib-rsync-tui.sh # Load Library of functions
 load_vars # Load variables: Title, Config files and Log files
 term_size # set TUI size to console size
 color_tui # Set color schemes for newt/whiptail
@@ -196,25 +196,25 @@ case "$CHOICE" in
         fi
 
         # Choose backup snapshot
-        SRC=$BACKUP_DIR/$(choose_backup_snapshot "Restore From") || continue
+        SNAPSHOT=$(choose_backup_snapshot "Restore From") || continue
         # If the functions returns nothing, presume no backups found
-        if [ -z "$SRC" ]; then
-            whiptail --title "$TITLE" --msgbox "You did not choose a Backup!\n(Or no backup snapshots found)" \
-            "$HEIGHT" "$WIDTH"
-            continue
+        if [ -z "$SNAPSHOT" ] || [ ! -d "$BACKUP_DIR/$SNAPSHOT" ]; then
+            whiptail --title "$TITLE" --msgbox "You did not choose a Backup!\n(Or no backup snapshots found)" "$HEIGHT" "$WIDTH"
+        else
+            # Run backup retore
+            "$SCRIPT_DIR/Restore-Rsync-Backup.sh" -i "$SRC" -o "$SERVER_DIR"
         fi
-        # Run backup retore
-        "$SCRIPT_DIR/Restore-Rsync-Backup.sh" -i "$SRC" -o "$SERVER_DIR"
     ;;
     manage)
-        SRC=$BACKUP_DIR/$(choose_backup_snapshot "Manage") || continue
-        ## If the functions returns nothing, presume no backups found
-        if [ -z "$SRC" ]; then
-            whiptail --title "$TITLE" --msgbox "You did not choose a Backup!\n(Or no backup snapshots found)" \
-            "$HEIGHT" "$WIDTH"
-            continue
+        # Choose backup snapshot
+        SNAPSHOT=$(choose_backup_snapshot "Manage") || continue
+        ## If the functions returns empty, presume no backups found
+        if [ -z "$SNAPSHOT" ] || [ ! -d "$BACKUP_DIR/$SNAPSHOT" ]; then
+            whiptail --title "$TITLE" --msgbox "You did not choose a Backup!\n(Or no backup snapshots found)" "$HEIGHT" "$WIDTH"
+        else
+            SRC="$BACKUP_DIR/$SNAPSHOT"
+            "$SCRIPT_DIR/Backup-Manager.sh" -i "$SRC"
         fi
-        "$SCRIPT_DIR/Backup-Manager.sh" -i "$SRC"
     ;;
     *) break ;;
 esac

@@ -17,7 +17,7 @@
 load_vars()
 {
     SCRIPT_TITLE="RsyncTUI-26.11"
-    TITLE="$SCRIPT_TITLE"
+    TITLE="$SCRIPT_TITLE" # Set default value just in case
     LOGDIR="$HOME/.local/state/Backups-RSYNC-TUI" # Folder for logs and configs
     #Logs
     LOGFILE_TUI="$LOGDIR/rsync-tui.log" # Logs for the TUI menus
@@ -139,8 +139,7 @@ checks_dirs()
         exit 1
     fi
 
-    # Finds out where the script is located
-    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+    # Script location
     if [ -z "$SCRIPT_DIR" ]; then
         error "This script has no idea where it is.\n you will have to find a way to get dirname and realpath to work on your OS"
         exit 1

@@ -1,5 +1,8 @@
 # MC Server TUI:
 ## A Simple TUI for Minecraft(Java) servers for Unix like OS
+
+--- 
+
 ## Features:
 - Runs best on Linux and or BSD (Or any other OS that meats the dependencies)
 - Setup and manage multiple MC(Minecraft) servers with very low resource usage. (Runs in terminal)
@@ -16,6 +19,8 @@
 - Use on a VPS instead of "Minecraft Server Hosting" at a way lower cost (2.2x - 4.8x cheaper)
 - Turn a old PC into a Minecraft server
 - Use parts of the code to make something else (Modular Design)
+
+---
 
 ## Knowledge
 **Not recommended for tech newbies!**
@@ -37,6 +42,14 @@
 - Hence they are recommended
 - If you need a different version of Java then the one provided by your distro, then install java manually
 
+## Download and run the latest Git version:
+```
+git clone https://github.com/squidnose/MCserverTUI.git
+cd MCserverTUI
+./MC-Server-TUI.sh
+```
+- MCserverTUI can be placed anywhere
+
 ## setup.sh
 - I highly recommended to install all your dependencies manually 
 - However you can also run **setup.sh**
@@ -46,19 +59,12 @@
 ./setup.sh
 ```
 
-## Download and run the latest Git version:
-```
-git clone https://github.com/squidnose/MCserverTUI.git
-cd MCserverTUI
-./MC-Server-TUI.sh
-```
-- MCserverTUI can be placed anywhere
+---
 
 ## MCserver scripts
 - MC-Server-TUI.sh is the main menu for all functions in the form of scripts.
 - Please read the: [[Docs]](https://github.com/squidnose/MCserverTUI/blob/main/scripts/Docs/)
   
-# Details
 ## Color Themes
 - MCserverTUI offers a range of color themes for the TUI 
 - The default is "Matrix" black and green theme
@@ -118,7 +124,7 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 
 # Todo
 - [ ] Custom FRP TUI for self hosted Tunneling
-- [ ]  Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
+- [ ] Duplicate MCserver - Unsure if i want to implement (Because it seems like to much bloat)
 - [ ] Add log interpreter (View all info on a selected player)
 - [ ] Showcase Videos:
   - 1. Motivation ("Selling it")
@@ -136,13 +142,14 @@ $HOME/.local/state/MCserverTUI/MCserverTUI.conf
 - [ ] separate tmux management from Manage-Servers.sh
   - start/stop mcserver
   - Close session: A) exit, B) crtl+c, C) kill session(Ask user)
+- [ ] Add pumkinMC support
 
 # Bugs
 - [X] when mods/plugins incorecly setup, initialize minecraft server, mcserverTUI crashes together with java -> Detect and inform the user.
 - [ ] stop command does not work when the server is fabric and eula=false
 
 
-# Disclaimer
-- I used an LLM to help with the programming. 
-- I understand the generated parts of the code.
-- It is not a "Copy and Paste" slop script. 
+# AI policy 
+- I do not directly copy LLM generated code. 
+- AI is used however for debugging purposes. 
+- This project is not a "Copy and Paste" slop script. 
